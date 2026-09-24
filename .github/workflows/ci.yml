@@ -1,0 +1,29 @@
+name: CI
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  backend:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+      - name: Backend tests and PostgreSQL migration contract
+        run: docker compose --env-file .env.example --profile test run --build --rm backend-test
+      - name: Python lint
+        run: docker compose --env-file .env.example --profile test run --no-deps --rm backend-test ruff check .
+      - name: Python typing
+        run: docker compose --env-file .env.example --profile test run --no-deps --rm backend-test mypy src
+      - name: Stop test services
+        if: always()
+        run: docker compose --env-file .env.example --profile test down --volumes
+
+  frontend:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+      - name: Frontend tests
+        run: docker compose --env-file .env.example --profile test run --build --rm frontend-test
+      - name: Typecheck and production build
+        run: docker compose --env-file .env.example --profile test run --no-deps --rm frontend-test npm run build
