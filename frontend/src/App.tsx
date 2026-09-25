@@ -86,7 +86,7 @@ export default function App() {
                 <CheckIcon /> Explainable results
               </li>
               <li>
-                <LockIcon /> Private by design
+                <CheckIcon /> No account needed
               </li>
             </ul>
           </div>
@@ -150,15 +150,6 @@ function CheckIcon() {
   return (
     <svg viewBox="0 0 20 20" aria-hidden="true">
       <path d="m5 10.5 3 3 7-7" />
-    </svg>
-  )
-}
-
-function LockIcon() {
-  return (
-    <svg viewBox="0 0 20 20" aria-hidden="true">
-      <rect x="5" y="9" width="10" height="8" rx="2" />
-      <path d="M7.5 9V6.5a2.5 2.5 0 0 1 5 0V9" />
     </svg>
   )
 }

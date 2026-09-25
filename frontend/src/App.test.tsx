@@ -38,7 +38,8 @@ test('presents the planner as a focused desktop workspace', async () => {
     screen.getByRole('heading', { name: 'Turn vacation days into longer breaks.' }),
   ).toBeInTheDocument()
   expect(screen.getByRole('region', { name: 'Build your search' })).toBeInTheDocument()
-  expect(screen.getByText('Private by design')).toBeInTheDocument()
+  expect(screen.getByText('No account needed')).toBeInTheDocument()
+  expect(screen.queryByText('Private by design')).not.toBeInTheDocument()
 })
 
 test('uses the configured API base path for the health view', async () => {
