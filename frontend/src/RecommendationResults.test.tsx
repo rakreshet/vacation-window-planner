@@ -155,3 +155,27 @@ test('reveals equivalent dates and the weighted score without changing feedback 
   expect(await screen.findByText('Feedback saved')).toBeInTheDocument()
   expect(onFeedback).toHaveBeenCalledWith(1, 'thumbs_up')
 })
+
+test('states how many equivalent dates were omitted from a bounded list', () => {
+  render(
+    <RecommendationResults
+      result={result([
+        recommendation({
+          matching_window_count: 5,
+          alternative_windows: [
+            {
+              start_date: '2027-02-05',
+              end_date: '2027-02-11',
+              total_days: 7,
+              vacation_days_used: 3,
+              holiday_dates: [],
+            },
+          ],
+        }),
+      ])}
+    />,
+  )
+
+  fireEvent.click(screen.getByText('5 matching date options · same score and vacation-day cost'))
+  expect(screen.getByText('+3 more matching dates')).toBeVisible()
+})

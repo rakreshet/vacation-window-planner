@@ -13,10 +13,7 @@ from vacation_window_planner.domain.contracts import (
     UserVacationContext,
 )
 from vacation_window_planner.domain.date_ranges import normalize_selected_months
-from vacation_window_planner.domain.diversity import (
-    group_equivalent_windows,
-    select_diverse_windows,
-)
+from vacation_window_planner.domain.diversity import select_diverse_window_groups
 from vacation_window_planner.domain.explanations import (
     DeterministicExplanationFormatter,
     ExplanationFormatter,
@@ -99,18 +96,16 @@ class RecommendationWorkflow:
             constraints=request.constraints,
             policy=self._policy,
         )
-        groups = group_equivalent_windows(scored)
-        selected = select_diverse_windows(
-            tuple(group.representative for group in groups),
+        selected = select_diverse_window_groups(
+            scored,
             result_limit=request.constraints.result_limit,
             near_duplicate_overlap_ratio=self._policy.near_duplicate_overlap_ratio,
             material_score_gap=self._policy.material_score_gap,
         )
         recommendations: list[Recommendation] = []
-        groups_by_window = {group.representative.window: group for group in groups}
         previous_score: int | None = None
-        for rank, item in enumerate(selected, start=1):
-            group = groups_by_window[item.window]
+        for rank, group in enumerate(selected, start=1):
+            item = group.representative
             recommendations.append(
                 Recommendation(
                     window=item.window,

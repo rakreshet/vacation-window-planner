@@ -144,6 +144,56 @@ def test_equal_value_dates_share_one_rank_and_leave_room_for_distinct_outcomes()
     assert snapshots[0].result["matching_window_count"] == 5
 
 
+def test_distinct_outcome_can_use_a_later_date_when_its_first_date_overlaps() -> None:
+    search = RecommendationRequest(
+        context=UserVacationContext(
+            session_id=SESSION_ID,
+            balance_days=6,
+            allowed_negative_days=1,
+            country_code="IL",
+            weekend_days=frozenset({4, 5}),
+        ),
+        constraints=SearchConstraints(
+            months=(YearMonth(year=2026, month=10), YearMonth(year=2026, month=11)),
+            preferred_length_days=9,
+            result_limit=5,
+        ),
+    )
+
+    result = workflow(FakeSnapshotWriter()).recommend(search)
+
+    assert len(result.recommendations) == 5
+    distinct = next(item for item in result.recommendations if item.score == 68)
+    assert distinct.window.start_date > date(2026, 10, 1)
+    assert any(window.start_date == date(2026, 10, 1) for window in distinct.alternative_windows)
+
+
+def test_matching_date_count_is_preserved_when_alternative_list_is_bounded() -> None:
+    search = RecommendationRequest(
+        context=UserVacationContext(
+            session_id=SESSION_ID,
+            balance_days=6,
+            allowed_negative_days=1,
+            country_code="IL",
+            weekend_days=frozenset({4, 5}),
+        ),
+        constraints=SearchConstraints(
+            months=(
+                YearMonth(year=2026, month=10),
+                YearMonth(year=2026, month=11),
+                YearMonth(year=2026, month=12),
+            ),
+            preferred_length_days=9,
+            result_limit=5,
+        ),
+    )
+
+    first = workflow(FakeSnapshotWriter()).recommend(search).recommendations[0]
+
+    assert first.matching_window_count == 13
+    assert len(first.alternative_windows) == 12
+
+
 def test_empty_candidate_set_is_persisted_without_results() -> None:
     writer = FakeSnapshotWriter()
 

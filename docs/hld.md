@@ -50,7 +50,7 @@ Use a modular monolith for the POC: a React and TypeScript frontend calls a Fast
 
 The temporary workweek policy covers any country code, but this does not expand holiday-calendar support: the production calendar adapter currently supports Israel only.
 1. The pure window generator enumerates candidate windows within a configurable safety cap. Starts must fall in a selected future local month or its unelapsed portion; ends may cross that month's boundary. Total length counts inclusive consecutive local dates, while PTO is charged only for effective working dates. Nonworking dates may occur at either edge. An incomplete enumeration caused by the cap yields a coded narrow-the-search outcome with no ranked recommendations.
-1. The ranker computes deterministic features, a normalized score and its weighted components, warnings, and fact based explanation inputs. It groups equal-outcome dates before applying the shortlist limit, then removes remaining near duplicates.
+1. The ranker computes deterministic features, a normalized score and its weighted components, warnings, and fact based explanation inputs. It groups equal-outcome dates before applying the shortlist limit, tries later equivalent dates when the first overlaps another selected result, then removes remaining near duplicates.
 1. The workflow persists an immutable search snapshot and its recommendations in one transaction.
 1. The backend returns typed JSON. The React frontend owns labels, colors, ordering display, empty states, and warning presentation.
 
