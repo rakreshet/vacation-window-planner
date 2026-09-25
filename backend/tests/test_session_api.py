@@ -1,0 +1,42 @@
+"""Anonymous session creation HTTP boundary."""
+
+from datetime import UTC, datetime
+from uuid import UUID
+
+from fastapi.testclient import TestClient
+
+from vacation_window_planner.api import create_app
+from vacation_window_planner.repositories.sessions import CreatedAnonymousSession
+
+NOW = datetime(2026, 9, 25, 12, tzinfo=UTC)
+SESSION_ID = UUID("00000000-0000-0000-0000-000000000001")
+
+
+def test_anonymous_session_creation_returns_opaque_token() -> None:
+    captured: list[object] = []
+
+    def create_session(request: object, now: datetime) -> CreatedAnonymousSession:
+        captured.extend((request, now))
+        return CreatedAnonymousSession(id=SESSION_ID, token="opaque-token")
+
+    client = TestClient(
+        create_app(
+            database_probe=lambda: True,
+            session_creator=create_session,
+            clock=lambda: NOW,
+        )
+    )
+
+    response = client.post(
+        "/sessions",
+        json={
+            "balance_days": 8,
+            "allowed_negative_days": 1,
+            "country_code": "IL",
+            "weekend_days": [4, 5],
+        },
+    )
+
+    assert response.status_code == 201
+    assert response.json() == {"session_id": str(SESSION_ID), "token": "opaque-token"}
+    assert captured[1] == NOW

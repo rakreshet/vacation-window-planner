@@ -1,9 +1,9 @@
 """ASGI application wiring."""
 
-from datetime import UTC, datetime
+from datetime import UTC, datetime, timedelta
 from uuid import UUID
 
-from vacation_window_planner.api import create_app
+from vacation_window_planner.api import SessionHttpRequest, create_app
 from vacation_window_planner.database import (
     database_is_reachable,
     make_engine,
@@ -21,6 +21,7 @@ from vacation_window_planner.repositories.searches import SearchSnapshotReposito
 from vacation_window_planner.repositories.sessions import (
     AnonymousSessionRepository,
     AnonymousSessionState,
+    CreatedAnonymousSession,
 )
 from vacation_window_planner.settings import Settings
 from vacation_window_planner.workflow import (
@@ -53,6 +54,20 @@ def utc_now() -> datetime:
 def find_session(token: str, now: datetime) -> AnonymousSessionState | None:
     with sessions() as session:
         return AnonymousSessionRepository(session).find_active(token, now=now)
+
+
+def create_session(request: SessionHttpRequest, now: datetime) -> CreatedAnonymousSession:
+    with sessions() as session:
+        created = AnonymousSessionRepository(session).create(
+            balance_days=request.balance_days,
+            allowed_negative_days=request.allowed_negative_days,
+            country_code=request.country_code,
+            weekend_days=request.weekend_days,
+            now=now,
+            expires_at=now + timedelta(days=30),
+        )
+        session.commit()
+        return created
 
 
 def recommend(request: RecommendationRequest) -> RecommendationResult:
@@ -90,5 +105,6 @@ app = create_app(
     recommendation_service=recommend,
     interpretation_service=interpreter.interpret if interpreter is not None else None,
     feedback_service=save_feedback,
+    session_creator=create_session,
     clock=utc_now,
 )

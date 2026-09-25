@@ -56,27 +56,28 @@ class SearchSnapshotRepository:
         created_at: datetime,
     ) -> UUID:
         search_id = uuid4()
-        self._session.add(
-            SearchRecord(
-                id=search_id,
-                session_id=session_id,
-                engine_version=engine_version,
-                structured_input=structured_input,
-                source_text=source_text,
-                created_at=created_at,
-            )
-        )
-        self._session.add_all(
-            RecommendationRecord(
-                id=uuid4(),
-                search_id=search_id,
-                rank=item.rank,
-                result=item.result,
-                warnings=list(item.warnings),
-            )
-            for item in recommendations
-        )
         try:
+            self._session.add(
+                SearchRecord(
+                    id=search_id,
+                    session_id=session_id,
+                    engine_version=engine_version,
+                    structured_input=structured_input,
+                    source_text=source_text,
+                    created_at=created_at,
+                )
+            )
+            self._session.flush()
+            self._session.add_all(
+                RecommendationRecord(
+                    id=uuid4(),
+                    search_id=search_id,
+                    rank=item.rank,
+                    result=item.result,
+                    warnings=list(item.warnings),
+                )
+                for item in recommendations
+            )
             self._session.flush()
         except SQLAlchemyError as error:
             self._session.rollback()

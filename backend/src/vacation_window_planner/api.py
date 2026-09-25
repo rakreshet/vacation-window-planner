@@ -8,7 +8,7 @@ from uuid import UUID
 from fastapi import FastAPI, Header, Request, Response, status
 from fastapi.exceptions import RequestValidationError
 from fastapi.responses import JSONResponse
-from pydantic import BaseModel, ConfigDict, Field
+from pydantic import BaseModel, ConfigDict, Field, StrictInt, field_validator
 from starlette.exceptions import HTTPException as StarletteHTTPException
 
 from vacation_window_planner.domain.calendar import UnsupportedCalendarError
@@ -24,7 +24,10 @@ from vacation_window_planner.domain.generator import SearchTooBroadError
 from vacation_window_planner.interpreter import ConstraintProposal, InterpretationError
 from vacation_window_planner.repositories.feedback import FeedbackAuthorizationError
 from vacation_window_planner.repositories.searches import SearchSnapshotPersistenceError
-from vacation_window_planner.repositories.sessions import AnonymousSessionState
+from vacation_window_planner.repositories.sessions import (
+    AnonymousSessionState,
+    CreatedAnonymousSession,
+)
 from vacation_window_planner.workflow import (
     RecommendationRequest,
     RecommendationResult,
@@ -62,6 +65,27 @@ class FeedbackHttpResponse(BaseModel):
     value: FeedbackValue
 
 
+class SessionHttpRequest(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    balance_days: StrictInt = Field(ge=0)
+    allowed_negative_days: StrictInt = Field(default=0, ge=0, le=5)
+    country_code: str = Field(pattern=r"^[A-Z]{2}$")
+    weekend_days: frozenset[StrictInt]
+
+    @field_validator("weekend_days")
+    @classmethod
+    def weekend_days_must_be_valid(cls, value: frozenset[int]) -> frozenset[int]:
+        if any(day < 0 or day > 6 for day in value):
+            raise ValueError("weekend days must use Monday=0 through Sunday=6")
+        return value
+
+
+class SessionHttpResponse(BaseModel):
+    session_id: UUID
+    token: str
+
+
 def _error(
     status_code: int, code: str, message: str, fields: list[str] | None = None
 ) -> JSONResponse:
@@ -77,6 +101,8 @@ def create_app(
     recommendation_service: Callable[[RecommendationRequest], RecommendationResult] | None = None,
     interpretation_service: Callable[[str], ConstraintProposal] | None = None,
     feedback_service: Callable[[UUID, int, UUID, FeedbackValue], None] | None = None,
+    session_creator: Callable[[SessionHttpRequest, datetime], CreatedAnonymousSession]
+    | None = None,
     clock: Callable[[], datetime] = lambda: datetime.now(UTC),
 ) -> FastAPI:
     app = FastAPI(title="Vacation Window Planner")
@@ -101,6 +127,13 @@ def create_app(
             return {"status": "ok", "database": "connected"}
         response.status_code = status.HTTP_503_SERVICE_UNAVAILABLE
         return {"status": "unavailable", "database": "disconnected"}
+
+    @app.post("/sessions", response_model=SessionHttpResponse, status_code=201)
+    def create_session(body: SessionHttpRequest) -> SessionHttpResponse | JSONResponse:
+        if session_creator is None:
+            return _error(503, "SERVICE_UNAVAILABLE", "Session service is unavailable")
+        created = session_creator(body, clock())
+        return SessionHttpResponse(session_id=created.id, token=created.token)
 
     @app.post("/recommendations", response_model=RecommendationHttpResponse)
     def recommendations(
