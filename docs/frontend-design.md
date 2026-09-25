@@ -13,7 +13,7 @@ Vacation Window Planner is a desktop decision-support workspace for people tryin
 3. State explicitly that interpretation only proposes editable fields and never searches.
 4. Present the confirmed structured constraints as the source of truth.
 5. Make Search the only action that produces recommendations.
-6. Rank results as comparable decision cards with dates, leave use, remaining balance, balance-free days, explanation, warnings, and feedback.
+6. Rank distinct outcomes as comparable decision cards with dates, leave use, remaining balance, balance-free days, explanation, warnings, and feedback. Keep equal-value alternative dates together within one card.
 
 ## Visual system
 
@@ -33,6 +33,7 @@ Vacation Window Planner is a desktop decision-support workspace for people tryin
 - Busy, success, validation, service-health, empty-result, warning, and feedback states must be visible and accessible.
 - A capped search shows the backend's actionable narrow-search message and never renders partial recommendation cards.
 - Successful search moves keyboard focus and the viewport to the result heading.
+- A result's score can be expanded to show weighted leave-efficiency, time-away, and length-fit points. Equivalent dates are disclosed within their shared result card; neither disclosure starts another search.
 - Product copy uses `vacation days`, `leave`, `break`, and `window`; engine, candidate, and persistence terminology stays out of the primary interface.
 - Phase 0 discusses dates only. Destinations, flights, prices, and proactive opportunities remain absent.
 

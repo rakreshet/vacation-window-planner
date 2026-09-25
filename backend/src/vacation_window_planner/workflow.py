@@ -13,7 +13,10 @@ from vacation_window_planner.domain.contracts import (
     UserVacationContext,
 )
 from vacation_window_planner.domain.date_ranges import normalize_selected_months
-from vacation_window_planner.domain.diversity import select_diverse_windows
+from vacation_window_planner.domain.diversity import (
+    group_equivalent_windows,
+    select_diverse_windows,
+)
 from vacation_window_planner.domain.explanations import (
     DeterministicExplanationFormatter,
     ExplanationFormatter,
@@ -96,15 +99,18 @@ class RecommendationWorkflow:
             constraints=request.constraints,
             policy=self._policy,
         )
+        groups = group_equivalent_windows(scored)
         selected = select_diverse_windows(
-            scored,
+            tuple(group.representative for group in groups),
             result_limit=request.constraints.result_limit,
             near_duplicate_overlap_ratio=self._policy.near_duplicate_overlap_ratio,
             material_score_gap=self._policy.material_score_gap,
         )
         recommendations: list[Recommendation] = []
+        groups_by_window = {group.representative.window: group for group in groups}
         previous_score: int | None = None
         for rank, item in enumerate(selected, start=1):
+            group = groups_by_window[item.window]
             recommendations.append(
                 Recommendation(
                     window=item.window,
@@ -113,6 +119,9 @@ class RecommendationWorkflow:
                     explanation=self._explanation_formatter.explain(item, previous_score),
                     remaining_balance=item.facts.remaining_balance,
                     warnings=item.warnings,
+                    alternative_windows=group.alternative_windows,
+                    matching_window_count=group.matching_window_count,
+                    score_breakdown=item.score_breakdown,
                 )
             )
             previous_score = item.score

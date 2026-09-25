@@ -50,7 +50,7 @@ Use a modular monolith for the POC: a React and TypeScript frontend calls a Fast
 
 The temporary workweek policy covers any country code, but this does not expand holiday-calendar support: the production calendar adapter currently supports Israel only.
 1. The pure window generator enumerates candidate windows within a configurable safety cap. Starts must fall in a selected future local month or its unelapsed portion; ends may cross that month's boundary. Total length counts inclusive consecutive local dates, while PTO is charged only for effective working dates. Nonworking dates may occur at either edge. An incomplete enumeration caused by the cap yields a coded narrow-the-search outcome with no ranked recommendations.
-1. The ranker computes deterministic features, a normalized score, warnings, and fact based explanation inputs, then removes redundant near duplicates.
+1. The ranker computes deterministic features, a normalized score and its weighted components, warnings, and fact based explanation inputs. It groups equal-outcome dates before applying the shortlist limit, then removes remaining near duplicates.
 1. The workflow persists an immutable search snapshot and its recommendations in one transaction.
 1. The backend returns typed JSON. The React frontend owns labels, colors, ordering display, empty states, and warning presentation.
 
@@ -69,7 +69,7 @@ Alongside the explicit search, the workflow may run a separate, bounded future-w
 | UserVacationContext | session_id, balance_days, allowed_negative_days, country_code, weekend_days | Anonymous and session scoped; allowed_negative_days is a whole-day value from 0 to 5, default 0 |
 | SearchConstraints | months, preferred_length_days, result_limit | Months constrain the start date, not the end date; optional flexibility, notice, text intent, and calendar override fields |
 | VacationWindow | start_date, end_date, total_days, vacation_days_used, holiday_dates | Pure generated value with no rank; total_days is inclusive local calendar length and vacation_days_used counts effective working dates only |
-| Recommendation | window, rank, score, explanation, remaining_balance, warnings | Phase 1 adds optional travel_enrichment without replacing the window |
+| Recommendation | window, rank, score, score_breakdown, alternative_windows, matching_window_count, explanation, remaining_balance, warnings | Equivalent dates share one rank; Phase 1 adds optional travel_enrichment without replacing the window |
 | TravelConstraints | origin, passenger_count, cabin | Phase 1; cabin defaults to economy and one origin is supported |
 | FlightOption | provider_id, destination, outbound, inbound, price, currency, itinerary | Normalized provider response; availability is point in time |
 | Feedback | session_id, recommendation_id, value | Value is thumbs_up or thumbs_down; no free text |
@@ -114,7 +114,7 @@ A phase 1 additive migration stores the effective opportunity policy and exact o
 - The generator returns all valid windows within explicit bounds. It does not score or call external systems.
 - The ranker derives explicit features such as efficiency, total days, length deviation, balance remaining, and warning flags.
 - A qualifying zero-PTO window remains a candidate. The phase 0 efficiency feature must be finite without division by zero; length fit and diversity keep trivial free weekends from displacing materially useful longer breaks. Negative remaining balance always yields a warning, even when within the explicit allowance.
-- Weights are configuration owned by the backend and versioned with the search snapshot. They are not exposed in the phase 0 response.
+- Weights are configuration owned by the backend and versioned with the search snapshot. The phase 0 response exposes per-result weighted point contributions and possible points for an on-demand explanation, without presenting the score as a probability.
 - Initial Phase 0 tunable defaults are 0.50 efficiency, 0.30 total duration, and 0.20 preferred-length fit (summing to 1), a generation cap of 5,000, near-duplicate overlap ratio of 0.80, material score gap of 5, and five results. These are product starting values, not scientifically established constants; the versioned effective policy is saved with each search when persistence is added.
 - Tie handling records the decisive feature so explanations can state the real trade off.
 - Near duplicate selection operates after scoring and keeps two similar windows only when their material feature differences exceed a configured threshold.

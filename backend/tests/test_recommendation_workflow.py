@@ -1,6 +1,6 @@
 """Recommendation workflow at its provider-independent public seam."""
 
-from datetime import UTC, datetime
+from datetime import UTC, date, datetime
 from uuid import UUID
 
 import pytest
@@ -96,6 +96,52 @@ def test_success_composes_ranked_explained_and_persisted_results() -> None:
     assert all(item.explanation for item in result.recommendations)
     assert writer.calls[0]["source_text"] == "Five days in September"
     assert writer.calls[0]["engine_version"] == "phase0-v1"
+
+
+def test_equal_value_dates_share_one_rank_and_leave_room_for_distinct_outcomes() -> None:
+    writer = FakeSnapshotWriter()
+    search = RecommendationRequest(
+        context=UserVacationContext(
+            session_id=SESSION_ID,
+            balance_days=6,
+            allowed_negative_days=1,
+            country_code="IL",
+            weekend_days=frozenset({4, 5}),
+        ),
+        constraints=SearchConstraints(
+            months=(YearMonth(year=2026, month=10),),
+            preferred_length_days=9,
+            result_limit=5,
+        ),
+    )
+
+    result = workflow(writer).recommend(search)
+
+    first = result.recommendations[0]
+    assert first.window.start_date == date(2026, 10, 2)
+    assert first.score == 72
+    assert first.matching_window_count == 5
+    assert [window.start_date for window in first.alternative_windows] == [
+        date(2026, 10, 9),
+        date(2026, 10, 16),
+        date(2026, 10, 23),
+        date(2026, 10, 30),
+    ]
+    assert len(result.recommendations) > 1
+    assert len(
+        {
+            (item.window.total_days, item.window.vacation_days_used, item.score)
+            for item in result.recommendations
+        }
+    ) == len(result.recommendations)
+    assert first.score_breakdown is not None
+    assert first.score_breakdown.leave_efficiency.points == 22.22
+    assert first.score_breakdown.time_away.points == 30
+    assert first.score_breakdown.length_fit.points == 20
+    snapshots = writer.calls[0]["recommendations"]
+    assert isinstance(snapshots, tuple)
+    assert snapshots[0].rank == 1
+    assert snapshots[0].result["matching_window_count"] == 5
 
 
 def test_empty_candidate_set_is_persisted_without_results() -> None:

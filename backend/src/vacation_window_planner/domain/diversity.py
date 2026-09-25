@@ -1,6 +1,40 @@
 """Deterministic selection of varied scored vacation windows."""
 
+from dataclasses import dataclass
+
+from vacation_window_planner.domain.contracts import VacationWindow
 from vacation_window_planner.domain.scoring import ScoredWindow
+
+
+@dataclass(frozen=True)
+class EquivalentWindowGroup:
+    representative: ScoredWindow
+    alternative_windows: tuple[VacationWindow, ...]
+    matching_window_count: int
+
+
+def group_equivalent_windows(
+    scored_windows: tuple[ScoredWindow, ...], *, visible_alternatives: int = 12
+) -> tuple[EquivalentWindowGroup, ...]:
+    """Group equally valuable dates before the shortlist consumes result slots."""
+    groups: dict[tuple[int, int, int, tuple[object, ...]], list[ScoredWindow]] = {}
+    for item in scored_windows:
+        key = (
+            item.window.total_days,
+            item.window.vacation_days_used,
+            item.score,
+            item.warnings,
+        )
+        groups.setdefault(key, []).append(item)
+
+    return tuple(
+        EquivalentWindowGroup(
+            representative=items[0],
+            alternative_windows=tuple(item.window for item in items[1 : visible_alternatives + 1]),
+            matching_window_count=len(items),
+        )
+        for items in groups.values()
+    )
 
 
 def _overlap_ratio(left: ScoredWindow, right: ScoredWindow) -> float:

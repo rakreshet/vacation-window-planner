@@ -29,6 +29,13 @@ export type Recommendation = {
   explanation: string
   remaining_balance: number
   warnings: string[]
+  alternative_windows?: Recommendation['window'][]
+  matching_window_count?: number
+  score_breakdown?: {
+    leave_efficiency: { points: number; max_points: number }
+    time_away: { points: number; max_points: number }
+    length_fit: { points: number; max_points: number }
+  } | null
 }
 
 export type RecommendationResponse = {

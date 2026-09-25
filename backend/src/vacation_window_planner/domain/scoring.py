@@ -3,6 +3,8 @@
 from dataclasses import dataclass
 
 from vacation_window_planner.domain.contracts import (
+    ScoreBreakdown,
+    ScoreComponent,
     SearchConstraints,
     UserVacationContext,
     VacationWindow,
@@ -25,6 +27,7 @@ class ScoredWindow:
     score: int
     facts: ScoreFacts
     warnings: tuple[WarningCode, ...]
+    score_breakdown: ScoreBreakdown | None = None
 
 
 def _warnings(length_deviation: int, remaining_balance: int) -> tuple[WarningCode, ...]:
@@ -61,6 +64,20 @@ def score_vacation_windows(
             + length_fit * policy.length_fit_weight
         )
         score = round(max(0.0, min(1.0, normalized)) * 100)
+        breakdown = ScoreBreakdown(
+            leave_efficiency=ScoreComponent(
+                points=round(efficiency * policy.efficiency_weight * 100, 2),
+                max_points=policy.efficiency_weight * 100,
+            ),
+            time_away=ScoreComponent(
+                points=round(duration_feature * policy.duration_weight * 100, 2),
+                max_points=policy.duration_weight * 100,
+            ),
+            length_fit=ScoreComponent(
+                points=round(length_fit * policy.length_fit_weight * 100, 2),
+                max_points=policy.length_fit_weight * 100,
+            ),
+        )
         scored.append(
             ScoredWindow(
                 window=window,
@@ -72,6 +89,7 @@ def score_vacation_windows(
                     remaining_balance=remaining_balance,
                 ),
                 warnings=_warnings(length_deviation, remaining_balance),
+                score_breakdown=breakdown,
             )
         )
 

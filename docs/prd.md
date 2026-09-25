@@ -59,12 +59,12 @@ Employees can see balances and calendars in HR tools, but they still have to dis
 
 - Generate date windows deterministically from structured constraints. The language model must not calculate or rank windows.
 - Favor vacation efficiency first, then total consecutive days away. Treat the preferred length as relatively strict.
-- Return a normalized score from 0 to 100. Do not expose internal weights in phase 0.
+- Return a normalized score from 0 to 100. Let users inspect its weighted components on demand, explaining that the score is a planning fit rather than a probability.
 - Explain why each option was selected. When scores are close, state the deciding trade off instead of implying certainty.
 - Using the full remaining balance is neutral in scoring but must produce a visible warning.
 - A zero-PTO window remains eligible when it meets the same length preference or tolerance as other windows. Its efficiency feature is finite and handled without division by zero; short free weekends must not crowd out more useful breaks.
 - A configurable generation cap protects performance before ranking. If the cap is reached before candidate enumeration is complete, return no ranked recommendations and a clear coded message asking the user to narrow the search; never present a partial set as the best options.
-- Favor variety. Merge nearly identical windows unless each exposes a meaningful trade off; in that case keep both and explain the difference.
+- Favor variety. Group windows with the same score, length, vacation-day cost, and warnings into one ranked result with alternative dates, before filling the shortlist. Keep materially different trade offs separate and explain the difference.
 - Impossible constraints return zero results and a clear message rather than a server error.
 - The holiday calendar provider supplies effective observed days. Phase 0 does not implement country specific observed holiday rules itself.
 
@@ -78,6 +78,8 @@ Employees can see balances and calendars in HR tools, but they still have to dis
 | vacation_days_used | Only working days in the window, after the effective working-week override and observed holidays are applied |
 | remaining_balance | Balance after the window, including an allowed negative balance if configured |
 | score | Normalized integer from 0 to 100 |
+| score_breakdown | Weighted points and possible points for leave efficiency, time away, and preferred-length fit |
+| alternative_windows and matching_window_count | Other dates with the same outcome and the total number of matching windows, including the representative; the visible date list may be bounded |
 | explanation | Short text describing the main reason and material trade off |
 | warnings | Structured warning codes rendered by the frontend, such as full balance used or length relaxed |
 

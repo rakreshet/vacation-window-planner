@@ -19,11 +19,15 @@ function dateParts(value: string): { monthDay: string; year: number } {
   }
 }
 
-function dateWindow(recommendation: Recommendation): string {
-  const start = dateParts(recommendation.window.start_date)
-  const end = dateParts(recommendation.window.end_date)
+function dateWindow(window: Recommendation['window']): string {
+  const start = dateParts(window.start_date)
+  const end = dateParts(window.end_date)
   if (start.year === end.year) return `${start.monthDay} – ${end.monthDay}, ${end.year}`
   return `${start.monthDay}, ${start.year} – ${end.monthDay}, ${end.year}`
+}
+
+function points(value: number): string {
+  return value.toFixed(1).replace(/\.0$/, '')
 }
 
 function warningText(warning: string, remainingBalance: number): string {
@@ -89,6 +93,9 @@ export default function RecommendationResults({ result, onFeedback }: Recommenda
           {result.recommendations.map((recommendation) => {
             const balanceFreeDays =
               recommendation.window.total_days - recommendation.window.vacation_days_used
+            const matchingCount = recommendation.matching_window_count ?? 1
+            const alternatives = recommendation.alternative_windows ?? []
+            const hiddenAlternatives = matchingCount - 1 - alternatives.length
             return (
               <li key={`${recommendation.rank}-${recommendation.window.start_date}`}>
                 <article
@@ -102,11 +109,47 @@ export default function RecommendationResults({ result, onFeedback }: Recommenda
                       <div>
                         {recommendation.rank === 1 && <span className="best-badge">Best fit</span>}
                         <h3>
-                          {recommendation.rank}. {dateWindow(recommendation)}
+                          {recommendation.rank}. {dateWindow(recommendation.window)}
                         </h3>
                       </div>
                     </div>
-                    <span className="score-pill">Score {recommendation.score}</span>
+                    {recommendation.score_breakdown ? (
+                      <details className="score-details">
+                        <summary className="score-pill">
+                          Score {recommendation.score} <InfoIcon />
+                        </summary>
+                        <div className="score-explanation">
+                          <strong>How this score adds up</strong>
+                          <p>Weighted points for this break, rounded to a score out of 100.</p>
+                          <dl>
+                            <div>
+                              <dt>Leave efficiency</dt>
+                              <dd>
+                                {points(recommendation.score_breakdown.leave_efficiency.points)} /{' '}
+                                {points(recommendation.score_breakdown.leave_efficiency.max_points)}
+                              </dd>
+                            </div>
+                            <div>
+                              <dt>Time away</dt>
+                              <dd>
+                                {points(recommendation.score_breakdown.time_away.points)} /{' '}
+                                {points(recommendation.score_breakdown.time_away.max_points)}
+                              </dd>
+                            </div>
+                            <div>
+                              <dt>Length fit</dt>
+                              <dd>
+                                {points(recommendation.score_breakdown.length_fit.points)} /{' '}
+                                {points(recommendation.score_breakdown.length_fit.max_points)}
+                              </dd>
+                            </div>
+                          </dl>
+                          <p>It measures fit to your plan, not the chance of getting time off.</p>
+                        </div>
+                      </details>
+                    ) : (
+                      <span className="score-pill">Score {recommendation.score}</span>
+                    )}
                   </div>
 
                   <div className="metric-grid">
@@ -131,6 +174,24 @@ export default function RecommendationResults({ result, onFeedback }: Recommenda
                       <span>Weekends and holidays</span>
                     </div>
                   </div>
+
+                  {matchingCount > 1 && (
+                    <details className="alternative-dates">
+                      <summary>
+                        {matchingCount} matching date options · same score and vacation-day cost
+                      </summary>
+                      <ul>
+                        {alternatives.map((window) => (
+                          <li key={`${window.start_date}-${window.end_date}`}>
+                            {dateWindow(window)}
+                          </li>
+                        ))}
+                      </ul>
+                      {hiddenAlternatives > 0 && (
+                        <span>+{hiddenAlternatives} more matching dates</span>
+                      )}
+                    </details>
+                  )}
 
                   <div className="recommendation-reason">
                     <span aria-hidden="true">

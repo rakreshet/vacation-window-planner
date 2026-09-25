@@ -85,6 +85,17 @@ class WarningCode(StrEnum):
     LENGTH_RELAXED = "length_relaxed"
 
 
+class ScoreComponent(DomainValue):
+    points: float = Field(ge=0)
+    max_points: float = Field(ge=0)
+
+
+class ScoreBreakdown(DomainValue):
+    leave_efficiency: ScoreComponent
+    time_away: ScoreComponent
+    length_fit: ScoreComponent
+
+
 class Recommendation(DomainValue):
     window: VacationWindow
     rank: StrictInt = Field(gt=0)
@@ -92,6 +103,13 @@ class Recommendation(DomainValue):
     explanation: str = Field(min_length=1)
     remaining_balance: StrictInt
     warnings: tuple[WarningCode, ...] = ()
+    alternative_windows: tuple[VacationWindow, ...] = Field(
+        default=(), exclude_if=lambda value: not value
+    )
+    matching_window_count: StrictInt = Field(default=1, ge=1, exclude_if=lambda value: value == 1)
+    score_breakdown: ScoreBreakdown | None = Field(
+        default=None, exclude_if=lambda value: value is None
+    )
 
 
 class FeedbackValue(StrEnum):

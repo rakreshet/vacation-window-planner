@@ -6,7 +6,12 @@ from uuid import UUID
 from fastapi.testclient import TestClient
 
 from vacation_window_planner.api import create_app
-from vacation_window_planner.domain.contracts import Recommendation, VacationWindow
+from vacation_window_planner.domain.contracts import (
+    Recommendation,
+    ScoreBreakdown,
+    ScoreComponent,
+    VacationWindow,
+)
 from vacation_window_planner.domain.generator import SearchTooBroadError
 from vacation_window_planner.repositories.feedback import FeedbackAuthorizationError
 from vacation_window_planner.repositories.searches import SearchSnapshotPersistenceError
@@ -72,6 +77,59 @@ def test_recommendation_success_returns_typed_data_only() -> None:
     assert response.json()["search_id"] == str(SEARCH_ID)
     assert response.json()["recommendations"][0]["score"] == 82
     assert "color" not in response.text
+
+
+def test_recommendation_response_exposes_grouped_dates_and_score_facts() -> None:
+    recommendation = Recommendation(
+        window=VacationWindow(
+            start_date=date(2026, 10, 2),
+            end_date=date(2026, 10, 10),
+            total_days=9,
+            vacation_days_used=5,
+        ),
+        rank=1,
+        score=72,
+        explanation="9 days off use 5 vacation days.",
+        remaining_balance=1,
+        matching_window_count=2,
+        alternative_windows=(
+            VacationWindow(
+                start_date=date(2026, 10, 9),
+                end_date=date(2026, 10, 17),
+                total_days=9,
+                vacation_days_used=5,
+            ),
+        ),
+        score_breakdown=ScoreBreakdown(
+            leave_efficiency=ScoreComponent(points=22.22, max_points=50),
+            time_away=ScoreComponent(points=30, max_points=30),
+            length_fit=ScoreComponent(points=20, max_points=20),
+        ),
+    )
+    client = TestClient(
+        create_app(
+            database_probe=lambda: True,
+            session_lookup=lambda _token, _now: active_session(),
+            recommendation_service=lambda _request: RecommendationResult(
+                search_id=SEARCH_ID, recommendations=(recommendation,)
+            ),
+            clock=lambda: NOW,
+        )
+    )
+
+    response = client.post(
+        "/recommendations", json=body(), headers={"Authorization": "Bearer token"}
+    )
+
+    assert response.status_code == 200
+    grouped = response.json()["recommendations"][0]
+    assert grouped["matching_window_count"] == 2
+    assert grouped["alternative_windows"][0]["start_date"] == "2026-10-09"
+    assert grouped["score_breakdown"] == {
+        "leave_efficiency": {"points": 22.22, "max_points": 50.0},
+        "time_away": {"points": 30.0, "max_points": 30.0},
+        "length_fit": {"points": 20.0, "max_points": 20.0},
+    }
 
 
 def test_zero_results_is_a_successful_empty_collection() -> None:

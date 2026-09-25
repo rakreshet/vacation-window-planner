@@ -997,7 +997,7 @@ a:focus-visible {
 .recommendation-topline {
   display: flex;
   gap: 22px;
-  align-items: center;
+  align-items: flex-start;
   justify-content: space-between;
 }
 
@@ -1044,6 +1044,9 @@ a:focus-visible {
 }
 
 .score-pill {
+  display: inline-flex;
+  gap: 6px;
+  align-items: center;
   flex: 0 0 auto;
   padding: 8px 12px;
   border: 1px solid #d7e2d3;
@@ -1052,6 +1055,127 @@ a:focus-visible {
   background: var(--mint-light);
   font-size: 11px;
   font-weight: 800;
+}
+
+.score-details {
+  flex: 0 0 auto;
+  text-align: right;
+}
+
+.score-details summary {
+  cursor: pointer;
+  list-style: none;
+}
+
+.score-details summary::-webkit-details-marker {
+  display: none;
+}
+
+.score-details summary:hover,
+.score-details summary:focus-visible {
+  border-color: #a9c6ae;
+  background: #e4efdf;
+}
+
+.score-details summary:focus-visible {
+  outline: 3px solid var(--coral);
+  outline-offset: 3px;
+}
+
+.score-details summary svg {
+  width: 14px;
+  height: 14px;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.7;
+}
+
+.score-explanation {
+  width: 290px;
+  margin-top: 9px;
+  padding: 16px;
+  border: 1px solid #d7e2d3;
+  border-radius: 13px;
+  color: var(--ink);
+  background: #f4f7f0;
+  box-shadow: 0 8px 20px rgba(30, 48, 41, 0.06);
+  text-align: left;
+}
+
+.score-explanation strong {
+  font-size: 12px;
+}
+
+.score-explanation p {
+  margin: 6px 0 0;
+  color: var(--ink-soft);
+  font-size: 11px;
+  line-height: 1.45;
+}
+
+.score-explanation dl {
+  display: grid;
+  gap: 7px;
+  margin: 13px 0 11px;
+  padding: 11px 0;
+  border-top: 1px solid #dce5d9;
+  border-bottom: 1px solid #dce5d9;
+  font-size: 11px;
+}
+
+.score-explanation dl div {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.score-explanation dd {
+  margin: 0;
+  font-weight: 800;
+}
+
+.alternative-dates {
+  margin-top: 16px;
+  padding: 14px 17px;
+  border: 1px solid #e2e4dd;
+  border-radius: 13px;
+  background: #faf9f4;
+}
+
+.alternative-dates summary {
+  color: var(--forest);
+  font-size: 11px;
+  font-weight: 800;
+  cursor: pointer;
+}
+
+.alternative-dates summary:focus-visible {
+  outline: 3px solid var(--coral);
+  outline-offset: 3px;
+}
+
+.alternative-dates ul {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 7px;
+  margin: 10px 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+.alternative-dates li {
+  padding: 5px 8px;
+  border-radius: 7px;
+  color: #50625a;
+  background: #edf2e9;
+  font-size: 10px;
+}
+
+.alternative-dates > span {
+  display: inline-block;
+  margin-top: 8px;
+  color: var(--ink-soft);
+  font-size: 10px;
 }
 
 .metric-grid {

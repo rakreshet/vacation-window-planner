@@ -109,3 +109,49 @@ test('submits one simple thumbs feedback action', async () => {
   expect(await screen.findByText('Feedback saved')).toBeInTheDocument()
   expect(onFeedback).toHaveBeenCalledWith(1, 'thumbs_up')
 })
+
+test('reveals equivalent dates and the weighted score without changing feedback rank', async () => {
+  const onFeedback = vi.fn().mockResolvedValue(undefined)
+  render(
+    <RecommendationResults
+      result={result([
+        recommendation({
+          score: 72,
+          matching_window_count: 3,
+          alternative_windows: [
+            {
+              start_date: '2027-02-05',
+              end_date: '2027-02-11',
+              total_days: 7,
+              vacation_days_used: 3,
+              holiday_dates: [],
+            },
+            {
+              start_date: '2027-02-12',
+              end_date: '2027-02-18',
+              total_days: 7,
+              vacation_days_used: 3,
+              holiday_dates: [],
+            },
+          ],
+          score_breakdown: {
+            leave_efficiency: { points: 22.22, max_points: 50 },
+            time_away: { points: 30, max_points: 30 },
+            length_fit: { points: 20, max_points: 20 },
+          },
+        }),
+      ])}
+      onFeedback={onFeedback}
+    />,
+  )
+
+  fireEvent.click(screen.getByText('3 matching date options · same score and vacation-day cost'))
+  expect(screen.getByText('Feb 5 – Feb 11, 2027')).toBeVisible()
+  expect(screen.getByText('Feb 12 – Feb 18, 2027')).toBeVisible()
+  fireEvent.click(screen.getByText('Score 72'))
+  expect(screen.getByText('How this score adds up')).toBeVisible()
+  expect(screen.getByText('22.2 / 50')).toBeVisible()
+  fireEvent.click(screen.getByRole('button', { name: 'Thumbs up recommendation 1' }))
+  expect(await screen.findByText('Feedback saved')).toBeInTheDocument()
+  expect(onFeedback).toHaveBeenCalledWith(1, 'thumbs_up')
+})
