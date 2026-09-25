@@ -31,6 +31,8 @@ Open [http://localhost:15173](http://localhost:15173). Once startup finishes, th
 
 If either default host port is occupied, add `WEB_PORT=15174` or `API_PORT=18081` to `.env`, restart with `docker compose up --build --detach`, and use the new port. To see the actual mapped ports, run `docker compose ps`.
 
+The frontend uses `/api` as its browser API base path by default. Set `VITE_API_BASE_URL` in `.env` only if you provide a different browser-accessible API path; the local Vite proxy still handles `/api`.
+
 To see logs or stop the app:
 
 ```sh

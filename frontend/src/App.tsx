@@ -1,5 +1,7 @@
 import { useEffect, useState } from 'react'
 
+import { getHealth } from './api'
+
 type HealthState = 'checking' | 'ready' | 'unavailable'
 
 export default function App() {
@@ -10,15 +12,8 @@ export default function App() {
 
     async function checkHealth() {
       try {
-        const response = await fetch('/api/health', { signal: controller.signal })
-        const data: unknown = await response.json()
-        if (
-          response.ok &&
-          typeof data === 'object' &&
-          data !== null &&
-          'status' in data &&
-          data.status === 'ok'
-        ) {
+        const data = await getHealth(controller.signal)
+        if (data.status === 'ok') {
           setHealth('ready')
         } else {
           setHealth('unavailable')
