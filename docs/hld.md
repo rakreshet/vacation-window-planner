@@ -43,9 +43,9 @@ Use a modular monolith for the POC: a React and TypeScript frontend calls a Fast
 
 1. The frontend creates or resumes an anonymous session token.
 1. The user supplies text or edits structured fields. If text is used, the Gemini adapter proposes typed constraints.
-1. Pydantic validation checks required months, integer whole day values, country or calendar selection, and configured limits.
+1. Pydantic validation checks required months, integer whole-day values, country or calendar selection, and configured limits. The allowed-negative allowance defaults to zero and rejects values outside zero through five.
 1. The holiday calendar adapter resolves observed holidays and the effective weekend pattern for the local date range.
-1. The pure window generator enumerates candidate windows within a configurable safety cap.
+1. The pure window generator enumerates candidate windows within a configurable safety cap. Starts must fall in a selected future local month or its unelapsed portion; ends may cross that month's boundary. Total length counts inclusive consecutive local dates, while PTO is charged only for effective working dates. Nonworking dates may occur at either edge.
 1. The ranker computes deterministic features, a normalized score, warnings, and fact based explanation inputs, then removes redundant near duplicates.
 1. The workflow persists an immutable search snapshot and its recommendations in one transaction.
 1. The backend returns typed JSON. The React frontend owns labels, colors, ordering display, empty states, and warning presentation.
@@ -62,9 +62,9 @@ Alongside the explicit search, the workflow may run a separate, bounded future-w
 
 | **Type** | **Required data** | **Notes** |
 | --- | --- | --- |
-| UserVacationContext | session_id, balance_days, allowed_negative_days, country_code, weekend_days | Anonymous and session scoped |
-| SearchConstraints | months, preferred_length_days, result_limit | Optional flexibility, notice, text intent, and calendar override fields |
-| VacationWindow | start_date, end_date, total_days, vacation_days_used, holiday_dates | Pure generated value with no rank |
+| UserVacationContext | session_id, balance_days, allowed_negative_days, country_code, weekend_days | Anonymous and session scoped; allowed_negative_days is a whole-day value from 0 to 5, default 0 |
+| SearchConstraints | months, preferred_length_days, result_limit | Months constrain the start date, not the end date; optional flexibility, notice, text intent, and calendar override fields |
+| VacationWindow | start_date, end_date, total_days, vacation_days_used, holiday_dates | Pure generated value with no rank; total_days is inclusive local calendar length and vacation_days_used counts effective working dates only |
 | Recommendation | window, rank, score, explanation, remaining_balance, warnings | Phase 1 adds optional travel_enrichment without replacing the window |
 | TravelConstraints | origin, passenger_count, cabin | Phase 1; cabin defaults to economy and one origin is supported |
 | FlightOption | provider_id, destination, outbound, inbound, price, currency, itinerary | Normalized provider response; availability is point in time |
@@ -108,6 +108,7 @@ A phase 1 additive migration stores the effective opportunity policy and exact o
 
 - The generator returns all valid windows within explicit bounds. It does not score or call external systems.
 - The ranker derives explicit features such as efficiency, total days, length deviation, balance remaining, and warning flags.
+- A qualifying zero-PTO window remains a candidate. The phase 0 efficiency feature must be finite without division by zero; length fit and diversity keep trivial free weekends from displacing materially useful longer breaks. Negative remaining balance always yields a warning, even when within the explicit allowance.
 - Weights are configuration owned by the backend and versioned with the search snapshot. They are not exposed in the phase 0 response.
 - Tie handling records the decisive feature so explanations can state the real trade off.
 - Near duplicate selection operates after scoring and keeps two similar windows only when their material feature differences exceed a configured threshold.
@@ -115,7 +116,7 @@ A phase 1 additive migration stores the effective opportunity policy and exact o
 
 ### Phase 1 opportunity scoring and gate
 
-- Opportunity scoring is a separate pure policy from phase 0 window ranking. Raw PTO efficiency is total consecutive days off divided by vacation days consumed (9 / 3 = 3.0); zero-PTO candidates need an explicit bounded rule and must never divide by zero.
+- Opportunity scoring is a separate pure policy from phase 0 window ranking. Raw PTO efficiency is total consecutive days off divided by vacation days consumed (9 / 3 = 3.0) when PTO use is positive. Zero-PTO candidates use a finite, policy-bounded efficiency feature instead of a raw ratio or infinity; length and the separate threshold still matter.
 - Normalize efficiency, total length, and low PTO consumption to comparable bounded features, then combine them with configurable weights. Initial tunable defaults are 0.50, 0.35, and 0.15 respectively; these are product starting values, not scientifically proven constants.
 - The opportunity score ranks attractiveness. A distinct configurable threshold gates proactive inclusion; changing the threshold must not recalculate a candidate's score. Record effective policy version, weights, and threshold with the search snapshot.
 - Ground explanations only in score facts and criteria differences, such as unusually high PTO leverage or a long break for relatively few vacation days. Gemini is not used to decide, score, threshold, or invent reasons.
@@ -150,6 +151,8 @@ The flight seam becomes real only when both mock and live adapters exist in phas
 | --- | --- |
 | Invalid request | Return a stable machine code, field details, and a short developer message |
 | Partly past month | Clip to future local dates and include a notice |
+| Selected-month crossing | Accept a future start in a selected month even if the end date lies in a later month; reject starts outside selected months |
+| Negative balance | Exclude windows below the explicitly allowed floor; include a warning whenever a returned window's remaining balance is negative |
 | No feasible window | Return an empty recommendations list with a clear reason |
 | Generation cap reached | Stop deterministically, record the cap notice, and keep the request reproducible |
 | Gemini unavailable | Allow structured input to continue; conversational interpretation returns a clear unavailable error |
@@ -170,6 +173,7 @@ The flight seam becomes real only when both mock and live adapters exist in phas
 
 - Test pure modules through their interfaces with table driven calendar cases and deterministic clocks.
 - Use property tests for invariants such as inclusive dates, nonnegative total days, and exact charged workdays.
+- Cover selected-month start and cross-month end, observed holidays and weekends at both edges, default-zero and explicit 1-to-5-day negative allowances, and zero-PTO windows that satisfy the length filter. Assert finite scores and that diversity does not fill the top results with trivial weekends.
 - Test the recommendation workflow with fake calendar, interpreter, repository, and phase 1 flight adapters.
 - Run PostgreSQL integration tests for mappings, migrations, transactions, and repository behavior after the initial unit test baseline.
 - Test the frontend with Vitest and React Testing Library; use contract fixtures generated from backend schemas.

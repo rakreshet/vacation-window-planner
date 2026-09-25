@@ -47,9 +47,9 @@ Employees can see balances and calendars in HR tools, but they still have to dis
 | **Input** | **Rule** | **Phase 0 behavior** |
 | --- | --- | --- |
 | Vacation balance | Whole vacation days only | Retained in session and copied into each persisted search snapshot |
-| Allowed negative balance | Optional policy value | A window may cross zero only within the supplied allowance and must show a warning |
-| Months | Explicit selection required | If a selected month partly passed, clip the range to future dates and state that adjustment |
-| Preferred trip length | Strong preference with soft tolerance | Return slightly shorter or longer options only when exact matches are weak, and explain the relaxation |
+| Allowed negative balance | Optional whole-day allowance, default 0, maximum 5 | A window may leave a negative balance only when the user explicitly sets enough allowance; every negative result shows a warning |
+| Months | Explicit selection required | A window must start in a selected month but may end in a later month; clip partly elapsed months to future local start dates and state that adjustment |
+| Preferred trip length | Inclusive consecutive local calendar days, with a strong preference and soft tolerance | Count weekends and observed holidays at either edge; return slightly shorter or longer options only when exact matches are weak, and explain the relaxation |
 | Country calendar | One calendar per search | Use a locale default and permit an explicit override |
 | Weekend pattern | Locale default with override | Use the user local calendar and time; no cross time zone logic |
 | Leave type | Vacation only | No personal, sick, or half day leave |
@@ -62,6 +62,7 @@ Employees can see balances and calendars in HR tools, but they still have to dis
 - Return a normalized score from 0 to 100. Do not expose internal weights in phase 0.
 - Explain why each option was selected. When scores are close, state the deciding trade off instead of implying certainty.
 - Using the full remaining balance is neutral in scoring but must produce a visible warning.
+- A zero-PTO window remains eligible when it meets the same length preference or tolerance as other windows. Its efficiency feature is finite and handled without division by zero; short free weekends must not crowd out more useful breaks.
 - A configurable generation cap protects performance before ranking.
 - Favor variety. Merge nearly identical windows unless each exposes a meaningful trade off; in that case keep both and explain the difference.
 - Impossible constraints return zero results and a clear message rather than a server error.
@@ -73,8 +74,8 @@ Employees can see balances and calendars in HR tools, but they still have to dis
 | --- | --- |
 | rank | One based display order after deterministic scoring and diversity selection |
 | start_date and end_date | Inclusive local dates for the vacation window |
-| total_days | All consecutive calendar days away |
-| vacation_days_used | Workdays charged against the vacation balance |
+| total_days | Inclusive consecutive local calendar days from start_date through end_date, including nonworking days at either edge |
+| vacation_days_used | Only working days in the window, after the effective working-week override and observed holidays are applied |
 | remaining_balance | Balance after the window, including an allowed negative balance if configured |
 | score | Normalized integer from 0 to 100 |
 | explanation | Short text describing the main reason and material trade off |
@@ -101,6 +102,9 @@ Employees can see balances and calendars in HR tools, but they still have to dis
 | PR 15 | Opportunity-score weights shall be configurable; initial tunable defaults are 50% efficiency, 35% total length, and 15% low PTO consumption, not scientifically proven constants. |
 | PR 16 | A separately configurable opportunity threshold shall decide whether a scored candidate is exceptional enough to surface; scoring and threshold decisions shall not use an LLM or depend on a flight provider. |
 | PR 17 | Every surfaced opportunity shall differ meaningfully from the current search, briefly explain its computed appeal and criteria difference, and remain eligible without destination or flight details. |
+| PR 18 | Phase 0 shall default allowed negative balance to zero, accept an explicit whole-day allowance of at most five, and warn on every recommendation with a negative remaining balance. |
+| PR 19 | Phase 0 shall count inclusive consecutive local dates as trip length (including nonworking days at either edge), charge PTO only for effective working days, require the start in a selected month, and permit the end in a later month. |
+| PR 20 | Phase 0 shall consider zero-PTO windows that satisfy the length preference or tolerance, score them with finite efficiency handling, and prevent trivial short breaks from dominating the returned set. |
 
 ## Non goals
 
@@ -119,6 +123,8 @@ The primary validation question is whether a user would seriously consider reque
 | **Area** | **Acceptance evidence** |
 | --- | --- |
 | Correctness | Golden date cases calculate workdays, holidays, weekends, and remaining balance exactly |
+| Boundaries and balance | Tests cover a selected-month start with an end in the next month, nonworking days at both edges, default-zero versus explicit negative allowance up to five, and a warning on every negative remaining balance |
+| Zero-PTO windows | A qualifying free break can appear without divide-by-zero; short weekends do not crowd out materially longer useful windows |
 | Trust | Every returned option has a score, reason, and relevant warning |
 | Usefulness | A manual review finds at least one plausible option for representative feasible cases |
 | Variety | Near duplicates collapse unless a documented trade off justifies both |
@@ -132,6 +138,7 @@ This is an additive phase 1 experience, not a change to the phase 0 optimizer. A
 | --- | --- |
 | Separate presentation | Exceptional out-of-criteria windows appear only in Opportunities worth considering; explicit search results and ranking do not change |
 | Deterministic score | Fixed inputs and policy produce the same ranking; 9 days off using 3 PTO days has raw efficiency 3.0, and a short break does not tie a materially longer one on ratio alone |
+| Zero-PTO candidates | Free windows use a finite bounded efficiency feature, never an infinite ratio; length and threshold still determine whether they are exceptional |
 | Configurable gate | Tests prove weight changes can change ranking, while changing only the threshold changes inclusion but not candidate scores |
 | Grounded explanation | Each item names a true reason such as high PTO leverage or a long break for few PTO days and states any relevant departure from the explicit search |
 | Provider independence | The same opportunities qualify with fake, unavailable, or absent flight adapters; optional travel enrichment cannot gate detection |
@@ -143,5 +150,7 @@ This is an additive phase 1 experience, not a change to the phase 0 optimizer. A
 | Search horizon | Explicit months are required in phase 0. The earlier three month default is superseded. |
 | Flights in the first release | Flights and destinations moved to phase 1. Earlier drafts that required a live flight for every recommendation are superseded for phase 0. |
 | Feedback | Simple thumbs up or down is included; free text is deferred. |
-| Balance enforcement | Support a configurable allowed negative balance and warn when a recommendation uses all available days or crosses zero. If the policy allowance makes the request impossible, return no results. |
+| Balance enforcement | Default allowed negative balance to zero. The user may explicitly allow borrowing up to five whole days; warn when a recommendation uses all available days or leaves a negative balance. Exclude windows beyond the allowance. |
+| Window measurement and selected months | Count inclusive local calendar days, including nonworking days at the edges, and charge PTO only for effective working days. Require the start date to be in a selected month; the end date may cross the month boundary. |
+| Free breaks | Keep zero-PTO windows eligible under the same length filter or tolerance, with finite efficiency scoring and diversity selection that does not flood results with trivial weekends. |
 | Persistence | Persist anonymous sessions and search snapshots for debugging and reproducibility, but do not show search history in phase 0. |

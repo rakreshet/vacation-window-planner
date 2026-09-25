@@ -8,6 +8,7 @@ A Docker-based proof of concept for finding useful vacation dates. Phase 0 will 
 - [High-level design (HLD)](docs/hld.md)
 - [Implementation task plan](docs/implementation-plan.md)
 - [Open product decisions](docs/open-decisions.md)
+- [Domain language](CONTEXT.md)
 
 The Markdown documents are the version-controlled source of truth. Review changes to them in pull requests; any Word copies are point-in-time exports and should be regenerated from the approved Markdown rather than edited independently. The phase 1 proactive-opportunity capability is planned here, not implemented in the current foundation.
 

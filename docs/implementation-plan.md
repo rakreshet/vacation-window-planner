@@ -74,7 +74,7 @@ This plan turns the agreed product and architecture into mergeable tasks. Each t
 
 **Scope**  Add immutable typed models for user context, constraints, holiday calendar, vacation window, recommendation, warnings, and feedback.
 
-**Tests**  Write validation tests for whole days, explicit months, result limits, balance rules, and date invariants.
+**Tests**  Write validation tests for whole days, explicit months, result limits, date invariants, and allowed-negative defaults and bounds (0 by default, explicit whole days through 5; reject larger or fractional values).
 
 **Definition of done**  Contracts reject invalid states and serialize stable JSON fixtures.
 
@@ -104,23 +104,23 @@ This plan turns the agreed product and architecture into mergeable tasks. Each t
 
 ### P0 10 Implement future date clipping
 
-**Scope**  Normalize explicit month ranges against an injected local clock and emit a clipped range notice.
+**Scope**  Normalize selected months against an injected local clock, constrain window starts to future local dates in those months, and emit a clipped range notice. Do not constrain window ends to the start month.
 
-**Tests**  Test fully future, partly past, fully past, leap year, and month boundary cases.
+**Tests**  Test fully future, partly past, fully past, leap year, and month boundary cases; a start in a selected month with an end in the next month is valid, while a start in an unselected month is not.
 
 **Definition of done**  Partly past selections start today and fully past selections fail validation clearly.
 
 ### P0 11 Implement the pure vacation window generator
 
-**Scope**  Enumerate all feasible inclusive windows from context, calendar, preferred length, and soft length tolerance without scoring.
+**Scope**  Enumerate feasible windows with inclusive local calendar-day length and the agreed start-month rule. Charge PTO only for effective working days; allow weekends and observed holidays at either edge and qualifying zero-PTO windows. Enforce the explicit negative allowance without scoring.
 
-**Tests**  Use table driven tests for weekends, holidays, consecutive days, balance usage, negative allowance, and generation cap behavior.
+**Tests**  Use table driven tests for weekend and observed-holiday edges, consecutive days, cross-month ends, zero-PTO length eligibility, default-zero and explicit 1-to-5-day negative allowance, and generation cap behavior.
 
 **Definition of done**  The pure function returns repeatable windows with exact charged vacation days.
 
 ### P0 12 Add generator property tests
 
-**Scope**  Define invariants for bounds, ordering, inclusive length, charged workdays, and duplicate identity.
+**Scope**  Define invariants for selected-month starts, future local dates, ordering, inclusive length, charged workdays, allowed balance floor, and duplicate identity.
 
 **Tests**  Generate randomized calendars and constraints with a fixed reproducible seed strategy.
 
@@ -128,9 +128,9 @@ This plan turns the agreed product and architecture into mergeable tasks. Each t
 
 ### P0 13 Implement deterministic scoring
 
-**Scope**  Calculate efficiency, total duration, length deviation, balance remaining, normalized 0 to 100 score, and warning facts.
+**Scope**  Calculate a finite efficiency feature (including zero-PTO candidates), total duration, length deviation, balance remaining, normalized 0 to 100 score, and warning facts.
 
-**Tests**  Test ordering, normalization extremes, close scores, full balance neutrality, and allowed negative balance warnings.
+**Tests**  Test ordering, normalization extremes, close scores, full balance neutrality, every negative remaining balance warning, and finite zero-PTO scoring without divide-by-zero.
 
 **Definition of done**  Scoring is deterministic and explains which facts affected the rank.
 
@@ -138,7 +138,7 @@ This plan turns the agreed product and architecture into mergeable tasks. Each t
 
 **Scope**  Collapse near duplicate windows unless a material trade off justifies both; return configurable top N with a default of five.
 
-**Tests**  Test identical windows, adjacent dates, meaningful efficiency differences, stable ties, and result limit changes.
+**Tests**  Test identical windows, adjacent dates, meaningful efficiency differences, stable ties, result limit changes, and trivial zero-PTO weekends not crowding out longer useful breaks.
 
 **Definition of done**  Results favor variety without discarding documented trade offs.
 
@@ -192,9 +192,9 @@ This plan turns the agreed product and architecture into mergeable tasks. Each t
 
 ### P0 21 Build the phase 0 search interface
 
-**Scope**  Create a conversational input area plus editable structured confirmation for balance, calendar, months, length, and overrides.
+**Scope**  Create a conversational input area plus editable structured confirmation for balance, an optional allowed-negative allowance (default 0, maximum 5 whole days), calendar, months, length, and overrides.
 
-**Tests**  Test required fields, local edits, manual search behavior, and accessible labels.
+**Tests**  Test required fields, allowance bounds and default, local edits, manual search behavior, and accessible labels.
 
 **Definition of done**  The user can confirm interpreted constraints before starting a search.
 
@@ -202,7 +202,7 @@ This plan turns the agreed product and architecture into mergeable tasks. Each t
 
 **Scope**  Render ranked date windows, totals, days used, remaining balance, score, explanation, warnings, and empty states.
 
-**Tests**  Test normal, close trade off, clipped dates, full balance, negative balance, and zero result fixtures.
+**Tests**  Test normal, close trade off, clipped dates, cross-month windows, zero-PTO windows, full balance, negative balance warning, and zero result fixtures.
 
 **Definition of done**  The top five are readable and presentation logic remains in the frontend.
 
@@ -306,9 +306,9 @@ This plan turns the agreed product and architecture into mergeable tasks. Each t
 
 ### P1 10 Implement pure opportunity scoring
 
-**Scope**  Score a VacationWindow from normalized PTO efficiency, total length, and low PTO consumption using initial tunable weights 0.50, 0.35, and 0.15; explicitly handle zero-PTO windows.
+**Scope**  Score a VacationWindow from normalized PTO efficiency, total length, and low PTO consumption using initial tunable weights 0.50, 0.35, and 0.15. For zero-PTO windows, use a finite policy-bounded efficiency feature rather than a raw ratio; length and threshold still govern surfacing.
 
-**Tests**  Test 9 days / 3 PTO = 3.0 raw efficiency, longer versus short windows at similar efficiency, zero-PTO behavior, deterministic ties, normalization, and weight overrides.
+**Tests**  Test 9 days / 3 PTO = 3.0 raw efficiency, longer versus short windows at similar efficiency, finite zero-PTO behavior without short free weekends auto-qualifying, deterministic ties, normalization, and weight overrides.
 
 **Definition of done**  A fixed window and policy always produce the same opportunity score without LLM or flight calls.
 
@@ -377,6 +377,7 @@ The repository starts public as agreed, with branch protection configured to req
 
 - A user can create an anonymous session and run a search for explicit future months.
 - Date calculations are deterministic and covered by golden and property tests.
+- Selected-month starts, cross-month ends, nonworking edges, default-zero/explicit-negative limits, and zero-PTO eligibility pass deterministic tests.
 - Five ranked results by default show score, explanation, balance impact, and warnings.
 - Near duplicates are handled according to the diversity rule.
 - Search inputs and outputs are persisted and reproducible.
