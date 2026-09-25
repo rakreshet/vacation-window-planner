@@ -51,6 +51,9 @@ docker compose --profile test run --build --rm backend-test
 docker compose --profile test run --build --rm frontend-test
 docker compose --profile test run --no-deps --rm backend-test ruff check .
 docker compose --profile test run --no-deps --rm backend-test mypy src
+docker compose --profile test run --no-deps --rm backend-test ruff format --check .
+docker compose --profile test run --no-deps --rm frontend-test npm run lint
+docker compose --profile test run --no-deps --rm frontend-test npm run format:check
 docker compose --profile test run --no-deps --rm frontend-test npm run build
 ```
 

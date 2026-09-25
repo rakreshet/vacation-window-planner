@@ -2,6 +2,7 @@ name: CI
 
 on:
   push:
+    branches: [main]
   pull_request:
 
 jobs:
@@ -9,21 +10,47 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v6
+      - uses: docker/setup-buildx-action@v4
+      - name: Build cached backend test image
+        uses: docker/build-push-action@v7
+        with:
+          context: ./backend
+          load: true
+          tags: vacation-window-planner/backend-test:ci
+          cache-from: type=gha,scope=backend
+          cache-to: type=gha,scope=backend,mode=max
       - name: Backend tests and PostgreSQL migration contract
-        run: docker compose --env-file .env.example --profile test run --build --rm backend-test
+        run: docker compose -f compose.yaml -f .github/compose.ci.yaml --env-file .env.example --profile test run --rm backend-test
+      - name: Python format
+        run: docker compose -f compose.yaml -f .github/compose.ci.yaml --env-file .env.example --profile test run --no-deps --rm backend-test ruff format --check .
       - name: Python lint
-        run: docker compose --env-file .env.example --profile test run --no-deps --rm backend-test ruff check .
+        run: docker compose -f compose.yaml -f .github/compose.ci.yaml --env-file .env.example --profile test run --no-deps --rm backend-test ruff check .
       - name: Python typing
-        run: docker compose --env-file .env.example --profile test run --no-deps --rm backend-test mypy src
+        run: docker compose -f compose.yaml -f .github/compose.ci.yaml --env-file .env.example --profile test run --no-deps --rm backend-test mypy src
       - name: Stop test services
         if: always()
-        run: docker compose --env-file .env.example --profile test down --volumes
+        run: docker compose -f compose.yaml -f .github/compose.ci.yaml --env-file .env.example --profile test down
 
   frontend:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v6
+      - uses: docker/setup-buildx-action@v4
+      - name: Build cached frontend test image
+        uses: docker/build-push-action@v7
+        with:
+          context: ./frontend
+          load: true
+          tags: vacation-window-planner/frontend-test:ci
+          cache-from: type=gha,scope=frontend
+          cache-to: type=gha,scope=frontend,mode=max
       - name: Frontend tests
-        run: docker compose --env-file .env.example --profile test run --build --rm frontend-test
-      - name: Typecheck and production build
-        run: docker compose --env-file .env.example --profile test run --no-deps --rm frontend-test npm run build
+        run: docker compose -f compose.yaml -f .github/compose.ci.yaml --env-file .env.example --profile test run --rm frontend-test
+      - name: Frontend lint
+        run: docker compose -f compose.yaml -f .github/compose.ci.yaml --env-file .env.example --profile test run --no-deps --rm frontend-test npm run lint
+      - name: Frontend format
+        run: docker compose -f compose.yaml -f .github/compose.ci.yaml --env-file .env.example --profile test run --no-deps --rm frontend-test npm run format:check
+      - name: Frontend typecheck
+        run: docker compose -f compose.yaml -f .github/compose.ci.yaml --env-file .env.example --profile test run --no-deps --rm frontend-test npm run typecheck
+      - name: Frontend production build
+        run: docker compose -f compose.yaml -f .github/compose.ci.yaml --env-file .env.example --profile test run --no-deps --rm frontend-test npm run build

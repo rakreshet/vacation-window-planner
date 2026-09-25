@@ -1,0 +1,8 @@
+services:
+  backend-test:
+    image: vacation-window-planner/backend-test:ci
+    pull_policy: never
+
+  frontend-test:
+    image: vacation-window-planner/frontend-test:ci
+    pull_policy: never

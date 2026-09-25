@@ -42,7 +42,10 @@ test('uses the configured API base path for the health view', async () => {
 })
 
 test('shows a checking state while the health request is pending', () => {
-  vi.stubGlobal('fetch', vi.fn(() => new Promise(() => {})))
+  vi.stubGlobal(
+    'fetch',
+    vi.fn(() => new Promise(() => {})),
+  )
 
   render(<App />)
 
