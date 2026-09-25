@@ -1,6 +1,15 @@
 # Vacation Window Planner
 
-A Docker-based proof of concept for finding useful vacation dates. Phase 0 will recommend date windows; phase 1 will add destinations and live flights. Today, this repository contains the running foundation and health screen, not the recommendation engine. The decisions to settle before building that engine are in [docs/open-decisions.md](docs/open-decisions.md).
+A Docker-based proof of concept for finding useful vacation dates. Phase 0 will recommend date windows; phase 1 will add destinations, live flights, and separate proactive vacation opportunities. Today, this repository contains the running foundation and health screen, not the recommendation engine. The decisions to settle before building that engine are in [docs/open-decisions.md](docs/open-decisions.md).
+
+## Product and implementation documents
+
+- [Product requirements (PRD)](docs/prd.md)
+- [High-level design (HLD)](docs/hld.md)
+- [Implementation task plan](docs/implementation-plan.md)
+- [Open product decisions](docs/open-decisions.md)
+
+The Markdown documents are the version-controlled source of truth. Review changes to them in pull requests; any Word copies are point-in-time exports and should be regenerated from the approved Markdown rather than edited independently. The phase 1 proactive-opportunity capability is planned here, not implemented in the current foundation.
 
 ## Run locally
 
