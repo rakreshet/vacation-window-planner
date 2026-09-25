@@ -4,6 +4,8 @@ from collections.abc import Mapping
 from datetime import date
 from typing import Protocol
 
+import holidays
+
 from vacation_window_planner.domain.contracts import HolidayCalendar
 
 
@@ -54,4 +56,39 @@ class FakeCalendarProvider:
             country_code=country_code,
             weekend_days=default_weekend if weekend_override is None else weekend_override,
             observed_holidays=frozenset(day for day in observed if start_date <= day <= end_date),
+        )
+
+
+class PythonHolidaysCalendarProvider:
+    """Production calendar backed by the offline ``python-holidays`` dataset."""
+
+    DEFAULT_WEEKENDS: Mapping[str, frozenset[int]] = {
+        "IL": frozenset({4, 5}),
+    }
+
+    def resolve(
+        self,
+        country_code: str,
+        start_date: date,
+        end_date: date,
+        weekend_override: frozenset[int] | None = None,
+    ) -> HolidayCalendar:
+        if end_date < start_date:
+            raise ValueError("end date must not precede start date")
+        try:
+            default_weekend = self.DEFAULT_WEEKENDS[country_code]
+        except KeyError as error:
+            raise UnsupportedCalendarError(
+                f"unsupported country calendar: {country_code}"
+            ) from error
+
+        source = holidays.country_holidays(
+            country_code,
+            years=range(start_date.year, end_date.year + 1),
+            observed=True,
+        )
+        return HolidayCalendar(
+            country_code=country_code,
+            weekend_days=default_weekend if weekend_override is None else weekend_override,
+            observed_holidays=frozenset(day for day in source if start_date <= day <= end_date),
         )

@@ -129,7 +129,7 @@ A phase 1 additive migration stores the effective opportunity policy and exact o
 | **Seam** | **Phase 0 adapter** | **Additional phase 1 adapter** |
 | --- | --- | --- |
 | Constraint interpreter | Gemini with a deterministic fake for tests | Same; prompt and schema may add travel constraints |
-| Holiday calendar | Local or library backed provider with a deterministic fake | Same interface |
+| Holiday calendar | Locked `python-holidays` dataset, initially Israel (`IL`), with a deterministic fake | Same interface |
 | Persistence | PostgreSQL through SQLAlchemy; in memory fake for domain tests | Same interface and additive travel fields |
 | Flight search | No seam in the running workflow | Mock adapter first, then SerpApi compatible live adapter |
 
@@ -191,7 +191,7 @@ The POC can run through a local compose setup with separate frontend, backend, a
 
 ## Open operational choices
 
-- Select the holiday data source and supported country list before implementing the calendar adapter.
+- Revisit the initial Israel-only supported-country list after the Phase 0 pilot establishes demand.
 - Set anonymous session expiry and raw text retention before any external pilot.
 - Choose final lint and formatting tools during repository bootstrap; the plan assumes Ruff for Python and ESLint plus Prettier for TypeScript.
 - Confirm current GitHub plan capabilities when configuring protected branch rules; CI must run regardless of enforcement availability.
