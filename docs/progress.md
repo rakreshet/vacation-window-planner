@@ -10,7 +10,7 @@ This is the versioned record of what has been merged and which pull request deli
 - Keep documentation-only PRs in the history below; they do not complete an implementation task.
 - Do not assign future PR numbers in advance. A blank PR cell means no PR has been opened yet.
 
-The next implementation PR is **P0 15**, grounded explanations. The foundation follow-ups and P0 06–14 are in review, and the core Phase 0 product decisions have been resolved. [Operational choices](open-decisions.md) remain for the relevant implementation tasks.
+The next implementation PR is **P0 16**, anonymous session persistence. The foundation follow-ups and P0 06–15 are in review, and the core Phase 0 product decisions have been resolved. [Operational choices](open-decisions.md) remain for the relevant implementation tasks.
 
 ## Phase 0
 
@@ -30,7 +30,7 @@ The next implementation PR is **P0 15**, grounded explanations. The foundation f
 | P0 12 | Generator property tests | [#15](https://github.com/rakreshet/vacation-window-planner/pull/15) | PR open |
 | P0 13 | Deterministic scoring | [#16](https://github.com/rakreshet/vacation-window-planner/pull/16) | PR open |
 | P0 14 | Diversity selection | [#17](https://github.com/rakreshet/vacation-window-planner/pull/17) | PR open |
-| P0 15 | Grounded explanations | — | Planned |
+| P0 15 | Grounded explanations | [#18](https://github.com/rakreshet/vacation-window-planner/pull/18) | PR open |
 | P0 16 | Anonymous session persistence | — | Planned |
 | P0 17 | Search and recommendation snapshots | — | Planned |
 | P0 18 | Recommendation workflow | — | Planned |
