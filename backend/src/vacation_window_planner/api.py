@@ -1,28 +1,78 @@
-"""HTTP entry point for the backend."""
+"""Typed HTTP entry point for the backend."""
 
 from collections.abc import Callable
+from datetime import UTC, datetime
+from typing import Annotated
+from uuid import UUID
 
-from fastapi import FastAPI, Request, Response, status
+from fastapi import FastAPI, Header, Request, Response, status
+from fastapi.exceptions import RequestValidationError
 from fastapi.responses import JSONResponse
+from pydantic import BaseModel, ConfigDict, Field
 from starlette.exceptions import HTTPException as StarletteHTTPException
 
+from vacation_window_planner.domain.calendar import UnsupportedCalendarError
+from vacation_window_planner.domain.contracts import (
+    Recommendation,
+    SearchConstraints,
+    UserVacationContext,
+    YearMonth,
+)
+from vacation_window_planner.domain.date_ranges import PastSearchRangeError
+from vacation_window_planner.domain.generator import SearchTooBroadError
+from vacation_window_planner.repositories.searches import SearchSnapshotPersistenceError
+from vacation_window_planner.repositories.sessions import AnonymousSessionState
+from vacation_window_planner.workflow import (
+    RecommendationRequest,
+    RecommendationResult,
+)
 
-def create_app(database_probe: Callable[[], bool]) -> FastAPI:
+
+class RecommendationHttpRequest(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    months: tuple[YearMonth, ...] = Field(min_length=1)
+    preferred_length_days: int = Field(gt=0)
+    result_limit: int = Field(default=5, gt=0)
+    source_text: str | None = None
+
+
+class RecommendationHttpResponse(BaseModel):
+    search_id: UUID
+    recommendations: tuple[Recommendation, ...]
+    notice: str | None = None
+
+
+def _error(
+    status_code: int, code: str, message: str, fields: list[str] | None = None
+) -> JSONResponse:
+    return JSONResponse(
+        status_code=status_code,
+        content={"error": {"code": code, "message": message, "fields": fields or []}},
+    )
+
+
+def create_app(
+    database_probe: Callable[[], bool],
+    session_lookup: Callable[[str, datetime], AnonymousSessionState | None] | None = None,
+    recommendation_service: Callable[[RecommendationRequest], RecommendationResult] | None = None,
+    clock: Callable[[], datetime] = lambda: datetime.now(UTC),
+) -> FastAPI:
     app = FastAPI(title="Vacation Window Planner")
 
     @app.exception_handler(StarletteHTTPException)
     async def http_error(_request: Request, error: StarletteHTTPException) -> JSONResponse:
         is_not_found = error.status_code == status.HTTP_404_NOT_FOUND
-        return JSONResponse(
-            status_code=error.status_code,
-            content={
-                "error": {
-                    "code": "NOT_FOUND" if is_not_found else "HTTP_ERROR",
-                    "message": "Not found" if is_not_found else str(error.detail),
-                    "fields": [],
-                }
-            },
+        return _error(
+            error.status_code,
+            "NOT_FOUND" if is_not_found else "HTTP_ERROR",
+            "Not found" if is_not_found else str(error.detail),
         )
+
+    @app.exception_handler(RequestValidationError)
+    async def validation_error(_request: Request, error: RequestValidationError) -> JSONResponse:
+        fields = [".".join(str(part) for part in item["loc"]) for item in error.errors()]
+        return _error(422, "VALIDATION_ERROR", "Request validation failed", fields)
 
     @app.get("/health")
     def health(response: Response) -> dict[str, str]:
@@ -30,5 +80,44 @@ def create_app(database_probe: Callable[[], bool]) -> FastAPI:
             return {"status": "ok", "database": "connected"}
         response.status_code = status.HTTP_503_SERVICE_UNAVAILABLE
         return {"status": "unavailable", "database": "disconnected"}
+
+    @app.post("/recommendations", response_model=RecommendationHttpResponse)
+    def recommendations(
+        body: RecommendationHttpRequest,
+        authorization: Annotated[str | None, Header()] = None,
+    ) -> RecommendationResult | JSONResponse:
+        if session_lookup is None or recommendation_service is None:
+            return _error(503, "SERVICE_UNAVAILABLE", "Recommendation service is unavailable")
+        if authorization is None or not authorization.startswith("Bearer "):
+            return _error(401, "INVALID_SESSION", "A bearer session token is required")
+        token = authorization.removeprefix("Bearer ").strip()
+        if not token:
+            return _error(401, "INVALID_SESSION", "A bearer session token is required")
+        session = session_lookup(token, clock())
+        if session is None:
+            return _error(401, "SESSION_EXPIRED", "Session is expired or unknown")
+        request = RecommendationRequest(
+            context=UserVacationContext(
+                session_id=session.id,
+                balance_days=session.balance_days,
+                allowed_negative_days=session.allowed_negative_days,
+                country_code=session.country_code,
+                weekend_days=session.weekend_days,
+            ),
+            constraints=SearchConstraints(
+                months=body.months,
+                preferred_length_days=body.preferred_length_days,
+                result_limit=body.result_limit,
+            ),
+            source_text=body.source_text,
+        )
+        try:
+            return recommendation_service(request)
+        except SearchTooBroadError as error:
+            return _error(422, error.code, str(error))
+        except (PastSearchRangeError, UnsupportedCalendarError) as error:
+            return _error(422, "INVALID_SEARCH", str(error))
+        except SearchSnapshotPersistenceError:
+            return _error(503, "PERSISTENCE_ERROR", "Search could not be saved")
 
     return app
