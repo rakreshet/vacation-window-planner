@@ -10,7 +10,7 @@ This is the versioned record of what has been merged and which pull request deli
 - Keep documentation-only PRs in the history below; they do not complete an implementation task.
 - Do not assign future PR numbers in advance. A blank PR cell means no PR has been opened yet.
 
-Phase 0 implementation and its production desktop UI are complete in the open, numbered stack through the grouped-results and score-explanation follow-up [#33](https://github.com/rakreshet/vacation-window-planner/pull/33). Review, rebase, and merge the PRs in numeric order; the latest branch is runnable without an interpretation provider key. The core Phase 0 product and operational decisions have been resolved.
+Phase 0 implementation and its production desktop UI are complete in the open, numbered stack through the accurate hero-copy follow-up [#34](https://github.com/rakreshet/vacation-window-planner/pull/34). Review, rebase, and merge the PRs in numeric order; the latest branch is runnable without an interpretation provider key. The core Phase 0 product and operational decisions have been resolved.
 
 ## Phase 0
 
@@ -36,7 +36,7 @@ Phase 0 implementation and its production desktop UI are complete in the open, n
 | P0 18 | Recommendation workflow | [#21](https://github.com/rakreshet/vacation-window-planner/pull/21) | PR open |
 | P0 19 | Recommendation endpoint | [#22](https://github.com/rakreshet/vacation-window-planner/pull/22) | PR open |
 | P0 20 | Constraint interpreter | [#23](https://github.com/rakreshet/vacation-window-planner/pull/23), [#31](https://github.com/rakreshet/vacation-window-planner/pull/31), [#32](https://github.com/rakreshet/vacation-window-planner/pull/32) | PR open |
-| P0 21 | Phase 0 search interface | [#24](https://github.com/rakreshet/vacation-window-planner/pull/24), [#29](https://github.com/rakreshet/vacation-window-planner/pull/29), [#30](https://github.com/rakreshet/vacation-window-planner/pull/30) | PR open |
+| P0 21 | Phase 0 search interface | [#24](https://github.com/rakreshet/vacation-window-planner/pull/24), [#29](https://github.com/rakreshet/vacation-window-planner/pull/29), [#30](https://github.com/rakreshet/vacation-window-planner/pull/30), [#34](https://github.com/rakreshet/vacation-window-planner/pull/34) | PR open |
 | P0 22 | Recommendation results | [#25](https://github.com/rakreshet/vacation-window-planner/pull/25), [#29](https://github.com/rakreshet/vacation-window-planner/pull/29), [#33](https://github.com/rakreshet/vacation-window-planner/pull/33) | PR open |
 | P0 23 | Simple feedback | [#26](https://github.com/rakreshet/vacation-window-planner/pull/26), [#29](https://github.com/rakreshet/vacation-window-planner/pull/29) | PR open |
 | P0 24 | End-to-end Phase 0 acceptance tests | [#27](https://github.com/rakreshet/vacation-window-planner/pull/27) | PR open |
