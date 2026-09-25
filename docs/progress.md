@@ -4,13 +4,13 @@ This is the versioned record of what has been merged and which pull request deli
 
 ## How to use this tracker
 
-- Use one task ID per pull request by default, with its tests in the same PR. Ask for approval before starting the next task.
+- Use one task ID per pull request by default, with its tests in the same PR. For the approved Phase 0 stack, give each PR an ordered title and base it on the preceding branch; the user will review and merge in order after the latest branch is runnable.
 - Add the PR link when it opens. Use **Done** only when the task's scope, tests, and definition of done are merged with passing checks. Use **Partial** when a merged PR delivered only part of the task; list the remaining work below.
 - If a PR combines tasks, record the same PR against each task and explain the exception. PR #1 bundled the initial foundation (P0 01–05).
 - Keep documentation-only PRs in the history below; they do not complete an implementation task.
 - Do not assign future PR numbers in advance. A blank PR cell means no PR has been opened yet.
 
-The next proposed implementation PR is to finish **P0 02**. Once the foundation follow-ups are complete, **P0 06** is the next new task ID. The remaining [product decisions](open-decisions.md) should be resolved before recommendation-engine behavior is implemented; this tracker does not imply those choices have been made.
+The next implementation PR is to finish **P0 02**. Once the foundation follow-ups are complete, **P0 06** is the next new task ID. The core Phase 0 product decisions have been resolved; [operational choices](open-decisions.md) remain for the relevant implementation tasks.
 
 ## Phase 0
 
@@ -79,4 +79,4 @@ The rows follow the [recommended execution order](implementation-plan.md#recomme
 | PR | Status | Result |
 | --- | --- | --- |
 | [#2](https://github.com/rakreshet/vacation-window-planner/pull/2) | Merged | Recorded the four Phase 0 product-rule decisions in the PRD, HLD, and task plan; added domain language. |
-| [#3](https://github.com/rakreshet/vacation-window-planner/pull/3) | Open | Introduces this delivery progress and PR map. |
+| [#3](https://github.com/rakreshet/vacation-window-planner/pull/3) | Merged | Introduced this delivery progress and PR map. |

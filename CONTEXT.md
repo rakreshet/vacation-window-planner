@@ -27,3 +27,7 @@ _Avoid_: Search boundary, travel month
 **Zero-PTO window**:
 A vacation window that uses no vacation days because none of its dates are effective working dates.
 _Avoid_: Free vacation
+
+**Search proposal**:
+Editable vacation-search fields inferred from optional conversational text before the user confirms a search.
+_Avoid_: Search result, recommendation

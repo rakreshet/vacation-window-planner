@@ -33,7 +33,7 @@ Use a modular monolith for the POC: a React and TypeScript frontend calls a Fast
 | Recommendation workflow | recommend(request) -> result | Coordinates validation, calendar lookup, generation, ranking, persistence, and optional phase 1 opportunity scan and travel enrichment behind one external interface |
 | Window generator | generate(context, constraints) -> windows | Pure deterministic enumeration of feasible local date windows; no ranking or provider calls |
 | Window ranker | rank(windows, policy) -> ranked | Scores, explains, applies candidate caps, and selects a diverse top N |
-| Constraint interpreter | interpret(text, session_context) -> constraints | Gemini adapter produces typed constraints; deterministic validation remains outside the model |
+| Constraint interpreter | interpret(text, session_context) -> proposal | Gemini adapter produces editable proposed fields; deterministic validation and search remain outside the model |
 | Holiday calendar | calendar(country, months, override) -> calendar | Adapter seam for locale defaults, observed holidays, and working week overrides |
 | Session repository | load, save_session, save_search, save_feedback | SQLAlchemy adapter hides PostgreSQL tables and transaction details |
 | Travel enricher in phase 1 | enrich(windows, travel_constraints) -> enriched | Selects candidates, finds destinations and live flights, normalizes results, and fails clearly when live data is unavailable |
@@ -42,10 +42,11 @@ Use a modular monolith for the POC: a React and TypeScript frontend calls a Fast
 ## Phase 0 request flow
 
 1. The frontend creates or resumes an anonymous session token.
-1. The user supplies text or edits structured fields. If text is used, the Gemini adapter proposes typed constraints.
+1. The user supplies text or edits structured fields. If text is used, POST /interpret returns a typed proposal for review; the user can edit it. This step does not run a recommendation search.
+1. The user explicitly starts a search with confirmed structured fields. Direct structured entry remains available if Gemini is not configured or unavailable.
 1. Pydantic validation checks required months, integer whole-day values, country or calendar selection, and configured limits. The allowed-negative allowance defaults to zero and rejects values outside zero through five.
 1. The holiday calendar adapter resolves observed holidays and the effective weekend pattern for the local date range.
-1. The pure window generator enumerates candidate windows within a configurable safety cap. Starts must fall in a selected future local month or its unelapsed portion; ends may cross that month's boundary. Total length counts inclusive consecutive local dates, while PTO is charged only for effective working dates. Nonworking dates may occur at either edge.
+1. The pure window generator enumerates candidate windows within a configurable safety cap. Starts must fall in a selected future local month or its unelapsed portion; ends may cross that month's boundary. Total length counts inclusive consecutive local dates, while PTO is charged only for effective working dates. Nonworking dates may occur at either edge. An incomplete enumeration caused by the cap yields a coded narrow-the-search outcome with no ranked recommendations.
 1. The ranker computes deterministic features, a normalized score, warnings, and fact based explanation inputs, then removes redundant near duplicates.
 1. The workflow persists an immutable search snapshot and its recommendations in one transaction.
 1. The backend returns typed JSON. The React frontend owns labels, colors, ordering display, empty states, and warning presentation.
@@ -78,13 +79,14 @@ Alongside the explicit search, the workflow may run a separate, bounded future-w
 | ProactiveOpportunity | window, opportunity_score, explanation, reason_facts, criteria_differences | Separate from Recommendation and its existing score; optional travel enrichment is additive |
 | RecommendationResponse | recommendations, notices; optional opportunities | Phase 0 behavior and explicit result semantics are preserved |
 
-## Single external endpoint
+## External API
 
-The POC exposes POST /recommendations as the main interface. The request contains an anonymous session identifier, structured context, constraints, and optional source text. The response contains recommendations and notices, plus an optional separate opportunities collection in phase 1. Health and feedback endpoints are separate operational conveniences. The backend returns codes plus short developer messages for errors; the frontend maps those codes to user wording.
+The POC exposes POST /recommendations as the main search interface. Its request contains an anonymous session identifier and confirmed structured context and constraints; optional source text may be retained as snapshot context but is not interpreted during search. POST /interpret is a separate optional text-to-proposal step. The recommendation response contains recommendations and notices, plus an optional separate opportunities collection in phase 1. Health and feedback endpoints are separate operational conveniences. The backend returns codes plus short developer messages for errors; the frontend maps those codes to user wording.
 
 | **Endpoint** | **Purpose** |
 | --- | --- |
 | POST /sessions | Create an anonymous session and return an opaque token |
+| POST /interpret | Turn optional conversational text into an editable structured proposal; never start a search |
 | POST /recommendations | Run the phase appropriate recommendation workflow |
 | POST /recommendations/{id}/feedback | Record thumbs up or thumbs down |
 | GET /health | Verify application and database readiness |
@@ -154,7 +156,7 @@ The flight seam becomes real only when both mock and live adapters exist in phas
 | Selected-month crossing | Accept a future start in a selected month even if the end date lies in a later month; reject starts outside selected months |
 | Negative balance | Exclude windows below the explicitly allowed floor; include a warning whenever a returned window's remaining balance is negative |
 | No feasible window | Return an empty recommendations list with a clear reason |
-| Generation cap reached | Stop deterministically, record the cap notice, and keep the request reproducible |
+| Generation cap reached before enumeration completes | Return a stable SEARCH_TOO_BROAD outcome with no ranked recommendations and a clear instruction to narrow the search; persist the attempted constraints and outcome for reproducibility |
 | Gemini unavailable | Allow structured input to continue; conversational interpretation returns a clear unavailable error |
 | Database failure | Fail the request; do not return an unpersisted result as though it were stored |
 | Live flight provider failure in phase 1 | Return a clear provider unavailable result and no partial travel recommendation |
@@ -174,7 +176,8 @@ The flight seam becomes real only when both mock and live adapters exist in phas
 - Test pure modules through their interfaces with table driven calendar cases and deterministic clocks.
 - Use property tests for invariants such as inclusive dates, nonnegative total days, and exact charged workdays.
 - Cover selected-month start and cross-month end, observed holidays and weekends at both edges, default-zero and explicit 1-to-5-day negative allowances, and zero-PTO windows that satisfy the length filter. Assert finite scores and that diversity does not fill the top results with trivial weekends.
-- Test the recommendation workflow with fake calendar, interpreter, repository, and phase 1 flight adapters.
+- Test the recommendation workflow with fake calendar and repository adapters, and test the separate interpretation flow with a fake Gemini adapter.
+- Test that a cap-hit workflow never ranks or returns partial candidates. Test that interpretation returns an editable proposal without triggering search, and that confirmed structured input works with Gemini unavailable.
 - Run PostgreSQL integration tests for mappings, migrations, transactions, and repository behavior after the initial unit test baseline.
 - Test the frontend with Vitest and React Testing Library; use contract fixtures generated from backend schemas.
 - Require GitHub Actions checks before merge on the public repository.
