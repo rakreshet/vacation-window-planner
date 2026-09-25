@@ -17,7 +17,7 @@ This plan turns the agreed product and architecture into mergeable tasks. Each t
 - Keep Python fully typed, enforce mypy in continuous integration, and use Pydantic at external boundaries.
 - Run backend tests, lint, mypy, frontend tests, type checking, and production build in GitHub Actions.
 - Keep secrets in environment variables and CI secrets. Never commit keys, local environment files, or captured sensitive payloads.
-- Record progress in a checked task list and keep pull requests small enough to review independently.
+- Record merged task status and PR links in the [delivery progress tracker](progress.md), and keep pull requests small enough to review independently.
 
 ## Milestones
 
