@@ -10,7 +10,7 @@ This is the versioned record of what has been merged and which pull request deli
 - Keep documentation-only PRs in the history below; they do not complete an implementation task.
 - Do not assign future PR numbers in advance. A blank PR cell means no PR has been opened yet.
 
-The next implementation PR is **P0 25**, Phase 0 hardening. The foundation follow-ups and P0 06–24 are in review, and the core Phase 0 product decisions have been resolved. [Operational choices](open-decisions.md) remain for the relevant implementation tasks.
+Phase 0 implementation is complete in the open, numbered stack through **P0 25**. Review, rebase, and merge the PRs in numeric order; the latest branch is runnable without Gemini configuration. The core Phase 0 product and operational decisions have been resolved.
 
 ## Phase 0
 
@@ -40,7 +40,7 @@ The next implementation PR is **P0 25**, Phase 0 hardening. The foundation follo
 | P0 22 | Recommendation results | [#25](https://github.com/rakreshet/vacation-window-planner/pull/25) | PR open |
 | P0 23 | Simple feedback | [#26](https://github.com/rakreshet/vacation-window-planner/pull/26) | PR open |
 | P0 24 | End-to-end Phase 0 acceptance tests | [#27](https://github.com/rakreshet/vacation-window-planner/pull/27) | PR open |
-| P0 25 | Phase 0 hardening | — | Planned |
+| P0 25 | Phase 0 hardening | [#28](https://github.com/rakreshet/vacation-window-planner/pull/28) | PR open |
 
 ### Foundation follow-ups from PR #1
 
