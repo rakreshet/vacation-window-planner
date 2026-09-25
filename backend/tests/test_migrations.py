@@ -25,6 +25,12 @@ def test_upgrade_and_downgrade_session_schema() -> None:
     try:
         command.upgrade(config, "head")
         assert inspect(engine).has_table("anonymous_sessions")
+        assert {
+            "balance_days",
+            "allowed_negative_days",
+            "country_code",
+            "weekend_days",
+        } <= {column["name"] for column in inspect(engine).get_columns("anonymous_sessions")}
 
         command.downgrade(config, "base")
         assert not inspect(engine).has_table("anonymous_sessions")

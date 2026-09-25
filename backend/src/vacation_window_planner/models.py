@@ -3,7 +3,7 @@
 from datetime import datetime
 from uuid import UUID
 
-from sqlalchemy import DateTime, String, Uuid
+from sqlalchemy import JSON, DateTime, Integer, String, Uuid
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column
 
 
@@ -18,3 +18,7 @@ class AnonymousSession(Base):
     token_hash: Mapped[str] = mapped_column(String(64), unique=True, nullable=False)
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False)
     expires_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False)
+    balance_days: Mapped[int] = mapped_column(Integer(), nullable=False)
+    allowed_negative_days: Mapped[int] = mapped_column(Integer(), nullable=False, default=0)
+    country_code: Mapped[str] = mapped_column(String(2), nullable=False)
+    weekend_days: Mapped[list[int]] = mapped_column(JSON(), nullable=False)
