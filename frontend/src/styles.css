@@ -766,6 +766,12 @@ a:focus-visible {
   background: #e6f2e6;
 }
 
+.prompt-notice {
+  margin-top: 16px;
+  font-size: 14px;
+  line-height: 1.5;
+}
+
 .search-action {
   display: flex;
   gap: 24px;

@@ -30,16 +30,18 @@ export default function SearchForm({ onResults }: SearchFormProps) {
   const [weekendDays, setWeekendDays] = useState<number[]>([4, 5])
   const [message, setMessage] = useState<string | null>(null)
   const [error, setError] = useState<string | null>(null)
+  const [interpretError, setInterpretError] = useState<string | null>(null)
   const [busy, setBusy] = useState<BusyAction>(null)
 
   async function interpret() {
+    setError(null)
+    setMessage(null)
     if (!sourceText.trim()) {
-      setError('Describe the break you have in mind, then try Interpret again.')
+      setInterpretError('Describe the break you have in mind, then try Interpret again.')
       return
     }
     setBusy('interpret')
-    setError(null)
-    setMessage(null)
+    setInterpretError(null)
     try {
       const proposal = await interpretText(sourceText)
       if (proposal.balance_days !== null) setBalance(String(proposal.balance_days))
@@ -54,8 +56,10 @@ export default function SearchForm({ onResults }: SearchFormProps) {
       }
       if (proposal.weekend_days !== null) setWeekendDays(proposal.weekend_days)
       setMessage('Proposal ready to edit')
-    } catch (caught) {
-      setError(caught instanceof Error ? caught.message : 'Text interpretation failed')
+    } catch {
+      setInterpretError(
+        'We could not interpret your description right now. Enter the details below and click Search, or try Interpret again later.',
+      )
     } finally {
       setBusy(null)
     }
@@ -64,6 +68,7 @@ export default function SearchForm({ onResults }: SearchFormProps) {
   async function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault()
     setError(null)
+    setInterpretError(null)
     setMessage(null)
     const balanceDays = Number(balance)
     const lengthDays = Number(preferredLength)
@@ -125,11 +130,11 @@ export default function SearchForm({ onResults }: SearchFormProps) {
 
       <div className="planner-layout">
         <div className="planner-main">
-          <div className="prompt-panel">
+          <section className="prompt-panel" aria-labelledby="description-heading">
             <div className="panel-title">
               <span className="step-number">1</span>
               <div>
-                <h3>Describe the break you want</h3>
+                <h3 id="description-heading">Describe the break you want</h3>
                 <p>Optional · Gemini can turn your sentence into a proposal.</p>
               </div>
             </div>
@@ -158,7 +163,13 @@ export default function SearchForm({ onResults }: SearchFormProps) {
                 {busy === 'interpret' ? 'Interpreting…' : 'Interpret request'}
               </button>
             </div>
-          </div>
+            {interpretError && (
+              <div className="form-notice form-notice--error prompt-notice">
+                <AlertIcon />
+                <p role="alert">{interpretError}</p>
+              </div>
+            )}
+          </section>
 
           <div className="choice-divider" aria-hidden="true">
             <span>then review and adjust</span>

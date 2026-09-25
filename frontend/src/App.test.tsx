@@ -1,4 +1,4 @@
-import { cleanup, fireEvent, render, screen, waitFor } from '@testing-library/react'
+import { cleanup, fireEvent, render, screen, waitFor, within } from '@testing-library/react'
 import { afterEach, expect, test, vi } from 'vitest'
 
 import App from './App'
@@ -125,6 +125,51 @@ test('interpretation only fills editable proposal fields and never searches', as
   expect(fetchMock.mock.calls.some(([url]) => String(url).endsWith('/recommendations'))).toBe(false)
 })
 
+test('failed interpretation explains how to continue beside Interpret', async () => {
+  vi.stubGlobal(
+    'fetch',
+    vi.fn(async (input: RequestInfo | URL) => {
+      const url = String(input)
+      if (url.endsWith('/health')) {
+        return { ok: true, json: async () => ({ status: 'ok', database: 'connected' }) }
+      }
+      if (url.endsWith('/interpret')) {
+        return {
+          ok: false,
+          json: async () => ({
+            error: {
+              code: 'INTERPRETATION_ERROR',
+              message: 'Text interpretation failed',
+              fields: [],
+            },
+          }),
+        }
+      }
+      if (url.endsWith('/sessions')) {
+        return { ok: true, json: async () => ({ token: 'session-token' }) }
+      }
+      if (url.endsWith('/recommendations')) {
+        return { ok: true, json: async () => ({ search_id: 'search-id', recommendations: [] }) }
+      }
+      throw new Error(`unexpected request: ${url}`)
+    }),
+  )
+  render(<App />)
+  await screen.findByText('Service ready')
+  fireEvent.change(screen.getByLabelText('Describe your ideal break'), {
+    target: { value: 'I want a break in January' },
+  })
+  fireEvent.click(screen.getByRole('button', { name: 'Interpret' }))
+
+  const description = screen.getByRole('region', { name: 'Describe the break you want' })
+  expect(await within(description).findByRole('alert')).toHaveTextContent(
+    'We could not interpret your description right now. Enter the details below and click Search, or try Interpret again later.',
+  )
+  fillRequiredSearchFields()
+  fireEvent.click(screen.getByRole('button', { name: 'Search' }))
+  expect(await screen.findByText('Search complete')).toBeInTheDocument()
+})
+
 test('makes the interpret-versus-search boundary and weekend choices explicit', async () => {
   vi.stubGlobal(
     'fetch',
@@ -203,7 +248,9 @@ test('structured search works without using interpretation', async () => {
   fireEvent.click(screen.getByRole('button', { name: 'Search' }))
 
   expect(await screen.findByText('Search complete')).toBeInTheDocument()
-  expect(screen.getByRole('heading', { name: 'Your best vacation windows' })).toHaveFocus()
+  await waitFor(() =>
+    expect(screen.getByRole('heading', { name: 'Your best vacation windows' })).toHaveFocus(),
+  )
   expect(requestedUrls.some((url) => url.endsWith('/interpret'))).toBe(false)
 })
 
