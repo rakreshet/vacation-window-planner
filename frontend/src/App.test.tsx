@@ -116,12 +116,18 @@ test('interpretation only fills editable proposal fields and never searches', as
   fireEvent.change(screen.getByLabelText('Describe your ideal break'), {
     target: { value: 'I have 8 days for a week in January' },
   })
+  fireEvent.click(screen.getByRole('checkbox', { name: 'Friday' }))
+  fireEvent.click(screen.getByRole('checkbox', { name: 'Sunday' }))
+  expect(screen.getByRole('checkbox', { name: 'Sunday' })).toBeChecked()
   fireEvent.click(screen.getByRole('button', { name: 'Interpret' }))
 
   expect(await screen.findByDisplayValue('8')).toBeInTheDocument()
   expect(screen.getByLabelText('Allowed negative days')).toHaveValue(1)
   expect(screen.getByLabelText('Selected month')).toHaveValue('2027-01')
   expect(screen.getByLabelText('Preferred length in days')).toHaveValue(7)
+  expect(screen.getByRole('checkbox', { name: 'Friday' })).toBeChecked()
+  expect(screen.getByRole('checkbox', { name: 'Saturday' })).toBeChecked()
+  expect(screen.getByRole('checkbox', { name: 'Sunday' })).not.toBeChecked()
   expect(fetchMock.mock.calls.some(([url]) => String(url).endsWith('/recommendations'))).toBe(false)
 })
 

@@ -22,7 +22,7 @@ Use a modular monolith for the POC: a React and TypeScript frontend calls a Fast
 | React frontend | Owns presentation and client session token; sends typed JSON to the backend |
 | FastAPI backend | Validates requests, coordinates domain modules, persists snapshots, and returns data only |
 | Holiday calendar adapter | Returns effective observed nonworking dates and locale weekend defaults |
-| Pydantic AI interpreter | Uses the configured Google or xAI model to propose editable structured fields; deterministic recommendation explanations remain outside the model |
+| Pydantic AI interpreter | Uses the configured Google or xAI model to propose editable structured fields; the application derives weekend defaults from country, and deterministic recommendation explanations remain outside the model |
 | PostgreSQL | Stores anonymous sessions, search snapshots, recommendations, and feedback |
 | Flight search adapter in phase 1 | Returns normalized live flight options from a mock or external provider such as SerpApi |
 
@@ -33,7 +33,8 @@ Use a modular monolith for the POC: a React and TypeScript frontend calls a Fast
 | Recommendation workflow | recommend(request) -> result | Coordinates validation, calendar lookup, generation, ranking, persistence, and optional phase 1 opportunity scan and travel enrichment behind one external interface |
 | Window generator | generate(context, constraints) -> windows | Pure deterministic enumeration of feasible local date windows; no ranking or provider calls |
 | Window ranker | rank(windows, policy) -> ranked | Scores, explains, applies candidate caps, and selects a diverse top N |
-| Constraint interpreter | interpret(text) -> proposal | One Pydantic AI implementation returns validated editable fields from the configured model; deterministic validation and search remain outside the model |
+| Constraint interpreter | interpret(text) -> proposal | One Pydantic AI implementation validates text input and schema-constrained model output, then adds the country workweek default; search remains outside the model |
+| Workweek policy | default_weekend_days(country_code) -> days | Pure, replaceable rule: Israel has Friday/Saturday off; every other country has Saturday/Sunday off. User edits remain authoritative at search time |
 | Holiday calendar | calendar(country, months, override) -> calendar | Adapter seam for locale defaults, observed holidays, and working week overrides |
 | Session repository | load, save_session, save_search, save_feedback | SQLAlchemy adapter hides PostgreSQL tables and transaction details |
 | Travel enricher in phase 1 | enrich(windows, travel_constraints) -> enriched | Selects candidates, finds destinations and live flights, normalizes results, and fails clearly when live data is unavailable |
@@ -42,10 +43,12 @@ Use a modular monolith for the POC: a React and TypeScript frontend calls a Fast
 ## Phase 0 request flow
 
 1. The frontend creates or resumes an anonymous session token.
-1. The user supplies text or edits structured fields. If text is used, POST /interpret returns a typed proposal for review; the user can edit it. This step does not run a recommendation search.
+1. The user supplies text or edits structured fields. If text is used, POST /interpret validates the input and obtains Pydantic AI `ToolOutput` with JSON-schema-constrained arguments validated as a Pydantic model. The model does not produce weekend days; a separate deterministic workweek policy adds the country default to the typed proposal. The user can edit it. This step does not run a recommendation search.
 1. The user explicitly starts a search with confirmed structured fields. Direct structured entry remains available if the interpretation provider is not configured or unavailable.
 1. Pydantic validation checks required months, integer whole-day values, country or calendar selection, and configured limits. The allowed-negative allowance defaults to zero and rejects values outside zero through five.
 1. The holiday calendar adapter resolves observed holidays and the effective weekend pattern for the local date range.
+
+The temporary workweek policy covers any country code, but this does not expand holiday-calendar support: the production calendar adapter currently supports Israel only.
 1. The pure window generator enumerates candidate windows within a configurable safety cap. Starts must fall in a selected future local month or its unelapsed portion; ends may cross that month's boundary. Total length counts inclusive consecutive local dates, while PTO is charged only for effective working dates. Nonworking dates may occur at either edge. An incomplete enumeration caused by the cap yields a coded narrow-the-search outcome with no ranked recommendations.
 1. The ranker computes deterministic features, a normalized score, warnings, and fact based explanation inputs, then removes redundant near duplicates.
 1. The workflow persists an immutable search snapshot and its recommendations in one transaction.
@@ -177,7 +180,7 @@ The flight seam becomes real only when both mock and live adapters exist in phas
 - Test pure modules through their interfaces with table driven calendar cases and deterministic clocks.
 - Use property tests for invariants such as inclusive dates, nonnegative total days, and exact charged workdays.
 - Cover selected-month start and cross-month end, observed holidays and weekends at both edges, default-zero and explicit 1-to-5-day negative allowances, and zero-PTO windows that satisfy the length filter. Assert finite scores and that diversity does not fill the top results with trivial weekends.
-- Test the recommendation workflow with fake calendar and repository adapters, and test the separate interpretation flow with Pydantic AI's test model.
+- Test the recommendation workflow with fake calendar and repository adapters, and test the separate interpretation flow with Pydantic AI's test model. Disable real model requests globally during backend tests so CI cannot spend provider tokens.
 - Test that a cap-hit workflow never ranks or returns partial candidates. Test that interpretation returns an editable proposal without triggering search, and that confirmed structured input works with interpretation unavailable.
 - Run PostgreSQL integration tests for mappings, migrations, transactions, and repository behavior after the initial unit test baseline.
 - Test the frontend with Vitest and React Testing Library; use contract fixtures generated from backend schemas.

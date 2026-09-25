@@ -25,7 +25,11 @@ from vacation_window_planner.domain.contracts import (
 )
 from vacation_window_planner.domain.date_ranges import PastSearchRangeError
 from vacation_window_planner.domain.generator import SearchTooBroadError
-from vacation_window_planner.interpreter import ConstraintProposal, InterpretationError
+from vacation_window_planner.interpreter import (
+    ConstraintProposal,
+    InterpretationError,
+    InterpretationInput,
+)
 from vacation_window_planner.repositories.feedback import FeedbackAuthorizationError
 from vacation_window_planner.repositories.searches import SearchSnapshotPersistenceError
 from vacation_window_planner.repositories.sessions import (
@@ -51,12 +55,6 @@ class RecommendationHttpResponse(BaseModel):
     search_id: UUID
     recommendations: tuple[Recommendation, ...]
     notice: str | None = None
-
-
-class InterpretationHttpRequest(BaseModel):
-    model_config = ConfigDict(extra="forbid")
-
-    text: str = Field(min_length=1, max_length=4000)
 
 
 class FeedbackHttpRequest(BaseModel):
@@ -218,7 +216,7 @@ def create_app(
             return _error(503, "PERSISTENCE_ERROR", "Search could not be saved")
 
     @app.post("/interpret", response_model=ConstraintProposal)
-    def interpret(body: InterpretationHttpRequest) -> ConstraintProposal | JSONResponse:
+    def interpret(body: InterpretationInput) -> ConstraintProposal | JSONResponse:
         if interpretation_service is None:
             return _error(
                 503,

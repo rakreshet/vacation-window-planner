@@ -1,7 +1,7 @@
 """Provider-neutral conversion of text into editable search proposals."""
 
 from pydantic import BaseModel, ConfigDict, Field, StrictInt, field_validator
-from pydantic_ai import Agent
+from pydantic_ai import Agent, ToolOutput
 from pydantic_ai.models import Model
 from pydantic_ai.models.google import GoogleModel
 from pydantic_ai.models.xai import XaiModel
@@ -10,6 +10,7 @@ from pydantic_ai.providers.xai import XaiProvider
 from pydantic_ai.settings import ModelSettings
 
 from vacation_window_planner.domain.contracts import YearMonth
+from vacation_window_planner.domain.workweek import default_weekend_days
 from vacation_window_planner.settings import Settings
 
 
@@ -17,7 +18,15 @@ class InterpretationError(ValueError):
     """A model request failed or did not yield a valid search proposal."""
 
 
-class ConstraintProposalFields(BaseModel):
+class InterpretationInput(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    text: str = Field(min_length=1, max_length=4000)
+
+
+class ModelProposalFields(BaseModel):
+    """Only fields that the language model may propose."""
+
     model_config = ConfigDict(extra="forbid")
 
     balance_days: StrictInt | None = Field(default=None, ge=0)
@@ -25,6 +34,9 @@ class ConstraintProposalFields(BaseModel):
     country_code: str | None = Field(default=None, pattern=r"^[A-Z]{2}$")
     months: tuple[YearMonth, ...] = ()
     preferred_length_days: StrictInt | None = Field(default=None, gt=0)
+
+
+class ConstraintProposalFields(ModelProposalFields):
     weekend_days: frozenset[StrictInt] | None = None
 
     @field_validator("weekend_days")
@@ -46,20 +58,23 @@ class ConstraintInterpreter:
     def __init__(self, model: Model) -> None:
         self._agent = Agent(
             model,
-            output_type=ConstraintProposalFields,
+            output_type=ToolOutput(ModelProposalFields),
             instructions=(
                 "Extract only editable vacation search fields from the user's text. "
                 "Do not search, rank dates, or invent missing values. "
                 "Leave a field unset when the user has not supplied it. "
-                "Weekdays use Monday=0 through Sunday=6."
+                "Return country_code as an uppercase ISO 3166-1 alpha-2 code when clear. "
+                "Do not infer or return working days or weekend days; the application "
+                "derives the default workweek from the country."
             ),
             model_settings=ModelSettings(timeout=20),
             retries=1,
         )
 
     def interpret(self, text: str) -> ConstraintProposal:
+        validated_input = InterpretationInput(text=text)
         try:
-            fields = self._agent.run_sync(text).output
+            fields = self._agent.run_sync(validated_input.text).output
         except Exception:  # Provider SDKs expose different transport exceptions.
             raise InterpretationError("Interpretation provider failed") from None
 
@@ -74,7 +89,12 @@ class ConstraintInterpreter:
             missing.append("preferred_length_days")
         return ConstraintProposal(
             **fields.model_dump(),
-            source_text=text,
+            weekend_days=(
+                default_weekend_days(fields.country_code)
+                if fields.country_code is not None
+                else None
+            ),
+            source_text=validated_input.text,
             missing_fields=tuple(missing),
         )
 
