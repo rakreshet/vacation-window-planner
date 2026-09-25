@@ -10,7 +10,7 @@ This is the versioned record of what has been merged and which pull request deli
 - Keep documentation-only PRs in the history below; they do not complete an implementation task.
 - Do not assign future PR numbers in advance. A blank PR cell means no PR has been opened yet.
 
-The next implementation PR is **P0 09**, the production holiday-calendar adapter. The foundation follow-ups and P0 06–08 are in review, and the core Phase 0 product decisions have been resolved. [Operational choices](open-decisions.md) remain for the relevant implementation tasks.
+The next implementation PR is **P0 10**, future-date clipping. The foundation follow-ups and P0 06–09 are in review, and the core Phase 0 product decisions have been resolved. [Operational choices](open-decisions.md) remain for the relevant implementation tasks.
 
 ## Phase 0
 
@@ -24,7 +24,7 @@ The next implementation PR is **P0 09**, the production holiday-calendar adapter
 | P0 06 | Phase 0 domain contracts | [#9](https://github.com/rakreshet/vacation-window-planner/pull/9) | PR open |
 | P0 07 | Recommendation configuration | [#10](https://github.com/rakreshet/vacation-window-planner/pull/10) | PR open |
 | P0 08 | Holiday calendar interface | [#11](https://github.com/rakreshet/vacation-window-planner/pull/11) | PR open |
-| P0 09 | Production holiday calendar adapter | — | Planned |
+| P0 09 | Production holiday calendar adapter | [#12](https://github.com/rakreshet/vacation-window-planner/pull/12) | PR open |
 | P0 10 | Future-date clipping | — | Planned |
 | P0 11 | Pure vacation-window generator | — | Planned |
 | P0 12 | Generator property tests | — | Planned |
