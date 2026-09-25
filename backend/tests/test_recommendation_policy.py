@@ -14,6 +14,7 @@ def test_policy_has_safe_versioned_defaults_for_a_search_snapshot() -> None:
         "duration_weight": 0.3,
         "length_fit_weight": 0.2,
         "generation_cap": 5000,
+        "length_tolerance_days": 2,
         "near_duplicate_overlap_ratio": 0.8,
         "material_score_gap": 5,
         "default_result_count": 5,
@@ -37,6 +38,7 @@ def test_environment_overrides_are_captured_in_the_effective_policy(
     "override",
     [
         {"generation_cap": 0},
+        {"length_tolerance_days": 8},
         {"default_result_count": 0},
         {"default_result_count": 21},
         {"near_duplicate_overlap_ratio": 1.5},
