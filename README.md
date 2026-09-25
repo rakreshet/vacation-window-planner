@@ -1,6 +1,6 @@
 # Vacation Window Planner
 
-A Docker-based proof of concept for finding useful vacation dates. Phase 0 recommends ranked date windows from an anonymous session, effective holiday calendar, editable structured constraints, and optional Gemini text interpretation; phase 1 will add destinations, live flights, and separate proactive vacation opportunities. The core Phase 0 product rules are in the PRD; remaining operational choices are in [docs/open-decisions.md](docs/open-decisions.md).
+A Docker-based proof of concept for finding useful vacation dates. Phase 0 recommends ranked date windows from an anonymous session, effective holiday calendar, editable structured constraints, and optional AI text interpretation; phase 1 will add destinations, live flights, and separate proactive vacation opportunities. The core Phase 0 product rules are in the PRD; remaining operational choices are in [docs/open-decisions.md](docs/open-decisions.md).
 
 ## Product and implementation documents
 
@@ -32,7 +32,7 @@ docker compose ps
 
 Open [http://localhost:15173](http://localhost:15173). Once startup finishes, the page should say **Service ready**. The API health check is at [http://localhost:18080/health](http://localhost:18080/health). Docker Compose starts PostgreSQL, applies the database migration, starts the API, then starts the frontend. The host ports are bound to localhost, not exposed publicly.
 
-Structured search works without a Gemini key. To enable the optional Interpret action, set `GEMINI_API_KEY` in `.env`; never use a `VITE_` variable for provider secrets. CORS, request-size, session-expiry, and source-text-retention settings are documented in the [runbook](docs/runbook.md).
+Structured search works without an AI key. To enable the optional Interpret action, set `INTERPRET_PROVIDER=xai` and `XAI_API_KEY` in `.env` for Grok, or select `gemini` and set `GEMINI_API_KEY`. The default provider is `gemini`; the backend uses Pydantic AI for both. Set the matching `XAI_MODEL` or `GEMINI_MODEL` only if you need a nondefault model. Rebuild and recreate the backend after changing these settings: `docker compose up --build --detach --force-recreate backend`. Never use a `VITE_` variable for provider secrets. CORS, request-size, session-expiry, and source-text-retention settings are documented in the [runbook](docs/runbook.md).
 
 If either default host port is occupied, add `WEB_PORT=15174` or `API_PORT=18081` to `.env`, restart with `docker compose up --build --detach`, and use the new port. To see the actual mapped ports, run `docker compose ps`.
 

@@ -85,11 +85,12 @@ def test_unsafe_hardening_settings_are_rejected(override: dict[str, object]) -> 
         Settings(database_url="postgresql+psycopg://user:pass@db/app", **override)
 
 
-def test_gemini_secret_is_masked_and_not_part_of_settings_dump() -> None:
+@pytest.mark.parametrize("key_name", ["gemini_api_key", "xai_api_key"])
+def test_interpretation_secret_is_masked_and_not_part_of_settings_dump(key_name: str) -> None:
     settings = Settings(
         database_url="postgresql+psycopg://user:pass@db/app",
-        gemini_api_key="super-secret-provider-key",
+        **{key_name: "super-secret-provider-key"},
     )
 
     assert "super-secret-provider-key" not in repr(settings)
-    assert "gemini_api_key" not in settings.model_dump(exclude={"gemini_api_key"})
+    assert key_name not in settings.model_dump(exclude={key_name})

@@ -12,10 +12,7 @@ from vacation_window_planner.database import (
 from vacation_window_planner.domain.calendar import PythonHolidaysCalendarProvider
 from vacation_window_planner.domain.contracts import FeedbackValue
 from vacation_window_planner.domain.policy import RecommendationPolicy
-from vacation_window_planner.interpreter import (
-    GeminiConstraintInterpreter,
-    HttpGeminiStructuredClient,
-)
+from vacation_window_planner.interpreter import build_interpreter
 from vacation_window_planner.logging_config import configure_json_logging
 from vacation_window_planner.repositories.feedback import FeedbackRepository
 from vacation_window_planner.repositories.searches import SearchSnapshotRepository
@@ -37,16 +34,7 @@ engine = make_engine(settings.database_url)
 sessions = make_session_factory(engine)
 policy = RecommendationPolicy()
 calendar_provider = PythonHolidaysCalendarProvider()
-interpreter = (
-    GeminiConstraintInterpreter(
-        HttpGeminiStructuredClient(
-            api_key=settings.gemini_api_key.get_secret_value(),
-            model=settings.gemini_model,
-        )
-    )
-    if settings.gemini_api_key is not None and settings.gemini_api_key.get_secret_value()
-    else None
-)
+interpreter = build_interpreter(settings)
 
 
 def utc_now() -> datetime:

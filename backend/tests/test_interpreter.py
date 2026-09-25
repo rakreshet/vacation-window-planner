@@ -1,34 +1,22 @@
-"""Constraint interpretation validates model output without searching."""
+"""Constraint interpretation proposes validated fields without searching."""
 
 import pytest
+from pydantic_ai.models.test import TestModel
 
-from vacation_window_planner.interpreter import (
-    GeminiConstraintInterpreter,
-    InterpretationError,
-)
-
-
-class FixtureGeminiClient:
-    def __init__(self, response: str) -> None:
-        self.response = response
-
-    def generate_json(self, prompt: str, schema: dict[str, object]) -> str:
-        assert "vacation search" in prompt.lower()
-        assert schema["type"] == "object"
-        return self.response
+from vacation_window_planner.interpreter import ConstraintInterpreter, InterpretationError
 
 
 def test_valid_model_output_becomes_editable_typed_proposal() -> None:
-    interpreter = GeminiConstraintInterpreter(
-        FixtureGeminiClient(
-            """{
+    interpreter = ConstraintInterpreter(
+        TestModel(
+            custom_output_args={
                 "balance_days": 8,
                 "allowed_negative_days": 1,
                 "country_code": "IL",
                 "months": [{"year": 2027, "month": 1}],
                 "preferred_length_days": 7,
-                "weekend_days": [4, 5]
-            }"""
+                "weekend_days": [4, 5],
+            }
         )
     )
 
@@ -45,7 +33,7 @@ def test_valid_model_output_becomes_editable_typed_proposal() -> None:
 
 
 def test_missing_output_fields_are_reported_for_editing() -> None:
-    proposal = GeminiConstraintInterpreter(FixtureGeminiClient("{}")).interpret(
+    proposal = ConstraintInterpreter(TestModel(custom_output_args={})).interpret(
         "Sometime next year"
     )
 
@@ -57,10 +45,10 @@ def test_missing_output_fields_are_reported_for_editing() -> None:
     )
 
 
-def test_malformed_or_out_of_policy_model_output_is_rejected() -> None:
-    interpreter = GeminiConstraintInterpreter(
-        FixtureGeminiClient('{"balance_days": 8, "allowed_negative_days": 10}')
+def test_out_of_policy_model_output_is_rejected() -> None:
+    interpreter = ConstraintInterpreter(
+        TestModel(custom_output_args={"balance_days": 8, "allowed_negative_days": 10})
     )
 
-    with pytest.raises(InterpretationError, match="validated"):
+    with pytest.raises(InterpretationError):
         interpreter.interpret("Let me borrow ten days")

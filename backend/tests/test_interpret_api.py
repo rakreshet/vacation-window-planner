@@ -3,7 +3,7 @@
 from fastapi.testclient import TestClient
 
 from vacation_window_planner.api import create_app
-from vacation_window_planner.interpreter import ConstraintProposal
+from vacation_window_planner.interpreter import ConstraintProposal, InterpretationError
 
 
 def test_interpret_returns_proposal_without_starting_search() -> None:
@@ -45,3 +45,18 @@ def test_interpret_is_optional_while_structured_endpoint_remains_registered() ->
     assert response.status_code == 503
     assert response.json()["error"]["code"] == "INTERPRETATION_UNAVAILABLE"
     assert any(route.path == "/recommendations" for route in client.app.routes)
+
+
+def test_provider_failure_does_not_expose_details() -> None:
+    def failed_interpretation(_text: str) -> ConstraintProposal:
+        raise InterpretationError("sensitive provider response")
+
+    client = TestClient(
+        create_app(database_probe=lambda: True, interpretation_service=failed_interpretation)
+    )
+
+    response = client.post("/interpret", json={"text": "A week in winter"})
+
+    assert response.status_code == 502
+    assert response.json()["error"]["code"] == "INTERPRETATION_ERROR"
+    assert "sensitive provider response" not in response.text

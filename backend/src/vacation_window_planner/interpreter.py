@@ -1,15 +1,20 @@
-"""Gemini-backed conversion of text into editable structured proposals."""
+"""Provider-neutral conversion of text into editable search proposals."""
 
-from typing import Protocol
-
-import httpx
-from pydantic import BaseModel, ConfigDict, Field, StrictInt, ValidationError, field_validator
+from pydantic import BaseModel, ConfigDict, Field, StrictInt, field_validator
+from pydantic_ai import Agent
+from pydantic_ai.models import Model
+from pydantic_ai.models.google import GoogleModel
+from pydantic_ai.models.xai import XaiModel
+from pydantic_ai.providers.google import GoogleProvider
+from pydantic_ai.providers.xai import XaiProvider
+from pydantic_ai.settings import ModelSettings
 
 from vacation_window_planner.domain.contracts import YearMonth
+from vacation_window_planner.settings import Settings
 
 
 class InterpretationError(ValueError):
-    """Provider output could not be validated as a search proposal."""
+    """A model request failed or did not yield a valid search proposal."""
 
 
 class ConstraintProposalFields(BaseModel):
@@ -35,73 +40,28 @@ class ConstraintProposal(ConstraintProposalFields):
     missing_fields: tuple[str, ...]
 
 
-class GeminiStructuredClient(Protocol):
-    def generate_json(self, prompt: str, schema: dict[str, object]) -> str: ...
+class ConstraintInterpreter:
+    """One Pydantic AI interpretation path regardless of selected model provider."""
 
-
-class _GeminiPart(BaseModel):
-    text: str
-
-
-class _GeminiContent(BaseModel):
-    parts: tuple[_GeminiPart, ...] = Field(min_length=1)
-
-
-class _GeminiCandidate(BaseModel):
-    content: _GeminiContent
-
-
-class _GeminiResponse(BaseModel):
-    candidates: tuple[_GeminiCandidate, ...] = Field(min_length=1)
-
-
-class HttpGeminiStructuredClient:
-    """Small REST adapter for Gemini structured JSON output."""
-
-    def __init__(self, *, api_key: str, model: str, timeout_seconds: float = 20.0) -> None:
-        self._api_key = api_key
-        self._model = model
-        self._timeout_seconds = timeout_seconds
-
-    def generate_json(self, prompt: str, schema: dict[str, object]) -> str:
-        try:
-            response = httpx.post(
-                f"https://generativelanguage.googleapis.com/v1beta/models/{self._model}:generateContent",
-                headers={"x-goog-api-key": self._api_key},
-                json={
-                    "contents": [{"parts": [{"text": prompt}]}],
-                    "generationConfig": {
-                        "responseMimeType": "application/json",
-                        "responseJsonSchema": schema,
-                    },
-                },
-                timeout=self._timeout_seconds,
-            )
-            response.raise_for_status()
-            parsed = _GeminiResponse.model_validate(response.json())
-            return parsed.candidates[0].content.parts[0].text
-        except (httpx.HTTPError, ValidationError, IndexError) as error:
-            raise InterpretationError("Gemini interpretation failed") from error
-
-
-class GeminiConstraintInterpreter:
-    def __init__(self, client: GeminiStructuredClient) -> None:
-        self._client = client
+    def __init__(self, model: Model) -> None:
+        self._agent = Agent(
+            model,
+            output_type=ConstraintProposalFields,
+            instructions=(
+                "Extract only editable vacation search fields from the user's text. "
+                "Do not search, rank dates, or invent missing values. "
+                "Leave a field unset when the user has not supplied it. "
+                "Weekdays use Monday=0 through Sunday=6."
+            ),
+            model_settings=ModelSettings(timeout=20),
+            retries=1,
+        )
 
     def interpret(self, text: str) -> ConstraintProposal:
-        prompt = (
-            "Extract only editable vacation search fields from the user's text. "
-            "Do not search, rank dates, or invent missing values. User text: "
-            f"{text}"
-        )
-        raw = self._client.generate_json(
-            prompt,
-            ConstraintProposalFields.model_json_schema(),
-        )
         try:
-            fields = ConstraintProposalFields.model_validate_json(raw)
-        except ValidationError as error:
-            raise InterpretationError("Gemini output could not be validated") from error
+            fields = self._agent.run_sync(text).output
+        except Exception:  # Provider SDKs expose different transport exceptions.
+            raise InterpretationError("Interpretation provider failed") from None
 
         missing: list[str] = []
         if fields.balance_days is None:
@@ -117,3 +77,21 @@ class GeminiConstraintInterpreter:
             source_text=text,
             missing_fields=tuple(missing),
         )
+
+
+def build_interpreter(settings: Settings) -> ConstraintInterpreter | None:
+    """Select a Pydantic AI provider; no key leaves structured search intact."""
+    model: Model | None
+    if settings.interpret_provider == "gemini":
+        key = settings.gemini_api_key.get_secret_value() if settings.gemini_api_key else ""
+        if key:
+            model = GoogleModel(settings.gemini_model, provider=GoogleProvider(api_key=key))
+        else:
+            model = None
+    else:
+        key = settings.xai_api_key.get_secret_value() if settings.xai_api_key else ""
+        if key:
+            model = XaiModel(settings.xai_model, provider=XaiProvider(api_key=key, timeout=20))
+        else:
+            model = None
+    return ConstraintInterpreter(model) if model is not None else None

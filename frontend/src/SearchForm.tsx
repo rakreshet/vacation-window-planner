@@ -135,7 +135,7 @@ export default function SearchForm({ onResults }: SearchFormProps) {
               <span className="step-number">1</span>
               <div>
                 <h3 id="description-heading">Describe the break you want</h3>
-                <p>Optional · Gemini can turn your sentence into a proposal.</p>
+                <p>Optional · AI can turn your sentence into an editable proposal.</p>
               </div>
             </div>
             <label className="sr-only" htmlFor="source-text">

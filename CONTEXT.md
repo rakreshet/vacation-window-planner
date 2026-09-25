@@ -35,3 +35,7 @@ _Avoid_: Provider calendar, public-holiday list
 **Search proposal**:
 Editable vacation-search fields inferred from optional conversational text before the user confirms a search.
 _Avoid_: Search result, recommendation
+
+**Interpretation provider**:
+The configured language-model provider used only to turn conversational text into a search proposal. It does not choose vacation windows or start a search.
+_Avoid_: Recommendation engine, search provider

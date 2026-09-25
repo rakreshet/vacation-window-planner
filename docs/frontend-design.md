@@ -26,7 +26,7 @@ Vacation Window Planner is a desktop decision-support workspace for people tryin
 
 ## Interaction and content rules
 
-- Structured search must work without Gemini configuration.
+- Structured search must work without interpretation-provider configuration.
 - Interpret must never trigger a search and must explain that boundary beside the action.
 - Weekend selection uses named days, never internal numeric codes.
 - Required fields are visibly marked and retain programmatic labels.
@@ -48,5 +48,5 @@ User-facing work is complete only when all of the following are true:
 - Lint, formatting, type checking, and the production build pass.
 - The real Docker application is inspected at a 1,440-pixel desktop viewport.
 - Initial, validation/error, empty, populated, warning, and feedback states are reviewed as applicable.
-- The full primary journey is exercised against the live backend without a Gemini key.
+- The full primary journey is exercised against the live backend without an interpretation-provider key.
 - The final handoff includes rendered visual evidence or explicitly states which visual states were not inspected.
