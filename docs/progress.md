@@ -10,7 +10,7 @@ This is the versioned record of what has been merged and which pull request deli
 - Keep documentation-only PRs in the history below; they do not complete an implementation task.
 - Do not assign future PR numbers in advance. A blank PR cell means no PR has been opened yet.
 
-The next implementation PR is to finish **P0 03**. Once the foundation follow-ups are complete, **P0 06** is the next new task ID. The core Phase 0 product decisions have been resolved; [operational choices](open-decisions.md) remain for the relevant implementation tasks.
+The next implementation PR is to finish **P0 04**. Once the foundation follow-ups are complete, **P0 06** is the next new task ID. The core Phase 0 product decisions have been resolved; [operational choices](open-decisions.md) remain for the relevant implementation tasks.
 
 ## Phase 0
 
@@ -18,7 +18,7 @@ The next implementation PR is to finish **P0 03**. Once the foundation follow-up
 | --- | --- | --- | --- |
 | P0 01 | Monorepo skeleton | [#1](https://github.com/rakreshet/vacation-window-planner/pull/1) | Done |
 | P0 02 | FastAPI health and configuration | [#1](https://github.com/rakreshet/vacation-window-planner/pull/1), [#5](https://github.com/rakreshet/vacation-window-planner/pull/5) | Partial; PR open |
-| P0 03 | PostgreSQL, SQLAlchemy, and Alembic foundation | [#1](https://github.com/rakreshet/vacation-window-planner/pull/1) | Partial |
+| P0 03 | PostgreSQL, SQLAlchemy, and Alembic foundation | [#1](https://github.com/rakreshet/vacation-window-planner/pull/1), [#6](https://github.com/rakreshet/vacation-window-planner/pull/6) | Partial; PR open |
 | P0 04 | React, TypeScript, and Vite shell | [#1](https://github.com/rakreshet/vacation-window-planner/pull/1) | Partial |
 | P0 05 | GitHub Actions CI | [#1](https://github.com/rakreshet/vacation-window-planner/pull/1) | Partial |
 | P0 06 | Phase 0 domain contracts | — | Planned |
@@ -49,7 +49,7 @@ These gaps are relative to the existing task plan, not regressions in the runnin
 | Task | Remaining acceptance work |
 | --- | --- |
 | P0 02 | Structured API error envelope and invalid-configuration handling are addressed by [#5](https://github.com/rakreshet/vacation-window-planner/pull/5), pending merge. The health endpoint and typed settings already exist. |
-| P0 03 | Add typed SQLAlchemy session management. Database connectivity and Alembic upgrade/downgrade tests already exist. |
+| P0 03 | Typed SQLAlchemy session management is addressed by [#6](https://github.com/rakreshet/vacation-window-planner/pull/6), pending merge. Database connectivity and Alembic upgrade/downgrade tests already exist. |
 | P0 04 | Extract a typed health API client, make frontend environment configuration explicit, and test loading and failure states. The Vite shell and success-state test already exist. |
 | P0 05 | Add dependency caching and the planned frontend lint/format checks. Backend and frontend jobs already run, and both are required checks on `main`. |
 
