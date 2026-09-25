@@ -10,7 +10,7 @@ This is the versioned record of what has been merged and which pull request deli
 - Keep documentation-only PRs in the history below; they do not complete an implementation task.
 - Do not assign future PR numbers in advance. A blank PR cell means no PR has been opened yet.
 
-The next implementation PR is **P0 13**, deterministic scoring. The foundation follow-ups and P0 06–12 are in review, and the core Phase 0 product decisions have been resolved. [Operational choices](open-decisions.md) remain for the relevant implementation tasks.
+The next implementation PR is **P0 14**, diversity selection. The foundation follow-ups and P0 06–13 are in review, and the core Phase 0 product decisions have been resolved. [Operational choices](open-decisions.md) remain for the relevant implementation tasks.
 
 ## Phase 0
 
@@ -28,7 +28,7 @@ The next implementation PR is **P0 13**, deterministic scoring. The foundation f
 | P0 10 | Future-date clipping | [#13](https://github.com/rakreshet/vacation-window-planner/pull/13) | PR open |
 | P0 11 | Pure vacation-window generator | [#14](https://github.com/rakreshet/vacation-window-planner/pull/14) | PR open |
 | P0 12 | Generator property tests | [#15](https://github.com/rakreshet/vacation-window-planner/pull/15) | PR open |
-| P0 13 | Deterministic scoring | — | Planned |
+| P0 13 | Deterministic scoring | [#16](https://github.com/rakreshet/vacation-window-planner/pull/16) | PR open |
 | P0 14 | Diversity selection | — | Planned |
 | P0 15 | Grounded explanations | — | Planned |
 | P0 16 | Anonymous session persistence | — | Planned |
