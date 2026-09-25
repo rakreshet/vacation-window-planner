@@ -67,7 +67,7 @@ class HttpGeminiStructuredClient:
         try:
             response = httpx.post(
                 f"https://generativelanguage.googleapis.com/v1beta/models/{self._model}:generateContent",
-                params={"key": self._api_key},
+                headers={"x-goog-api-key": self._api_key},
                 json={
                     "contents": [{"parts": [{"text": prompt}]}],
                     "generationConfig": {

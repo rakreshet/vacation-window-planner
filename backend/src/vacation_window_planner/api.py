@@ -1,15 +1,19 @@
 """Typed HTTP entry point for the backend."""
 
+import logging
 from collections.abc import Callable
 from datetime import UTC, datetime
+from time import perf_counter
 from typing import Annotated
 from uuid import UUID
 
 from fastapi import FastAPI, Header, Request, Response, status
 from fastapi.exceptions import RequestValidationError
+from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 from pydantic import BaseModel, ConfigDict, Field, StrictInt, field_validator
 from starlette.exceptions import HTTPException as StarletteHTTPException
+from starlette.middleware.base import RequestResponseEndpoint
 
 from vacation_window_planner.domain.calendar import UnsupportedCalendarError
 from vacation_window_planner.domain.contracts import (
@@ -104,8 +108,47 @@ def create_app(
     session_creator: Callable[[SessionHttpRequest, datetime], CreatedAnonymousSession]
     | None = None,
     clock: Callable[[], datetime] = lambda: datetime.now(UTC),
+    cors_origins: tuple[str, ...] = (),
+    max_request_bytes: int = 65_536,
 ) -> FastAPI:
     app = FastAPI(title="Vacation Window Planner")
+    app.add_middleware(
+        CORSMiddleware,
+        allow_origins=list(cors_origins),
+        allow_credentials=False,
+        allow_methods=["GET", "POST", "OPTIONS"],
+        allow_headers=["Authorization", "Content-Type"],
+    )
+    request_logger = logging.getLogger("vacation_window_planner.requests")
+
+    @app.middleware("http")
+    async def request_guard_and_log(
+        request: Request, call_next: RequestResponseEndpoint
+    ) -> Response:
+        started = perf_counter()
+        content_length = request.headers.get("content-length")
+        if (
+            content_length is not None
+            and content_length.isdigit()
+            and int(content_length) > max_request_bytes
+        ):
+            response: Response = _error(
+                413,
+                "REQUEST_TOO_LARGE",
+                f"Request body exceeds the {max_request_bytes}-byte limit",
+            )
+        else:
+            response = await call_next(request)
+        request_logger.info(
+            "request_complete",
+            extra={
+                "http_method": request.method,
+                "http_path": request.url.path,
+                "http_status": response.status_code,
+                "duration_ms": round((perf_counter() - started) * 1000, 2),
+            },
+        )
+        return response
 
     @app.exception_handler(StarletteHTTPException)
     async def http_error(_request: Request, error: StarletteHTTPException) -> JSONResponse:

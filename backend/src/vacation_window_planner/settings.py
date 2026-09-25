@@ -1,6 +1,6 @@
 """Typed backend settings."""
 
-from pydantic import SecretStr, field_validator
+from pydantic import Field, SecretStr, field_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
 from sqlalchemy.engine import make_url
 from sqlalchemy.exc import ArgumentError
@@ -12,6 +12,10 @@ class Settings(BaseSettings):
     database_url: str
     gemini_api_key: SecretStr | None = None
     gemini_model: str = "gemini-2.5-flash"
+    cors_origins: tuple[str, ...] = ("http://localhost:15173",)
+    max_request_bytes: int = Field(default=65_536, ge=1_024, le=1_048_576)
+    session_expiry_days: int = Field(default=30, ge=1, le=365)
+    source_text_retention_days: int = Field(default=30, ge=0, le=365)
 
     @field_validator("database_url")
     @classmethod

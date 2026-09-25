@@ -16,6 +16,7 @@ from vacation_window_planner.interpreter import (
     GeminiConstraintInterpreter,
     HttpGeminiStructuredClient,
 )
+from vacation_window_planner.logging_config import configure_json_logging
 from vacation_window_planner.repositories.feedback import FeedbackRepository
 from vacation_window_planner.repositories.searches import SearchSnapshotRepository
 from vacation_window_planner.repositories.sessions import (
@@ -31,6 +32,7 @@ from vacation_window_planner.workflow import (
 )
 
 settings = Settings()
+configure_json_logging()
 engine = make_engine(settings.database_url)
 sessions = make_session_factory(engine)
 policy = RecommendationPolicy()
@@ -64,7 +66,7 @@ def create_session(request: SessionHttpRequest, now: datetime) -> CreatedAnonymo
             country_code=request.country_code,
             weekend_days=request.weekend_days,
             now=now,
-            expires_at=now + timedelta(days=30),
+            expires_at=now + timedelta(days=settings.session_expiry_days),
         )
         session.commit()
         return created
@@ -72,9 +74,13 @@ def create_session(request: SessionHttpRequest, now: datetime) -> CreatedAnonymo
 
 def recommend(request: RecommendationRequest) -> RecommendationResult:
     with sessions() as session:
+        snapshot_repository = SearchSnapshotRepository(session)
+        snapshot_repository.purge_source_text_before(
+            utc_now() - timedelta(days=settings.source_text_retention_days)
+        )
         workflow = RecommendationWorkflow(
             calendar_provider=calendar_provider,
-            snapshot_writer=SearchSnapshotRepository(session),
+            snapshot_writer=snapshot_repository,
             policy=policy,
             clock=utc_now,
         )
@@ -107,4 +113,6 @@ app = create_app(
     feedback_service=save_feedback,
     session_creator=create_session,
     clock=utc_now,
+    cors_origins=settings.cors_origins,
+    max_request_bytes=settings.max_request_bytes,
 )

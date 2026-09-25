@@ -119,3 +119,15 @@ class SearchSnapshotRepository:
         ).all()
         snapshots = (self.get(search_id) for search_id in search_ids)
         return tuple(snapshot for snapshot in snapshots if snapshot is not None)
+
+    def purge_source_text_before(self, cutoff: datetime) -> int:
+        records = self._session.scalars(
+            select(SearchRecord).where(
+                SearchRecord.created_at < cutoff,
+                SearchRecord.source_text.is_not(None),
+            )
+        ).all()
+        for record in records:
+            record.source_text = None
+        self._session.flush()
+        return len(records)

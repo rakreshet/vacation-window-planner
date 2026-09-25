@@ -37,6 +37,10 @@ services:
       RECOMMENDATION_ENGINE_VERSION: ${RECOMMENDATION_ENGINE_VERSION:-phase0-v1}
       GEMINI_API_KEY: ${GEMINI_API_KEY:-}
       GEMINI_MODEL: ${GEMINI_MODEL:-gemini-2.5-flash}
+      CORS_ORIGINS: '${CORS_ORIGINS:-["http://localhost:15173"]}'
+      MAX_REQUEST_BYTES: ${MAX_REQUEST_BYTES:-65536}
+      SESSION_EXPIRY_DAYS: ${SESSION_EXPIRY_DAYS:-30}
+      SOURCE_TEXT_RETENTION_DAYS: ${SOURCE_TEXT_RETENTION_DAYS:-30}
     depends_on:
       migrate:
         condition: service_completed_successfully

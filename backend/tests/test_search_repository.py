@@ -94,3 +94,26 @@ def test_snapshot_write_rolls_back_atomically_on_invalid_order(session: Session)
         )
 
     assert repository.list_for_session(SESSION_ID) == ()
+
+
+def test_expired_source_text_is_purged_without_removing_structured_snapshot(
+    session: Session,
+) -> None:
+    repository = SearchSnapshotRepository(session)
+    created_at = datetime(2026, 8, 1, 12, tzinfo=UTC)
+    search_id = repository.save_completed(
+        session_id=SESSION_ID,
+        engine_version="phase0-v1",
+        structured_input={"balance_days": 8},
+        source_text="delete after retention window",
+        recommendations=(),
+        created_at=created_at,
+    )
+    session.commit()
+
+    assert repository.purge_source_text_before(datetime(2026, 9, 1, tzinfo=UTC)) == 1
+    session.commit()
+    restored = repository.get(search_id)
+    assert restored is not None
+    assert restored.source_text is None
+    assert restored.structured_input == {"balance_days": 8}

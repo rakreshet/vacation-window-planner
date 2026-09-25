@@ -1,6 +1,6 @@
 # Vacation Window Planner
 
-A Docker-based proof of concept for finding useful vacation dates. Phase 0 will recommend date windows; phase 1 will add destinations, live flights, and separate proactive vacation opportunities. Today, this repository contains the running foundation and health screen, not the recommendation engine. The core Phase 0 product rules are in the PRD; remaining operational choices are in [docs/open-decisions.md](docs/open-decisions.md).
+A Docker-based proof of concept for finding useful vacation dates. Phase 0 recommends ranked date windows from an anonymous session, effective holiday calendar, editable structured constraints, and optional Gemini text interpretation; phase 1 will add destinations, live flights, and separate proactive vacation opportunities. The core Phase 0 product rules are in the PRD; remaining operational choices are in [docs/open-decisions.md](docs/open-decisions.md).
 
 ## Product and implementation documents
 
@@ -9,6 +9,8 @@ A Docker-based proof of concept for finding useful vacation dates. Phase 0 will 
 - [Implementation task plan](docs/implementation-plan.md)
 - [Delivery progress and PR map](docs/progress.md)
 - [Open product decisions](docs/open-decisions.md)
+- [Phase 0 runbook](docs/runbook.md)
+- [Security guidance](SECURITY.md)
 - [Domain language](CONTEXT.md)
 
 The Markdown documents are the version-controlled source of truth. Review changes to them in pull requests; any Word copies are point-in-time exports and should be regenerated from the approved Markdown rather than edited independently. The phase 1 proactive-opportunity capability is planned here, not implemented in the current foundation.
@@ -28,6 +30,8 @@ docker compose ps
 `cp -n` creates the local configuration only if it does not already exist. The example password is for local development; edit `.env` before sharing access to the app. `.env` is ignored by Git.
 
 Open [http://localhost:15173](http://localhost:15173). Once startup finishes, the page should say **Service ready**. The API health check is at [http://localhost:18080/health](http://localhost:18080/health). Docker Compose starts PostgreSQL, applies the database migration, starts the API, then starts the frontend. The host ports are bound to localhost, not exposed publicly.
+
+Structured search works without a Gemini key. To enable the optional Interpret action, set `GEMINI_API_KEY` in `.env`; never use a `VITE_` variable for provider secrets. CORS, request-size, session-expiry, and source-text-retention settings are documented in the [runbook](docs/runbook.md).
 
 If either default host port is occupied, add `WEB_PORT=15174` or `API_PORT=18081` to `.env`, restart with `docker compose up --build --detach`, and use the new port. To see the actual mapped ports, run `docker compose ps`.
 

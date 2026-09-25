@@ -4,4 +4,4 @@ The core Phase 0 behavior choices are now specified in the [PRD](prd.md), [HLD](
 
 The Phase 0 calendar source is the offline `python-holidays` library, initially with Israel (`IL`) as the only production-supported country. Its version is locked with the backend dependencies and recorded date cases protect provider-data changes.
 
-Before a public pilot, set session expiry and raw-text retention. Phase 1 flight-provider selection can wait.
+Phase 0 sessions expire after 30 days, and conversational source text is purged after 30 days by default; both periods are bounded environment settings. Phase 1 flight-provider selection can wait.
