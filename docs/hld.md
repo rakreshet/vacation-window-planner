@@ -112,6 +112,7 @@ A phase 1 additive migration stores the effective opportunity policy and exact o
 - The ranker derives explicit features such as efficiency, total days, length deviation, balance remaining, and warning flags.
 - A qualifying zero-PTO window remains a candidate. The phase 0 efficiency feature must be finite without division by zero; length fit and diversity keep trivial free weekends from displacing materially useful longer breaks. Negative remaining balance always yields a warning, even when within the explicit allowance.
 - Weights are configuration owned by the backend and versioned with the search snapshot. They are not exposed in the phase 0 response.
+- Initial Phase 0 tunable defaults are 0.50 efficiency, 0.30 total duration, and 0.20 preferred-length fit (summing to 1), a generation cap of 5,000, near-duplicate overlap ratio of 0.80, material score gap of 5, and five results. These are product starting values, not scientifically established constants; the versioned effective policy is saved with each search when persistence is added.
 - Tie handling records the decisive feature so explanations can state the real trade off.
 - Near duplicate selection operates after scoring and keeps two similar windows only when their material feature differences exceed a configured threshold.
 - Explanations are grounded in computed facts. A deterministic formatter is the baseline; Gemini may rephrase facts but cannot add or change them.
