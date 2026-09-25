@@ -28,6 +28,10 @@ _Avoid_: Search boundary, travel month
 A vacation window that uses no vacation days because none of its dates are effective working dates.
 _Avoid_: Free vacation
 
+**Effective calendar**:
+The observed holidays and nonworking weekdays applicable to a vacation search after the user's workweek override, if any, is applied to the selected country.
+_Avoid_: Provider calendar, public-holiday list
+
 **Search proposal**:
 Editable vacation-search fields inferred from optional conversational text before the user confirms a search.
 _Avoid_: Search result, recommendation
