@@ -10,6 +10,10 @@ from vacation_window_planner.database import (
 )
 from vacation_window_planner.domain.calendar import PythonHolidaysCalendarProvider
 from vacation_window_planner.domain.policy import RecommendationPolicy
+from vacation_window_planner.interpreter import (
+    GeminiConstraintInterpreter,
+    HttpGeminiStructuredClient,
+)
 from vacation_window_planner.repositories.searches import SearchSnapshotRepository
 from vacation_window_planner.repositories.sessions import (
     AnonymousSessionRepository,
@@ -27,6 +31,16 @@ engine = make_engine(settings.database_url)
 sessions = make_session_factory(engine)
 policy = RecommendationPolicy()
 calendar_provider = PythonHolidaysCalendarProvider()
+interpreter = (
+    GeminiConstraintInterpreter(
+        HttpGeminiStructuredClient(
+            api_key=settings.gemini_api_key.get_secret_value(),
+            model=settings.gemini_model,
+        )
+    )
+    if settings.gemini_api_key is not None and settings.gemini_api_key.get_secret_value()
+    else None
+)
 
 
 def utc_now() -> datetime:
@@ -59,5 +73,6 @@ app = create_app(
     database_probe=lambda: database_is_reachable(engine),
     session_lookup=find_session,
     recommendation_service=recommend,
+    interpretation_service=interpreter.interpret if interpreter is not None else None,
     clock=utc_now,
 )

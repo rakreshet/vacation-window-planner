@@ -20,6 +20,7 @@ from vacation_window_planner.domain.contracts import (
 )
 from vacation_window_planner.domain.date_ranges import PastSearchRangeError
 from vacation_window_planner.domain.generator import SearchTooBroadError
+from vacation_window_planner.interpreter import ConstraintProposal, InterpretationError
 from vacation_window_planner.repositories.searches import SearchSnapshotPersistenceError
 from vacation_window_planner.repositories.sessions import AnonymousSessionState
 from vacation_window_planner.workflow import (
@@ -43,6 +44,12 @@ class RecommendationHttpResponse(BaseModel):
     notice: str | None = None
 
 
+class InterpretationHttpRequest(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    text: str = Field(min_length=1, max_length=4000)
+
+
 def _error(
     status_code: int, code: str, message: str, fields: list[str] | None = None
 ) -> JSONResponse:
@@ -56,6 +63,7 @@ def create_app(
     database_probe: Callable[[], bool],
     session_lookup: Callable[[str, datetime], AnonymousSessionState | None] | None = None,
     recommendation_service: Callable[[RecommendationRequest], RecommendationResult] | None = None,
+    interpretation_service: Callable[[str], ConstraintProposal] | None = None,
     clock: Callable[[], datetime] = lambda: datetime.now(UTC),
 ) -> FastAPI:
     app = FastAPI(title="Vacation Window Planner")
@@ -119,5 +127,18 @@ def create_app(
             return _error(422, "INVALID_SEARCH", str(error))
         except SearchSnapshotPersistenceError:
             return _error(503, "PERSISTENCE_ERROR", "Search could not be saved")
+
+    @app.post("/interpret", response_model=ConstraintProposal)
+    def interpret(body: InterpretationHttpRequest) -> ConstraintProposal | JSONResponse:
+        if interpretation_service is None:
+            return _error(
+                503,
+                "INTERPRETATION_UNAVAILABLE",
+                "Text interpretation is not configured; use structured search fields",
+            )
+        try:
+            return interpretation_service(body.text)
+        except InterpretationError:
+            return _error(502, "INTERPRETATION_ERROR", "Text interpretation failed")
 
     return app
