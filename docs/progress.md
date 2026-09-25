@@ -10,7 +10,7 @@ This is the versioned record of what has been merged and which pull request deli
 - Keep documentation-only PRs in the history below; they do not complete an implementation task.
 - Do not assign future PR numbers in advance. A blank PR cell means no PR has been opened yet.
 
-Phase 0 implementation and its production desktop UI are complete in the open, numbered stack through the validated workweek interpretation follow-up [#32](https://github.com/rakreshet/vacation-window-planner/pull/32). Review, rebase, and merge the PRs in numeric order; the latest branch is runnable without an interpretation provider key. The core Phase 0 product and operational decisions have been resolved.
+Phase 0 implementation and its production desktop UI are complete in the open, numbered stack through the grouped-results and score-explanation follow-up [#33](https://github.com/rakreshet/vacation-window-planner/pull/33). Review, rebase, and merge the PRs in numeric order; the latest branch is runnable without an interpretation provider key. The core Phase 0 product and operational decisions have been resolved.
 
 ## Phase 0
 
@@ -28,8 +28,8 @@ Phase 0 implementation and its production desktop UI are complete in the open, n
 | P0 10 | Future-date clipping | [#13](https://github.com/rakreshet/vacation-window-planner/pull/13) | PR open |
 | P0 11 | Pure vacation-window generator | [#14](https://github.com/rakreshet/vacation-window-planner/pull/14) | PR open |
 | P0 12 | Generator property tests | [#15](https://github.com/rakreshet/vacation-window-planner/pull/15) | PR open |
-| P0 13 | Deterministic scoring | [#16](https://github.com/rakreshet/vacation-window-planner/pull/16) | PR open |
-| P0 14 | Diversity selection | [#17](https://github.com/rakreshet/vacation-window-planner/pull/17) | PR open |
+| P0 13 | Deterministic scoring | [#16](https://github.com/rakreshet/vacation-window-planner/pull/16), [#33](https://github.com/rakreshet/vacation-window-planner/pull/33) | PR open |
+| P0 14 | Diversity selection | [#17](https://github.com/rakreshet/vacation-window-planner/pull/17), [#33](https://github.com/rakreshet/vacation-window-planner/pull/33) | PR open |
 | P0 15 | Grounded explanations | [#18](https://github.com/rakreshet/vacation-window-planner/pull/18) | PR open |
 | P0 16 | Anonymous session persistence | [#19](https://github.com/rakreshet/vacation-window-planner/pull/19) | PR open |
 | P0 17 | Search and recommendation snapshots | [#20](https://github.com/rakreshet/vacation-window-planner/pull/20) | PR open |
@@ -37,7 +37,7 @@ Phase 0 implementation and its production desktop UI are complete in the open, n
 | P0 19 | Recommendation endpoint | [#22](https://github.com/rakreshet/vacation-window-planner/pull/22) | PR open |
 | P0 20 | Constraint interpreter | [#23](https://github.com/rakreshet/vacation-window-planner/pull/23), [#31](https://github.com/rakreshet/vacation-window-planner/pull/31), [#32](https://github.com/rakreshet/vacation-window-planner/pull/32) | PR open |
 | P0 21 | Phase 0 search interface | [#24](https://github.com/rakreshet/vacation-window-planner/pull/24), [#29](https://github.com/rakreshet/vacation-window-planner/pull/29), [#30](https://github.com/rakreshet/vacation-window-planner/pull/30) | PR open |
-| P0 22 | Recommendation results | [#25](https://github.com/rakreshet/vacation-window-planner/pull/25), [#29](https://github.com/rakreshet/vacation-window-planner/pull/29) | PR open |
+| P0 22 | Recommendation results | [#25](https://github.com/rakreshet/vacation-window-planner/pull/25), [#29](https://github.com/rakreshet/vacation-window-planner/pull/29), [#33](https://github.com/rakreshet/vacation-window-planner/pull/33) | PR open |
 | P0 23 | Simple feedback | [#26](https://github.com/rakreshet/vacation-window-planner/pull/26), [#29](https://github.com/rakreshet/vacation-window-planner/pull/29) | PR open |
 | P0 24 | End-to-end Phase 0 acceptance tests | [#27](https://github.com/rakreshet/vacation-window-planner/pull/27) | PR open |
 | P0 25 | Phase 0 hardening | [#28](https://github.com/rakreshet/vacation-window-planner/pull/28) | PR open |
