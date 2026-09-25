@@ -76,6 +76,7 @@ The rows follow the [recommended execution order](implementation-plan.md#recomme
 
 ## Documentation PRs
 
-| PR | Result |
-| --- | --- |
-| [#2](https://github.com/rakreshet/vacation-window-planner/pull/2) | Merged the four Phase 0 product-rule decisions into the versioned PRD, HLD, and task plan; added domain language. |
+| PR | Status | Result |
+| --- | --- | --- |
+| [#2](https://github.com/rakreshet/vacation-window-planner/pull/2) | Merged | Recorded the four Phase 0 product-rule decisions in the PRD, HLD, and task plan; added domain language. |
+| [#3](https://github.com/rakreshet/vacation-window-planner/pull/3) | Open | Introduces this delivery progress and PR map. |
