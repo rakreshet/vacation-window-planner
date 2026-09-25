@@ -7,6 +7,7 @@ A Docker-based proof of concept for finding useful vacation dates. Phase 0 will 
 - [Product requirements (PRD)](docs/prd.md)
 - [High-level design (HLD)](docs/hld.md)
 - [Implementation task plan](docs/implementation-plan.md)
+- [Delivery progress and PR map](docs/progress.md)
 - [Open product decisions](docs/open-decisions.md)
 - [Domain language](CONTEXT.md)
 
