@@ -1,11 +1,14 @@
 import { useEffect, useState } from 'react'
 
 import { getHealth } from './api'
+import type { RecommendationResponse } from './api'
+import SearchForm from './SearchForm'
 
 type HealthState = 'checking' | 'ready' | 'unavailable'
 
 export default function App() {
   const [health, setHealth] = useState<HealthState>('checking')
+  const [, setResults] = useState<RecommendationResponse | null>(null)
 
   useEffect(() => {
     const controller = new AbortController()
@@ -38,6 +41,7 @@ export default function App() {
       <h1>Vacation Window Planner</h1>
       <p>Find the best time to take a break.</p>
       <p role="status">{message}</p>
+      <SearchForm onResults={setResults} />
     </main>
   )
 }
