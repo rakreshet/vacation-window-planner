@@ -10,6 +10,7 @@ A Docker-based proof of concept for finding useful vacation dates. Phase 0 recom
 - [Delivery progress and PR map](docs/progress.md)
 - [Open product decisions](docs/open-decisions.md)
 - [Phase 0 runbook](docs/runbook.md)
+- [Phase 0 frontend design contract](docs/frontend-design.md)
 - [Security guidance](SECURITY.md)
 - [Domain language](CONTEXT.md)
 

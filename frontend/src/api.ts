@@ -61,6 +61,13 @@ function isObject(value: unknown): value is Record<string, unknown> {
   return typeof value === 'object' && value !== null
 }
 
+function errorMessage(body: unknown, fallback: string): string {
+  if (!isObject(body) || !isObject(body.error) || typeof body.error.message !== 'string') {
+    return fallback
+  }
+  return body.error.message
+}
+
 function isHealthResponse(value: unknown): value is HealthResponse {
   if (typeof value !== 'object' || value === null) return false
   if (!('status' in value) || !('database' in value)) return false
@@ -118,7 +125,7 @@ export async function searchRecommendations(
   })
   const body: unknown = await response.json()
   if (!response.ok || !isObject(body) || !Array.isArray(body.recommendations)) {
-    throw new Error('Search failed')
+    throw new Error(errorMessage(body, 'Search failed'))
   }
   return body as RecommendationResponse
 }

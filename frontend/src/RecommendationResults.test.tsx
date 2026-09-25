@@ -41,6 +41,14 @@ test('renders ranked cross-month recommendation facts', () => {
   expect(screen.getByText('Score 88')).toBeInTheDocument()
 })
 
+test('highlights the strongest option and translates efficiency into a decision metric', () => {
+  render(<RecommendationResults result={result([recommendation()])} />)
+
+  expect(screen.getByText('Best fit')).toBeInTheDocument()
+  expect(screen.getByText('4 balance-free days')).toBeInTheDocument()
+  expect(screen.getByText('Why this window works')).toBeInTheDocument()
+})
+
 test('renders close tradeoff explanation and clipped-date notice', () => {
   const close = recommendation({
     rank: 2,

@@ -23,6 +23,24 @@ test('shows that the service is ready when the health endpoint responds', async 
   expect(await screen.findByText('Service ready')).toBeInTheDocument()
 })
 
+test('presents the planner as a focused desktop workspace', async () => {
+  vi.stubGlobal(
+    'fetch',
+    vi.fn().mockResolvedValue({
+      ok: true,
+      json: async () => ({ status: 'ok', database: 'connected' }),
+    }),
+  )
+
+  render(<App />)
+
+  expect(
+    screen.getByRole('heading', { name: 'Turn vacation days into longer breaks.' }),
+  ).toBeInTheDocument()
+  expect(screen.getByRole('region', { name: 'Build your search' })).toBeInTheDocument()
+  expect(screen.getByText('Private by design')).toBeInTheDocument()
+})
+
 test('uses the configured API base path for the health view', async () => {
   vi.stubEnv('VITE_API_BASE_URL', '/custom-api')
   vi.stubGlobal(
@@ -107,6 +125,27 @@ test('interpretation only fills editable proposal fields and never searches', as
   expect(fetchMock.mock.calls.some(([url]) => String(url).endsWith('/recommendations'))).toBe(false)
 })
 
+test('makes the interpret-versus-search boundary and weekend choices explicit', async () => {
+  vi.stubGlobal(
+    'fetch',
+    vi.fn().mockResolvedValue({
+      ok: true,
+      json: async () => ({ status: 'ok', database: 'connected' }),
+    }),
+  )
+  render(<App />)
+  await screen.findByText('Service ready')
+
+  expect(
+    screen.getByText('Interpret only fills the editable fields below. It never starts a search.'),
+  ).toBeInTheDocument()
+  const weekendGroup = screen.getByRole('group', { name: 'Weekend days' })
+  expect(weekendGroup).toBeInTheDocument()
+  expect(screen.getByRole('checkbox', { name: 'Friday' })).toBeChecked()
+  expect(screen.getByRole('checkbox', { name: 'Saturday' })).toBeChecked()
+  expect(screen.getByRole('checkbox', { name: 'Sunday' })).not.toBeChecked()
+})
+
 test('proposal remains editable and search only uses confirmed local fields', async () => {
   const requests: Array<{ url: string; body?: string }> = []
   vi.stubGlobal(
@@ -164,6 +203,7 @@ test('structured search works without using interpretation', async () => {
   fireEvent.click(screen.getByRole('button', { name: 'Search' }))
 
   expect(await screen.findByText('Search complete')).toBeInTheDocument()
+  expect(screen.getByRole('heading', { name: 'Your best vacation windows' })).toHaveFocus()
   expect(requestedUrls.some((url) => url.endsWith('/interpret'))).toBe(false)
 })
 
@@ -189,4 +229,41 @@ test('required fields and allowance bounds are validated accessibly', async () =
       'Allowed negative days must be a whole number from 0 to 5',
     ),
   )
+})
+
+test('shows the actionable narrow-search error without rendering partial results', async () => {
+  vi.stubGlobal(
+    'fetch',
+    vi.fn(async (input: RequestInfo | URL) => {
+      const url = String(input)
+      if (url.endsWith('/health')) {
+        return { ok: true, json: async () => ({ status: 'ok', database: 'connected' }) }
+      }
+      if (url.endsWith('/sessions')) {
+        return { ok: true, json: async () => ({ token: 'session-token' }) }
+      }
+      return {
+        ok: false,
+        json: async () => ({
+          error: {
+            code: 'SEARCH_TOO_BROAD',
+            message: 'Search is too broad; narrow the selected months or length flexibility.',
+            fields: [],
+          },
+        }),
+      }
+    }),
+  )
+  render(<App />)
+  await screen.findByText('Service ready')
+  fillRequiredSearchFields()
+
+  fireEvent.click(screen.getByRole('button', { name: 'Search' }))
+
+  expect(await screen.findByRole('alert')).toHaveTextContent(
+    'Search is too broad; narrow the selected months or length flexibility.',
+  )
+  expect(
+    screen.queryByRole('heading', { name: 'Your best vacation windows' }),
+  ).not.toBeInTheDocument()
 })
