@@ -1,6 +1,7 @@
 """ASGI application wiring."""
 
 from datetime import UTC, datetime
+from uuid import UUID
 
 from vacation_window_planner.api import create_app
 from vacation_window_planner.database import (
@@ -9,11 +10,13 @@ from vacation_window_planner.database import (
     make_session_factory,
 )
 from vacation_window_planner.domain.calendar import PythonHolidaysCalendarProvider
+from vacation_window_planner.domain.contracts import FeedbackValue
 from vacation_window_planner.domain.policy import RecommendationPolicy
 from vacation_window_planner.interpreter import (
     GeminiConstraintInterpreter,
     HttpGeminiStructuredClient,
 )
+from vacation_window_planner.repositories.feedback import FeedbackRepository
 from vacation_window_planner.repositories.searches import SearchSnapshotRepository
 from vacation_window_planner.repositories.sessions import (
     AnonymousSessionRepository,
@@ -69,10 +72,23 @@ def recommend(request: RecommendationRequest) -> RecommendationResult:
             raise
 
 
+def save_feedback(search_id: UUID, rank: int, session_id: UUID, value: FeedbackValue) -> None:
+    with sessions() as session:
+        FeedbackRepository(session).set_for_rank(
+            session_id=session_id,
+            search_id=search_id,
+            rank=rank,
+            value=value,
+            now=utc_now(),
+        )
+        session.commit()
+
+
 app = create_app(
     database_probe=lambda: database_is_reachable(engine),
     session_lookup=find_session,
     recommendation_service=recommend,
     interpretation_service=interpreter.interpret if interpreter is not None else None,
+    feedback_service=save_feedback,
     clock=utc_now,
 )

@@ -1,5 +1,5 @@
-import { cleanup, render, screen } from '@testing-library/react'
-import { afterEach, expect, test } from 'vitest'
+import { cleanup, fireEvent, render, screen } from '@testing-library/react'
+import { afterEach, expect, test, vi } from 'vitest'
 
 import type { Recommendation, RecommendationResponse } from './api'
 import RecommendationResults from './RecommendationResults'
@@ -90,4 +90,14 @@ test('renders a clear zero-result state', () => {
   render(<RecommendationResults result={result([])} />)
 
   expect(screen.getByText('No feasible vacation windows found.')).toBeInTheDocument()
+})
+
+test('submits one simple thumbs feedback action', async () => {
+  const onFeedback = vi.fn().mockResolvedValue(undefined)
+  render(<RecommendationResults result={result([recommendation()])} onFeedback={onFeedback} />)
+
+  fireEvent.click(screen.getByRole('button', { name: 'Thumbs up recommendation 1' }))
+
+  expect(await screen.findByText('Feedback saved')).toBeInTheDocument()
+  expect(onFeedback).toHaveBeenCalledWith(1, 'thumbs_up')
 })

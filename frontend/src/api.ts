@@ -51,6 +51,8 @@ export type SearchInput = {
   source_text: string | null
 }
 
+export type FeedbackValue = 'thumbs_up' | 'thumbs_down'
+
 function baseUrl(): string {
   return (import.meta.env.VITE_API_BASE_URL || '/api').replace(/\/$/, '')
 }
@@ -119,4 +121,21 @@ export async function searchRecommendations(
     throw new Error('Search failed')
   }
   return body as RecommendationResponse
+}
+
+export async function submitFeedback(
+  token: string,
+  searchId: string,
+  rank: number,
+  value: FeedbackValue,
+): Promise<void> {
+  const response = await fetch(`${baseUrl()}/recommendations/${searchId}/${rank}/feedback`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      Authorization: `Bearer ${token}`,
+    },
+    body: JSON.stringify({ value }),
+  })
+  if (!response.ok) throw new Error('Could not save feedback')
 }

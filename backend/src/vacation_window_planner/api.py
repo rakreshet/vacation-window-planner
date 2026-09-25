@@ -13,6 +13,7 @@ from starlette.exceptions import HTTPException as StarletteHTTPException
 
 from vacation_window_planner.domain.calendar import UnsupportedCalendarError
 from vacation_window_planner.domain.contracts import (
+    FeedbackValue,
     Recommendation,
     SearchConstraints,
     UserVacationContext,
@@ -21,6 +22,7 @@ from vacation_window_planner.domain.contracts import (
 from vacation_window_planner.domain.date_ranges import PastSearchRangeError
 from vacation_window_planner.domain.generator import SearchTooBroadError
 from vacation_window_planner.interpreter import ConstraintProposal, InterpretationError
+from vacation_window_planner.repositories.feedback import FeedbackAuthorizationError
 from vacation_window_planner.repositories.searches import SearchSnapshotPersistenceError
 from vacation_window_planner.repositories.sessions import AnonymousSessionState
 from vacation_window_planner.workflow import (
@@ -50,6 +52,16 @@ class InterpretationHttpRequest(BaseModel):
     text: str = Field(min_length=1, max_length=4000)
 
 
+class FeedbackHttpRequest(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    value: FeedbackValue
+
+
+class FeedbackHttpResponse(BaseModel):
+    value: FeedbackValue
+
+
 def _error(
     status_code: int, code: str, message: str, fields: list[str] | None = None
 ) -> JSONResponse:
@@ -64,6 +76,7 @@ def create_app(
     session_lookup: Callable[[str, datetime], AnonymousSessionState | None] | None = None,
     recommendation_service: Callable[[RecommendationRequest], RecommendationResult] | None = None,
     interpretation_service: Callable[[str], ConstraintProposal] | None = None,
+    feedback_service: Callable[[UUID, int, UUID, FeedbackValue], None] | None = None,
     clock: Callable[[], datetime] = lambda: datetime.now(UTC),
 ) -> FastAPI:
     app = FastAPI(title="Vacation Window Planner")
@@ -140,5 +153,28 @@ def create_app(
             return interpretation_service(body.text)
         except InterpretationError:
             return _error(502, "INTERPRETATION_ERROR", "Text interpretation failed")
+
+    @app.post(
+        "/recommendations/{search_id}/{rank}/feedback",
+        response_model=FeedbackHttpResponse,
+    )
+    def feedback(
+        search_id: UUID,
+        rank: int,
+        body: FeedbackHttpRequest,
+        authorization: Annotated[str | None, Header()] = None,
+    ) -> dict[str, str] | JSONResponse:
+        if feedback_service is None or session_lookup is None:
+            return _error(503, "SERVICE_UNAVAILABLE", "Feedback service is unavailable")
+        if authorization is None or not authorization.startswith("Bearer "):
+            return _error(401, "INVALID_SESSION", "A bearer session token is required")
+        session = session_lookup(authorization.removeprefix("Bearer ").strip(), clock())
+        if session is None:
+            return _error(401, "SESSION_EXPIRED", "Session is expired or unknown")
+        try:
+            feedback_service(search_id, rank, session.id, body.value)
+        except FeedbackAuthorizationError:
+            return _error(404, "RECOMMENDATION_NOT_FOUND", "Recommendation not found")
+        return {"value": body.value.value}
 
     return app

@@ -8,6 +8,7 @@ from fastapi.testclient import TestClient
 from vacation_window_planner.api import create_app
 from vacation_window_planner.domain.contracts import Recommendation, VacationWindow
 from vacation_window_planner.domain.generator import SearchTooBroadError
+from vacation_window_planner.repositories.feedback import FeedbackAuthorizationError
 from vacation_window_planner.repositories.searches import SearchSnapshotPersistenceError
 from vacation_window_planner.repositories.sessions import AnonymousSessionState
 from vacation_window_planner.workflow import RecommendationResult
@@ -172,3 +173,52 @@ def test_repository_failure_returns_stable_service_error() -> None:
 
     assert response.status_code == 503
     assert response.json()["error"]["code"] == "PERSISTENCE_ERROR"
+
+
+def test_feedback_endpoint_authorizes_session_and_accepts_only_thumbs() -> None:
+    actions: list[tuple[UUID, int, UUID, str]] = []
+
+    def save_feedback(search_id: UUID, rank: int, session_id: UUID, value: object) -> None:
+        actions.append((search_id, rank, session_id, str(value)))
+
+    client = TestClient(
+        create_app(
+            database_probe=lambda: True,
+            session_lookup=lambda _token, _now: active_session(),
+            feedback_service=save_feedback,
+            clock=lambda: NOW,
+        )
+    )
+
+    response = client.post(
+        f"/recommendations/{SEARCH_ID}/1/feedback",
+        json={"value": "thumbs_up"},
+        headers={"Authorization": "Bearer token"},
+    )
+
+    assert response.status_code == 200
+    assert response.json() == {"value": "thumbs_up"}
+    assert actions[0][:3] == (SEARCH_ID, 1, SESSION_ID)
+
+
+def test_feedback_for_another_sessions_recommendation_is_hidden() -> None:
+    def reject_feedback(_search_id: UUID, _rank: int, _session_id: UUID, _value: object) -> None:
+        raise FeedbackAuthorizationError("not owned")
+
+    client = TestClient(
+        create_app(
+            database_probe=lambda: True,
+            session_lookup=lambda _token, _now: active_session(),
+            feedback_service=reject_feedback,
+            clock=lambda: NOW,
+        )
+    )
+
+    response = client.post(
+        f"/recommendations/{SEARCH_ID}/1/feedback",
+        json={"value": "thumbs_down"},
+        headers={"Authorization": "Bearer token"},
+    )
+
+    assert response.status_code == 404
+    assert response.json()["error"]["code"] == "RECOMMENDATION_NOT_FOUND"

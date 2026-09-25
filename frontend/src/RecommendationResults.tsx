@@ -1,7 +1,11 @@
+import { useState } from 'react'
+
 import type { Recommendation, RecommendationResponse } from './api'
+import type { FeedbackValue } from './api'
 
 type RecommendationResultsProps = {
   result: RecommendationResponse
+  onFeedback?: (rank: number, value: FeedbackValue) => Promise<void>
 }
 
 function dateParts(value: string): { monthDay: string; year: number } {
@@ -33,7 +37,19 @@ function warningText(warning: string, remainingBalance: number): string {
   return warning
 }
 
-export default function RecommendationResults({ result }: RecommendationResultsProps) {
+export default function RecommendationResults({ result, onFeedback }: RecommendationResultsProps) {
+  const [feedbackStatus, setFeedbackStatus] = useState<Record<number, string>>({})
+
+  async function saveFeedback(rank: number, value: FeedbackValue) {
+    if (onFeedback === undefined) return
+    try {
+      await onFeedback(rank, value)
+      setFeedbackStatus((current) => ({ ...current, [rank]: 'Feedback saved' }))
+    } catch {
+      setFeedbackStatus((current) => ({ ...current, [rank]: 'Feedback could not be saved' }))
+    }
+  }
+
   return (
     <section aria-labelledby="results-heading">
       <h2 id="results-heading">Recommendations</h2>
@@ -61,6 +77,27 @@ export default function RecommendationResults({ result }: RecommendationResultsP
                       </li>
                     ))}
                   </ul>
+                )}
+                {onFeedback && (
+                  <div aria-label={`Feedback for recommendation ${recommendation.rank}`}>
+                    <button
+                      type="button"
+                      aria-label={`Thumbs up recommendation ${recommendation.rank}`}
+                      onClick={() => void saveFeedback(recommendation.rank, 'thumbs_up')}
+                    >
+                      👍
+                    </button>
+                    <button
+                      type="button"
+                      aria-label={`Thumbs down recommendation ${recommendation.rank}`}
+                      onClick={() => void saveFeedback(recommendation.rank, 'thumbs_down')}
+                    >
+                      👎
+                    </button>
+                    {feedbackStatus[recommendation.rank] && (
+                      <span role="status">{feedbackStatus[recommendation.rank]}</span>
+                    )}
+                  </div>
                 )}
               </article>
             </li>

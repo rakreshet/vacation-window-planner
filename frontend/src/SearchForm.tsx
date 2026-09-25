@@ -5,7 +5,7 @@ import { createSession, interpretText, searchRecommendations } from './api'
 import type { RecommendationResponse } from './api'
 
 type SearchFormProps = {
-  onResults: (result: RecommendationResponse) => void
+  onResults: (result: RecommendationResponse, token: string) => void
 }
 
 export default function SearchForm({ onResults }: SearchFormProps) {
@@ -90,7 +90,7 @@ export default function SearchForm({ onResults }: SearchFormProps) {
         result_limit: 5,
         source_text: sourceText.trim() || null,
       })
-      onResults(result)
+      onResults(result, token)
       setMessage('Search complete')
     } catch (caught) {
       setError(caught instanceof Error ? caught.message : 'Search failed')
