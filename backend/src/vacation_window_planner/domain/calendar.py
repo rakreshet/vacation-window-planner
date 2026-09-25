@@ -49,9 +49,7 @@ class FakeCalendarProvider:
         return HolidayCalendar(
             country_code=country_code,
             weekend_days=(
-                default_weekend_days(country_code)
-                if weekend_override is None
-                else weekend_override
+                default_weekend_days(country_code) if weekend_override is None else weekend_override
             ),
             observed_holidays=frozenset(day for day in observed if start_date <= day <= end_date),
         )
@@ -82,9 +80,7 @@ class PythonHolidaysCalendarProvider:
         return HolidayCalendar(
             country_code=country_code,
             weekend_days=(
-                default_weekend_days(country_code)
-                if weekend_override is None
-                else weekend_override
+                default_weekend_days(country_code) if weekend_override is None else weekend_override
             ),
             observed_holidays=frozenset(day for day in source if start_date <= day <= end_date),
         )
