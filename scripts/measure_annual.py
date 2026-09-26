@@ -69,15 +69,23 @@ def fixtures() -> list[Fixture]:
         }
         cases.append(Fixture("default", country, session, request, "complete"))
         dates = [
-            (date(year, 1, 1) + timedelta(days=offset)).isoformat()
+            (date(year, 1, 1) + timedelta(days=offset * 2)).isoformat()
             for offset in range(100)
         ]
         personal = {
             "schema_version": 1,
             "minimum_notice_days": 0,
             "date_overrides": [
-                {"start_date": day, "end_date": day, "kind": "extra_working_day"}
-                for day in dates
+                {
+                    "start_date": (
+                        date.fromisoformat(day) + timedelta(days=1)
+                    ).isoformat(),
+                    "end_date": (
+                        date.fromisoformat(day) + timedelta(days=1)
+                    ).isoformat(),
+                    "kind": "extra_working_day" if index % 2 else "personal_day_off",
+                }
+                for index, day in enumerate(dates)
             ],
             "unavailable_ranges": [
                 {"start_date": day, "end_date": day} for day in dates
@@ -223,6 +231,10 @@ def measure(base_url: str, fixture: Fixture) -> dict[str, Any]:
             fixture.country,
             result["status"],
         )
+        if fixture.name == "dense-rules":
+            calendar = result["calculation_context"]["planning"]["personal_calendar"]
+            assert len(calendar["date_overrides"]) == 100
+            assert len(calendar["unavailable_ranges"]) == 100
         if result["status"] == "too_broad":
             assert result["plans"] == [] and result["full_mix_feasibility"] == "unknown"
         if fixture.name == "reduction":
