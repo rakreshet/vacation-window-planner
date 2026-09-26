@@ -23,7 +23,10 @@ from vacation_window_planner.repositories.comparisons import (
     ComparisonSnapshotRepository,
 )
 from vacation_window_planner.repositories.feedback import FeedbackRepository
-from vacation_window_planner.repositories.searches import SearchSnapshotRepository
+from vacation_window_planner.repositories.searches import (
+    SearchSnapshotPersistenceError,
+    SearchSnapshotRepository,
+)
 from vacation_window_planner.repositories.sessions import (
     AnonymousSessionRepository,
     AnonymousSessionState,
@@ -87,6 +90,9 @@ def recommend(request: RecommendationRequest) -> RecommendationResult:
             result = workflow.recommend(request)
             session.commit()
             return result
+        except SQLAlchemyError as error:
+            session.rollback()
+            raise SearchSnapshotPersistenceError("Search could not be saved") from error
         except Exception:
             session.rollback()
             raise
