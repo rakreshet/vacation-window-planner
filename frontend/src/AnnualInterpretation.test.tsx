@@ -175,3 +175,25 @@ test('provider failure leaves structured planning usable and reports no applied 
   expect(screen.getByRole('button', { name: 'Generate plans' })).toBeEnabled()
   expect(screen.getByLabelText('Available leave for included trips')).toHaveValue(18)
 })
+
+test('an unfinished date edit cannot be discarded by applying a replacement mix', async () => {
+  openWorkspace({
+    slots: [{ label: 'Long', min_days: 7, max_days: 14 }],
+    references: [],
+    assumptions: [],
+  })
+  fireEvent.click(
+    within(screen.getByRole('group', { name: 'Break 1' })).getByRole('button', {
+      name: 'Add exact dates',
+    }),
+  )
+  fireEvent.change(screen.getByLabelText('Describe your year'), {
+    target: { value: 'One long trip' },
+  })
+  fireEvent.click(screen.getByRole('button', { name: 'Interpret annual request' }))
+  await screen.findByRole('region', { name: 'Review annual proposal' })
+  expect(screen.getByRole('button', { name: 'Apply proposal' })).toBeDisabled()
+  expect(
+    screen.getByText('Keep or cancel your unfinished exact dates before applying a proposal.'),
+  ).toBeInTheDocument()
+})
