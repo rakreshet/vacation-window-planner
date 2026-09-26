@@ -49,7 +49,10 @@ def test_representative_phase0_journey_and_cap_safety() -> None:
     sessions = make_session_factory(engine)
     with engine.begin() as connection:
         connection.execute(
-            text("TRUNCATE comparisons, feedback, recommendations, searches, anonymous_sessions")
+            text(
+                "TRUNCATE annual_plan_runs, comparisons, feedback, "
+                "recommendations, searches, anonymous_sessions"
+            )
         )
 
     def create_session(body: SessionHttpRequest, now: datetime) -> CreatedAnonymousSession:

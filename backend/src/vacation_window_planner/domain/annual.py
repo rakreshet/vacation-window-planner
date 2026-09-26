@@ -26,7 +26,7 @@ from vacation_window_planner.domain.annual_search import (
     solve_annual_graph,
 )
 from vacation_window_planner.domain.assessment import DayDetail, PreparedCalendar, assess_window
-from vacation_window_planner.domain.contracts import VacationWindow
+from vacation_window_planner.domain.contracts import UserVacationContext, VacationWindow
 from vacation_window_planner.domain.personal_calendar import DateRange
 from vacation_window_planner.domain.values import DomainValue
 
@@ -571,27 +571,44 @@ def annual_accounting(
     )
 
 
+class AnnualInputError(ValueError):
+    def __init__(self, message: str, field: str) -> None:
+        super().__init__(message)
+        self.field = field
+
+
 def validate_annual_context(request: AnnualRequest, calendar: PreparedCalendar) -> None:
     if (
         calendar.base.country_code != calendar.context.country_code
         or calendar.base.weekend_days != calendar.context.weekend_days
     ):
         raise ValueError("Resolved calendar must match the common planning context")
-    if calendar.context.allowed_negative_days:
-        raise ValueError("Annual planning does not use a negative allowance")
-    if not calendar.local_today.year <= request.year <= calendar.local_today.year + 2:
-        raise ValueError("Choose the current year or one of the next two years")
-    if not 0 <= calendar.context.balance_days <= 366:
-        raise ValueError("Available leave must be between zero and 366 days")
-    if request.reserve_days > calendar.context.balance_days:
-        raise ValueError("Reserve cannot exceed available leave")
-    for slot in request.slots:
+    validate_annual_inputs(request, calendar.context, calendar.local_today)
+
+
+def validate_annual_inputs(
+    request: AnnualRequest, context: UserVacationContext, today: date
+) -> None:
+    if context.allowed_negative_days:
+        raise AnnualInputError(
+            "Annual planning does not use a negative allowance", "context.allowed_negative_days"
+        )
+    if not today.year <= request.year <= today.year + 2:
+        raise AnnualInputError("Choose the current year or one of the next two years", "year")
+    if not 0 <= context.balance_days <= 366:
+        raise AnnualInputError(
+            "Available leave must be between zero and 366 days", "context.balance_days"
+        )
+    if request.reserve_days > context.balance_days:
+        raise AnnualInputError("Reserve cannot exceed available leave", "reserve_days")
+    for index, slot in enumerate(request.slots):
         dates = slot.locked_dates
         if dates is not None and (
-            dates.start_date < calendar.local_today
+            dates.start_date < today
             or dates.start_date.year != request.year
             or dates.end_date.year != request.year
         ):
-            raise ValueError(
-                f"Locked break {slot.slot_id} must start today or later within the plan year"
+            raise AnnualInputError(
+                f"Locked break {slot.slot_id} must start today or later within the plan year",
+                f"slots.{index}.locked_dates",
             )
