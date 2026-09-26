@@ -141,7 +141,7 @@ def create_app(
     recommendation_service: Callable[[RecommendationRequest], RecommendationResult] | None = None,
     annual_service: Callable[[AnnualPlanningRequest], AnnualRun] | None = None,
     comparison_service: Callable[[ComparisonRequest], ComparisonResult] | None = None,
-    interpretation_service: Callable[[str], ConstraintProposal] | None = None,
+    interpretation_service: Callable[[InterpretationInput], ConstraintProposal] | None = None,
     annual_interpretation_service: Callable[[AnnualInterpretationInput], AnnualProposal]
     | None = None,
     feedback_service: Callable[[UUID, int, UUID, FeedbackValue], None] | None = None,
@@ -359,7 +359,7 @@ def create_app(
                 "Text interpretation is not configured; use structured search fields",
             )
         try:
-            return interpretation_service(body.text)
+            return interpretation_service(body)
         except InterpretationError:
             return _error(502, "INTERPRETATION_ERROR", "Text interpretation failed")
 
