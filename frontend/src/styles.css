@@ -1361,3 +1361,39 @@ a:focus-visible {
   color: var(--ink-soft);
   font-size: 12px;
 }
+
+[hidden] {
+  display: none !important;
+}
+.planning-tabs {
+  display: flex;
+  gap: 8px;
+  margin: 0 0 20px;
+}
+.planning-tabs button {
+  padding: 14px 24px;
+  border: 1px solid var(--line);
+  border-radius: 99px;
+  background: var(--paper);
+  color: var(--ink);
+  font-weight: 700;
+}
+.planning-tabs button[aria-pressed='true'] {
+  background: var(--forest);
+  color: white;
+}
+.comparison-fields {
+  padding: 0;
+  margin: 24px 0;
+  border: 0;
+  min-width: 0;
+}
+.comparison-baseline {
+  margin-top: 28px;
+  padding: 24px;
+  background: var(--mint-light);
+  border-radius: 20px;
+}
+.compare-result-action {
+  margin: 20px 0 0;
+}

@@ -2,32 +2,24 @@ import { useState } from 'react'
 import type { FormEvent } from 'react'
 
 import { createSession, interpretText, searchRecommendations } from './api'
-import type { RecommendationResponse } from './api'
+import type { RecommendationResponse, SessionInput } from './api'
+import PlanningFields from './PlanningFields'
+import { planningSession } from './planning'
+import type { PlanningDraft } from './planning'
 
 type SearchFormProps = {
-  onResults: (result: RecommendationResponse, token: string) => void
+  onResults: (result: RecommendationResponse, token: string, context: SessionInput) => void
+  planning: PlanningDraft
+  onPlanningChange: (value: PlanningDraft) => void
 }
 
 type BusyAction = 'interpret' | 'search' | null
 
-const WEEKDAYS = [
-  { value: 0, short: 'Mon', label: 'Monday' },
-  { value: 1, short: 'Tue', label: 'Tuesday' },
-  { value: 2, short: 'Wed', label: 'Wednesday' },
-  { value: 3, short: 'Thu', label: 'Thursday' },
-  { value: 4, short: 'Fri', label: 'Friday' },
-  { value: 5, short: 'Sat', label: 'Saturday' },
-  { value: 6, short: 'Sun', label: 'Sunday' },
-]
-
-export default function SearchForm({ onResults }: SearchFormProps) {
+export default function SearchForm({ onResults, planning, onPlanningChange }: SearchFormProps) {
   const [sourceText, setSourceText] = useState('')
-  const [balance, setBalance] = useState('')
-  const [allowedNegative, setAllowedNegative] = useState('0')
-  const [country, setCountry] = useState('IL')
+  const { balance, allowedNegative, country } = planning
   const [month, setMonth] = useState('')
   const [preferredLength, setPreferredLength] = useState('')
-  const [weekendDays, setWeekendDays] = useState<number[]>([4, 5])
   const [message, setMessage] = useState<string | null>(null)
   const [error, setError] = useState<string | null>(null)
   const [interpretError, setInterpretError] = useState<string | null>(null)
@@ -44,9 +36,12 @@ export default function SearchForm({ onResults }: SearchFormProps) {
     setInterpretError(null)
     try {
       const proposal = await interpretText(sourceText)
-      if (proposal.balance_days !== null) setBalance(String(proposal.balance_days))
-      setAllowedNegative(String(proposal.allowed_negative_days))
-      if (proposal.country_code !== null) setCountry(proposal.country_code)
+      onPlanningChange({
+        balance: proposal.balance_days !== null ? String(proposal.balance_days) : planning.balance,
+        allowedNegative: String(proposal.allowed_negative_days),
+        country: proposal.country_code ?? planning.country,
+        weekendDays: proposal.weekend_days ?? planning.weekendDays,
+      })
       if (proposal.months.length > 0) {
         const selected = proposal.months[0]
         setMonth(`${selected.year}-${String(selected.month).padStart(2, '0')}`)
@@ -54,7 +49,6 @@ export default function SearchForm({ onResults }: SearchFormProps) {
       if (proposal.preferred_length_days !== null) {
         setPreferredLength(String(proposal.preferred_length_days))
       }
-      if (proposal.weekend_days !== null) setWeekendDays(proposal.weekend_days)
       setMessage('Proposal ready to edit')
     } catch {
       setInterpretError(
@@ -88,31 +82,21 @@ export default function SearchForm({ onResults }: SearchFormProps) {
     const [year, selectedMonth] = month.split('-').map(Number)
     setBusy('search')
     try {
-      const token = await createSession({
-        balance_days: balanceDays,
-        allowed_negative_days: negativeDays,
-        country_code: country,
-        weekend_days: weekendDays,
-      })
+      const context = planningSession(planning)
+      const token = await createSession(context)
       const result = await searchRecommendations(token, {
         months: [{ year, month: selectedMonth }],
         preferred_length_days: lengthDays,
         result_limit: 5,
         source_text: sourceText.trim() || null,
       })
-      onResults(result, token)
+      onResults(result, token, context)
       setMessage('Search complete')
     } catch (caught) {
       setError(caught instanceof Error ? caught.message : 'Search failed')
     } finally {
       setBusy(null)
     }
-  }
-
-  function toggleWeekend(day: number) {
-    setWeekendDays((current) =>
-      current.includes(day) ? current.filter((value) => value !== day) : [...current, day].sort(),
-    )
   }
 
   return (
@@ -185,59 +169,7 @@ export default function SearchForm({ onResults }: SearchFormProps) {
             </div>
 
             <div className="field-grid">
-              <div className="field">
-                <label htmlFor="balance">
-                  Vacation balance <span>Required</span>
-                </label>
-                <div className="input-with-suffix">
-                  <input
-                    id="balance"
-                    aria-label="Vacation balance"
-                    type="number"
-                    min="0"
-                    step="1"
-                    value={balance}
-                    placeholder="8"
-                    onChange={(event) => setBalance(event.target.value)}
-                  />
-                  <span>days</span>
-                </div>
-                <small>Available before this break</small>
-              </div>
-
-              <div className="field">
-                <label htmlFor="allowed-negative">Allowed negative days</label>
-                <div className="input-with-suffix">
-                  <input
-                    id="allowed-negative"
-                    type="number"
-                    min="0"
-                    max="5"
-                    step="1"
-                    value={allowedNegative}
-                    onChange={(event) => setAllowedNegative(event.target.value)}
-                  />
-                  <span>days</span>
-                </div>
-                <small>How far below zero you will accept</small>
-              </div>
-
-              <div className="field">
-                <label htmlFor="country">Public holiday calendar</label>
-                <div className="select-wrap">
-                  <select
-                    id="country"
-                    aria-label="Country calendar"
-                    value={country}
-                    onChange={(event) => setCountry(event.target.value)}
-                  >
-                    <option value="IL">Israel</option>
-                  </select>
-                  <ChevronIcon />
-                </div>
-                <small>Israel is supported in Phase 0</small>
-              </div>
-
+              <PlanningFields value={planning} onChange={onPlanningChange} />
               <div className="field">
                 <label htmlFor="month">
                   Month to explore <span>Required</span>
@@ -271,24 +203,6 @@ export default function SearchForm({ onResults }: SearchFormProps) {
                 </div>
                 <small>Close alternatives may also appear</small>
               </div>
-
-              <fieldset className="field field--wide weekend-field">
-                <legend>Weekend days</legend>
-                <small>Choose the days that are normally free for you</small>
-                <div className="day-picker">
-                  {WEEKDAYS.map((day) => (
-                    <label key={day.value}>
-                      <input
-                        type="checkbox"
-                        aria-label={day.label}
-                        checked={weekendDays.includes(day.value)}
-                        onChange={() => toggleWeekend(day.value)}
-                      />
-                      <span>{day.short}</span>
-                    </label>
-                  ))}
-                </div>
-              </fieldset>
             </div>
 
             {(error || message) && (
@@ -369,14 +283,6 @@ function ShieldIcon() {
     <svg viewBox="0 0 20 20" aria-hidden="true">
       <path d="M10 2.5 16 5v4.7c0 3.5-2.4 6.5-6 7.8-3.6-1.3-6-4.3-6-7.8V5l6-2.5Z" />
       <path d="m7.2 10 1.8 1.8 3.8-4" />
-    </svg>
-  )
-}
-
-function ChevronIcon() {
-  return (
-    <svg viewBox="0 0 20 20" aria-hidden="true">
-      <path d="m6 8 4 4 4-4" />
     </svg>
   )
 }

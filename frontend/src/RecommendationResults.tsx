@@ -4,6 +4,7 @@ import type { FeedbackValue, Recommendation, RecommendationResponse } from './ap
 
 type RecommendationResultsProps = {
   result: RecommendationResponse
+  onCompare?: (window: Recommendation['window']) => void
   onFeedback?: (rank: number, value: FeedbackValue) => Promise<void>
 }
 
@@ -40,7 +41,11 @@ function warningText(warning: string, remainingBalance: number): string {
   return warning
 }
 
-export default function RecommendationResults({ result, onFeedback }: RecommendationResultsProps) {
+export default function RecommendationResults({
+  result,
+  onFeedback,
+  onCompare,
+}: RecommendationResultsProps) {
   const [feedbackStatus, setFeedbackStatus] = useState<Record<number, string>>({})
   const [feedbackChoice, setFeedbackChoice] = useState<Record<number, FeedbackValue>>({})
 
@@ -184,6 +189,16 @@ export default function RecommendationResults({ result, onFeedback }: Recommenda
                         {alternatives.map((window) => (
                           <li key={`${window.start_date}-${window.end_date}`}>
                             {dateWindow(window)}
+                            {onCompare && (
+                              <button
+                                className="button button--secondary"
+                                type="button"
+                                onClick={() => onCompare(window)}
+                                aria-label={`Compare ${dateWindow(window)}`}
+                              >
+                                Compare dates
+                              </button>
+                            )}
                           </li>
                         ))}
                       </ul>
@@ -217,6 +232,16 @@ export default function RecommendationResults({ result, onFeedback }: Recommenda
                     </ul>
                   )}
 
+                  {onCompare && (
+                    <button
+                      className="button button--secondary compare-result-action"
+                      type="button"
+                      onClick={() => onCompare(recommendation.window)}
+                      aria-label={`Compare nearby dates for recommendation ${recommendation.rank}`}
+                    >
+                      Compare nearby dates →
+                    </button>
+                  )}
                   {onFeedback && (
                     <div
                       className="feedback-row"

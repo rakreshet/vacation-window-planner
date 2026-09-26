@@ -1,9 +1,12 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 
 import { getHealth, submitFeedback } from './api'
-import type { RecommendationResponse } from './api'
+import type { RecommendationResponse, SessionInput, DateRange } from './api'
 import RecommendationResults from './RecommendationResults'
 import SearchForm from './SearchForm'
+import ComparisonWorkspace from './ComparisonWorkspace'
+import type { ComparisonDraft, ComparisonOrigin } from './ComparisonWorkspace'
+import { emptyPlanning, planningFromSession } from './planning'
 
 type HealthState = 'checking' | 'ready' | 'unavailable'
 
@@ -11,6 +14,34 @@ export default function App() {
   const [health, setHealth] = useState<HealthState>('checking')
   const [results, setResults] = useState<RecommendationResponse | null>(null)
   const [sessionToken, setSessionToken] = useState<string | null>(null)
+
+  const [planning, setPlanning] = useState(emptyPlanning)
+  const [confirmedContext, setConfirmedContext] = useState<SessionInput | null>(null)
+  const [mode, setMode] = useState<'search' | 'compare'>('search')
+  const [comparisonDraft, setComparisonDraft] = useState<ComparisonDraft | null>(null)
+  const [origin, setOrigin] = useState<ComparisonOrigin | undefined>()
+  const [comparisonKey, setComparisonKey] = useState(0)
+  const opener = useRef<HTMLElement | null>(null)
+
+  function openComparison(dates?: DateRange) {
+    opener.current = document.activeElement as HTMLElement
+    if (dates && confirmedContext && sessionToken && results) {
+      setComparisonDraft({ dates, planning: planningFromSession(confirmedContext) })
+      setOrigin({ token: sessionToken, searchId: results.search_id, context: confirmedContext })
+    } else {
+      setComparisonDraft(
+        (current) => current ?? { dates: { start_date: '', end_date: '' }, planning },
+      )
+      setOrigin(undefined)
+    }
+    setComparisonKey((value) => value + 1)
+    setMode('compare')
+  }
+
+  function closeComparison() {
+    setMode('search')
+    setTimeout(() => opener.current?.focus(), 0)
+  }
 
   useEffect(() => {
     const controller = new AbortController()
@@ -121,26 +152,52 @@ export default function App() {
           </aside>
         </section>
 
-        <SearchForm
-          onResults={(result, token) => {
-            setResults(result)
-            setSessionToken(token)
-          }}
-        />
-        {results && (
-          <RecommendationResults
-            result={results}
-            onFeedback={async (rank, value) => {
-              if (sessionToken === null) throw new Error('Session is unavailable')
-              await submitFeedback(sessionToken, results.search_id, rank, value)
+        <nav className="planning-tabs" aria-label="Planning task">
+          <button type="button" aria-pressed={mode === 'search'} onClick={closeComparison}>
+            Find dates
+          </button>
+          <button type="button" aria-pressed={mode === 'compare'} onClick={() => openComparison()}>
+            Compare my dates
+          </button>
+        </nav>
+        <div hidden={mode !== 'search'}>
+          <SearchForm
+            planning={planning}
+            onPlanningChange={setPlanning}
+            onResults={(result, token, context) => {
+              setResults(result)
+              setSessionToken(token)
+              setConfirmedContext(context)
             }}
+          />
+          {results && (
+            <RecommendationResults
+              key={results.search_id}
+              result={results}
+              onCompare={(window) =>
+                openComparison({ start_date: window.start_date, end_date: window.end_date })
+              }
+              onFeedback={async (rank, value) => {
+                if (sessionToken === null) throw new Error('Session is unavailable')
+                await submitFeedback(sessionToken, results.search_id, rank, value)
+              }}
+            />
+          )}
+        </div>
+        {mode === 'compare' && comparisonDraft && (
+          <ComparisonWorkspace
+            key={comparisonKey}
+            draft={comparisonDraft}
+            onDraftChange={setComparisonDraft}
+            origin={origin}
+            onClose={closeComparison}
           />
         )}
       </main>
 
       <footer className="site-footer">
         <span>Vacation Window Planner</span>
-        <span>Phase 0 · Dates, not destinations</span>
+        <span>Phase 0.5 · Make every leave day count</span>
       </footer>
     </div>
   )

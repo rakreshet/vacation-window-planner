@@ -45,6 +45,7 @@ export type RecommendationResponse = {
 }
 
 export type SessionInput = {
+  time_zone?: string
   balance_days: number
   allowed_negative_days: number
   country_code: string
@@ -152,4 +153,79 @@ export async function submitFeedback(
     body: JSON.stringify({ value }),
   })
   if (!response.ok) throw new Error('Could not save feedback')
+}
+
+export type DateRange = { start_date: string; end_date: string }
+export type ComparedWindow = {
+  window: Recommendation['window']
+  charged_dates: string[]
+  weekend_dates: string[]
+  remaining_balance: number
+  feasible: boolean
+  warnings: string[]
+}
+export type ComparisonAlternative = {
+  evaluation: ComparedWindow
+  delta: {
+    extra_days: number
+    vacation_days_saved: number
+    start_shift_days: number
+    end_shift_days: number
+  }
+  explanation: string
+}
+export type ComparisonResponse = {
+  comparison_id: string
+  baseline: ComparedWindow
+  save_leave: ComparisonAlternative[]
+  longer_break: ComparisonAlternative[]
+  policy: {
+    version: string
+    shift_days: number
+    extra_days: number
+    max_length_days: number
+    result_limit: number
+    generation_cap: number
+  }
+  notices: string[]
+}
+export class ComparisonError extends Error {
+  constructor(
+    message: string,
+    readonly code: string,
+  ) {
+    super(message)
+  }
+}
+export async function compareDates(
+  token: string,
+  dates: DateRange,
+  sourceSearchId?: string,
+): Promise<ComparisonResponse> {
+  const response = await fetch(`${baseUrl()}/comparisons`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+    body: JSON.stringify({
+      ...dates,
+      ...(sourceSearchId ? { source_search_id: sourceSearchId } : {}),
+    }),
+  })
+  const body: unknown = await response.json()
+  if (
+    !response.ok ||
+    !isObject(body) ||
+    !isObject(body.baseline) ||
+    !Array.isArray(body.save_leave) ||
+    !Array.isArray(body.longer_break)
+  ) {
+    const code =
+      isObject(body) && isObject(body.error) && typeof body.error.code === 'string'
+        ? body.error.code
+        : 'COMPARISON_ERROR'
+    throw new ComparisonError(
+      errorMessage(body, 'Comparison is unavailable. Your dates have been kept; try again.'),
+      code,
+    )
+  }
+  return body as ComparisonResponse
 }
