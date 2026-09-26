@@ -22,6 +22,7 @@ from vacation_window_planner.comparison_workflow import (
 )
 from vacation_window_planner.domain.calendar import UnsupportedCalendarError
 from vacation_window_planner.domain.comparison import ComparisonInput, ComparisonResult
+from vacation_window_planner.domain.comparison_engine import ComparisonTooBroadError
 from vacation_window_planner.domain.contracts import (
     FeedbackValue,
     Recommendation,
@@ -251,6 +252,8 @@ def create_app(
         )
         try:
             return comparison_service(ComparisonRequest(context=context, dates=body))
+        except ComparisonTooBroadError as error:
+            return _error(422, "COMPARISON_TOO_BROAD", str(error))
         except ComparisonPersistenceError:
             return _error(503, "PERSISTENCE_ERROR", "Comparison could not be saved")
         except ComparisonOriginError as error:

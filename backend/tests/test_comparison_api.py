@@ -1,3 +1,4 @@
+from dataclasses import replace
 from datetime import UTC, datetime, timedelta
 from uuid import UUID
 
@@ -26,10 +27,10 @@ class MemorySnapshots:
         self.last = values
 
 
-def client() -> TestClient:
+def client(balance: int = 2, **policy_values: object) -> TestClient:
     workflow = ComparisonWorkflow(
         calendar_provider=FakeCalendarProvider(),
-        policy=ComparisonPolicy(_env_file=None),
+        policy=ComparisonPolicy(_env_file=None, **policy_values),
         clock=lambda: NOW,
         snapshot_writer=MemorySnapshots(),
         source_search_owned=lambda search, session: search == UUID(int=2),
@@ -37,7 +38,9 @@ def client() -> TestClient:
     return TestClient(
         create_app(
             database_probe=lambda: True,
-            session_lookup=lambda token, now: SESSION if token == "valid" else None,
+            session_lookup=lambda token, now: (
+                replace(SESSION, balance_days=balance) if token == "valid" else None
+            ),
             comparison_service=workflow.compare,
         )
     )
@@ -107,3 +110,67 @@ def test_invalid_dates_and_sessions_are_rejected_while_free_weekends_are_valid()
     )
     assert response.json()["baseline"]["window"]["vacation_days_used"] == 0
     assert response.json()["baseline"]["feasible"] is True
+
+
+def test_nearby_groups_fulfil_their_literal_promises_and_preserve_baseline() -> None:
+    data = (
+        client(balance=8)
+        .post(
+            "/comparisons",
+            headers={"Authorization": "Bearer valid"},
+            json={
+                "start_date": "2027-01-03",
+                "end_date": "2027-01-07",
+            },
+        )
+        .json()
+    )
+    assert data["baseline"]["window"]["start_date"] == "2027-01-03"
+    saved = data["save_leave"][0]
+    assert saved["evaluation"]["window"]["total_days"] == 5
+    assert saved["delta"]["vacation_days_saved"] == 2
+    assert saved["evaluation"]["window"]["start_date"] == "2027-01-01"
+    extended = data["longer_break"][0]
+    assert extended["evaluation"]["window"]["total_days"] == 9
+    assert extended["delta"]["extra_days"] == 4
+    assert extended["evaluation"]["window"]["vacation_days_used"] == 5
+    assert len(data["save_leave"]) <= 3 and len(data["longer_break"]) <= 3
+
+
+def test_zero_leave_and_no_improvement_are_valid_complete_responses() -> None:
+    body = {"start_date": "2027-01-01", "end_date": "2027-01-02"}
+    data = (
+        client(balance=0)
+        .post("/comparisons", headers={"Authorization": "Bearer valid"}, json=body)
+        .json()
+    )
+    assert data["save_leave"] == [] and data["longer_break"] == []
+    assert data["baseline"]["window"]["vacation_days_used"] == 0
+
+
+def test_incomplete_discovery_never_returns_a_partial_shortlist() -> None:
+    response = client(generation_cap=1).post(
+        "/comparisons",
+        headers={"Authorization": "Bearer valid"},
+        json={
+            "start_date": "2027-01-03",
+            "end_date": "2027-01-07",
+        },
+    )
+    assert response.status_code == 422
+    assert response.json()["error"]["code"] == "COMPARISON_TOO_BROAD"
+    assert "save_leave" not in response.json()
+
+
+def test_all_alternatives_are_feasible_and_deterministic_across_month_boundary() -> None:
+    body = {"start_date": "2027-01-03", "end_date": "2027-01-07"}
+    app = client(balance=2)
+    first = app.post("/comparisons", headers={"Authorization": "Bearer valid"}, json=body).json()
+    second = app.post("/comparisons", headers={"Authorization": "Bearer valid"}, json=body).json()
+    assert first["save_leave"] == second["save_leave"]
+    assert first["longer_break"] == second["longer_break"]
+    for group in ("save_leave", "longer_break"):
+        for option in first[group]:
+            assert option["evaluation"]["feasible"] is True
+            assert option["evaluation"]["remaining_balance"] >= -1
+            assert option["delta"]["vacation_days_saved"] >= 0

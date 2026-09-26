@@ -12,7 +12,7 @@ from vacation_window_planner.domain.comparison import (
     ComparisonPolicy,
     ComparisonResult,
 )
-from vacation_window_planner.domain.comparison_engine import describe_window
+from vacation_window_planner.domain.comparison_engine import describe_window, discover_alternatives
 from vacation_window_planner.domain.contracts import UserVacationContext
 from vacation_window_planner.domain.local_dates import local_today
 
@@ -79,13 +79,26 @@ class ComparisonWorkflow:
             raise InvalidComparisonError("Dates are too close to the calendar limit")
         calendar = self._calendar_provider.resolve(
             context.country_code,
-            dates.start_date,
-            dates.end_date,
+            date.fromordinal(
+                max(today.toordinal(), dates.start_date.toordinal() - self._policy.shift_days)
+            ),
+            dates.start_date
+            + timedelta(days=self._policy.shift_days + self._policy.max_length_days - 1),
             weekend_override=context.weekend_days,
+        )
+        baseline = describe_window(dates.start_date, dates.end_date, calendar, context)
+        saved, longer = discover_alternatives(
+            baseline,
+            calendar=calendar,
+            context=context,
+            policy=self._policy,
+            today=today,
         )
         result = ComparisonResult(
             comparison_id=uuid4(),
-            baseline=describe_window(dates.start_date, dates.end_date, calendar, context),
+            baseline=baseline,
+            save_leave=saved,
+            longer_break=longer,
             policy=self._policy,
         )
         self._snapshot_writer.save_completed(
