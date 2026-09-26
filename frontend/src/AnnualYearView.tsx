@@ -23,7 +23,8 @@ export default function AnnualYearView({
     <section aria-label={`${result.input.year} year view`} className="annual-year">
       <h3>{result.input.year} year view</h3>
       <p className="annual-legend">
-        Proposed break · 🔒 Locked dates · ● Charged workday · × Unavailable · Past dates faded
+        Proposed break · Outlined: locked dates · ● Charged workday · × Unavailable · Past dates
+        struck through
       </p>
       <div className="annual-month-grid">
         {Array.from({ length: 12 }, (_, monthIndex) => {

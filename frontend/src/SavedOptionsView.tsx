@@ -1,3 +1,5 @@
+import { formatSavedDate, formatSavedWindow } from './displayDates'
+import { Icon } from './InterfaceArtwork'
 import ExportActions from './ExportActions'
 import { useCallback, useEffect, useState } from 'react'
 import type { ActionSnapshot } from './actionSnapshots'
@@ -23,9 +25,11 @@ export function snapshotEvaluation(snapshot: ActionSnapshot) {
 export default function SavedOptionsView({
   onCheck,
   store,
+  onExplore,
 }: {
   onCheck: (snapshot: ActionSnapshot) => void
   store?: SavedOptionsStore
+  onExplore?: () => void
 }) {
   const [records, setRecords] = useState<SavedOptionsList>({ items: [], invalid: [] })
   const [error, setError] = useState('')
@@ -88,7 +92,21 @@ export default function SavedOptionsView({
           </button>
         </div>
       )}
-      {!records.items.length && !records.invalid.length && !error && <p>No saved options yet.</p>}
+      {!records.items.length && !records.invalid.length && !error && (
+        <div className="empty-results">
+          <Icon name="bookmark" />
+          <h3>A little space for your next escape.</h3>
+          <p>No saved options yet.</p>
+          <p>
+            Find a break you love and save it here. Compare it later, or add it to your calendar.
+          </p>
+          {onExplore && (
+            <button className="button button--primary" type="button" onClick={onExplore}>
+              Explore vacation dates <Icon name="arrow" />
+            </button>
+          )}
+        </div>
+      )}
       {records.invalid.map((key) => (
         <article key={key} className="form-notice">
           <p>
@@ -128,11 +146,19 @@ function SavedOptionCard({
   const [name, setName] = useState(item.name)
   return (
     <article className="recommendation-card">
-      <h2>{item.name}</h2>
+      <h2>
+        {item.name === `${item.snapshot.window.start_date} – ${item.snapshot.window.end_date}`
+          ? formatSavedWindow(item.snapshot.window)
+          : item.name}
+      </h2>
       <ExportActions snapshot={item.snapshot} title={item.name} />
       <p>
-        Historical calculation · {item.snapshot.context.calculated_at} ·{' '}
-        {item.snapshot.context.planning.time_zone}
+        Historical calculation ·{' '}
+        {formatSavedDate(
+          item.snapshot.context.calculated_at,
+          item.snapshot.context.planning.time_zone,
+        )}{' '}
+        · {item.snapshot.context.planning.time_zone}
       </p>
       {renaming ? (
         <form

@@ -127,7 +127,7 @@ test.each(['IL', 'US', 'GB'])(
     fireEvent.change(screen.getByLabelText('Vacation balance'), { target: { value: '8' } })
     fireEvent.change(screen.getByLabelText('Selected month'), { target: { value: '2027-01' } })
     fireEvent.change(screen.getByLabelText('Preferred length in days'), { target: { value: '5' } })
-    fireEvent.click(screen.getByRole('button', { name: 'Search' }))
+    fireEvent.click(screen.getByRole('button', { name: 'Find my dates' }))
     await screen.findByText('Search complete')
     fireEvent.click(screen.getByRole('button', { name: 'Thumbs up recommendation 1' }))
     await screen.findByText('Feedback saved')
@@ -201,7 +201,7 @@ test('an opportunity opens Compare with the confirmed Search context and origin'
   fireEvent.change(screen.getByLabelText('Vacation balance'), { target: { value: '8' } })
   fireEvent.change(screen.getByLabelText('Selected month'), { target: { value: '2027-02' } })
   fireEvent.change(screen.getByLabelText('Preferred length in days'), { target: { value: '5' } })
-  fireEvent.click(screen.getByRole('button', { name: 'Search' }))
+  fireEvent.click(screen.getByRole('button', { name: 'Find my dates' }))
   fireEvent.click(await screen.findByRole('button', { name: 'Compare opportunity Jan 3, 2027' }))
   await screen.findByRole('region', { name: 'Your dates' })
   expect(comparisons[0]).toEqual({

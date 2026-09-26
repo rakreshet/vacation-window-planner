@@ -37,8 +37,10 @@ test('a past model proposal never fills the search month', async () => {
   fireEvent.change(screen.getByLabelText('Describe your ideal break'), {
     target: { value: 'next April' },
   })
-  fireEvent.click(screen.getByRole('button', { name: 'Interpret' }))
-  await waitFor(() => expect(screen.getByRole('button', { name: 'Interpret' })).toBeEnabled())
+  fireEvent.click(screen.getByRole('button', { name: 'Fill in my details' }))
+  await waitFor(() =>
+    expect(screen.getByRole('button', { name: 'Fill in my details' })).toBeEnabled(),
+  )
   expect(screen.getByLabelText('Selected month')).not.toHaveValue('2025-04')
   expect(screen.getByRole('alert')).toHaveTextContent(/past/i)
 })
@@ -48,7 +50,7 @@ test('manual past months are rejected before creating a session', async () => {
   fireEvent.change(screen.getByLabelText('Vacation balance'), { target: { value: '10' } })
   fireEvent.change(screen.getByLabelText('Preferred length in days'), { target: { value: '12' } })
   fireEvent.change(screen.getByLabelText('Selected month'), { target: { value: '2025-04' } })
-  fireEvent.click(screen.getByRole('button', { name: 'Search' }))
+  fireEvent.click(screen.getByRole('button', { name: 'Find my dates' }))
   expect(request.mock.calls.some(([url]) => String(url).endsWith('/sessions'))).toBe(false)
   expect(screen.getByRole('alert')).toHaveTextContent(/past/i)
   expect(screen.getByLabelText('Selected month')).toHaveAttribute('min', '2026-09')

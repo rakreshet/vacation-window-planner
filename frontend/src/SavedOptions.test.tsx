@@ -84,3 +84,18 @@ test('a failed rename retains editable text and Escape cancels it', async () => 
   fireEvent.keyDown(screen.getByLabelText('Option name'), { key: 'Escape' })
   expect(screen.queryByLabelText('Option name')).not.toBeInTheDocument()
 })
+
+test('historical calculation time matches its displayed planning timezone across midnight', async () => {
+  const store = new SavedOptionsStore(new MemoryOptionStorage())
+  store.save(
+    await createActionSnapshot('search', vacationWindow, assessment, {
+      ...context,
+      calculated_at: '2026-09-26T23:30:00Z',
+      planning: { ...context.planning, time_zone: 'America/Los_Angeles' },
+    }),
+  )
+  render(<SavedOptions store={store} onCheck={() => {}} />)
+  expect(screen.getByText(/Historical calculation/)).toHaveTextContent(
+    'Historical calculation · Sep 26, 2026, 4:30 PM · America/Los_Angeles',
+  )
+})
