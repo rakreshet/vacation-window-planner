@@ -227,3 +227,51 @@ def test_production_calendars_account_for_observed_holidays_in_comparisons(
     assert sorted(baseline["charged_dates"]) == charged
     assert baseline["window"]["vacation_days_used"] == len(charged)
     assert baseline["remaining_balance"] == 2 - len(charged)
+
+
+def test_personal_block_is_not_mislabeled_as_over_budget() -> None:
+    from vacation_window_planner.domain.personal_calendar import PersonalCalendar
+
+    rules = PersonalCalendar.model_validate(
+        {
+            "unavailable_ranges": [
+                {"start_date": "2027-01-02", "end_date": "2027-01-02"},
+            ]
+        }
+    )
+    workflow = ComparisonWorkflow(
+        calendar_provider=FakeCalendarProvider(),
+        policy=ComparisonPolicy(),
+        clock=lambda: NOW,
+        snapshot_writer=MemorySnapshots(),
+        source_search_owned=lambda *_: True,
+    )
+    app = create_app(
+        database_probe=lambda: True,
+        session_lookup=lambda *_: replace(SESSION, personal_calendar=rules),
+        comparison_service=workflow.compare,
+    )
+    response = TestClient(app).post(
+        "/comparisons",
+        headers={"Authorization": "Bearer valid"},
+        json={"start_date": "2027-01-01", "end_date": "2027-01-02"},
+    )
+    assert response.status_code == 200
+    baseline = response.json()["baseline"]
+    assert not baseline["feasible"]
+    assert "over_budget" not in baseline["warnings"]
+    assert baseline["assessment"]["eligibility_reasons"] == [
+        {"code": "unavailable_dates", "dates": ["2027-01-02"]},
+    ]
+
+
+def test_comparison_context_records_accounting_version_without_session_identity() -> None:
+    response = client().post(
+        "/comparisons",
+        headers={"Authorization": "Bearer valid"},
+        json={"start_date": "2027-01-01", "end_date": "2027-01-02"},
+    )
+    context = response.json()["calculation_context"]
+    assert context["accounting_version"] == "phase075-v1"
+    assert context["local_today"] == "2026-09-26"
+    assert "session_id" not in context["planning"]
