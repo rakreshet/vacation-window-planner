@@ -27,6 +27,7 @@ export default function AnnualPlanWorkspace({
     active.current = null
     setBusy(false)
     setError(null)
+    setFailedOutcome(null)
     setDraft(next)
   }
   const [selectedId, setSelectedId] = useState('')
