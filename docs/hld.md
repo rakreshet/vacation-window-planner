@@ -2,13 +2,15 @@
 
 A phased architecture for deterministic vacation recommendations and later travel enrichment
 
-This design places the recommendation engine behind a small interface and keeps language models, persistence, holiday data, and future flight providers at explicit seams. Phase 0 ships without destinations or flights. Phase 1 adds travel enrichment and deterministic proactive opportunity detection while preserving the tested vacation window core.
+This design places the recommendation engine behind a small interface and keeps language models, persistence, holiday data, and future flight providers at explicit seams. Phase 0 and Phase 0.5 are delivered without destinations or flights. Exact-date comparison shares the pure day-accounting core with Search. Phase 1 will add travel enrichment and deterministic proactive opportunity detection while preserving the tested vacation window core.
 
 | Field | Value |
 | --- | --- |
-| **Status** | Approved planning baseline |
+| **Status** | Phase 0 and Phase 0.5 delivered; Phase 1 planned |
 | **Prepared for** | POC product and engineering implementation |
-| **Version date** | 2026-09-25 |
+| **Version date** | 2026-09-26 |
+
+Delivery and original PR links are recorded in the [progress tracker](progress.md). Phase 0.5 requirements and task details are maintained in the [comparison plan](phase-0.5-plan.md), with completed validation in the [acceptance record](phase-0.5-acceptance.md).
 
 ## Architecture decision
 
@@ -18,12 +20,12 @@ Use a modular monolith for the POC: a React and TypeScript frontend calls a Fast
 
 | **Actor or system** | **Interaction** |
 | --- | --- |
-| Anonymous user | Provides conversational or structured constraints, starts a search, reviews recommendations, and submits simple feedback |
+| Anonymous user | Provides conversational or structured constraints, starts a search or exact-date comparison, reviews results, and submits simple recommendation feedback |
 | React frontend | Owns presentation and client session token; sends typed JSON to the backend |
 | FastAPI backend | Validates requests, coordinates domain modules, persists snapshots, and returns data only |
 | Holiday calendar adapter | Returns effective observed nonworking dates and locale weekend defaults |
 | Pydantic AI interpreter | Uses the configured Google or xAI model to propose editable structured fields; the application derives weekend defaults from country, and deterministic recommendation explanations remain outside the model |
-| PostgreSQL | Stores anonymous sessions, search snapshots, recommendations, and feedback |
+| PostgreSQL | Stores anonymous sessions, Search and comparison snapshots, recommendations, and feedback |
 | Flight search adapter in phase 1 | Returns normalized live flight options from a mock or external provider such as SerpApi |
 
 ## Module map
@@ -31,12 +33,14 @@ Use a modular monolith for the POC: a React and TypeScript frontend calls a Fast
 | **Module** | **Interface** | **Responsibility and depth** |
 | --- | --- | --- |
 | Recommendation workflow | recommend(request) -> result | Coordinates validation, calendar lookup, generation, ranking, persistence, and optional phase 1 opportunity scan and travel enrichment behind one external interface |
+| Exact-window evaluator | evaluate_window(start, end, calendar, balance) -> evaluation | Pure inclusive day accounting shared by Search and comparison; identifies charged dates, observed holidays, and remaining balance |
+| Comparison service | compare(context, request) -> result | Validates local dates and optional Search ownership, evaluates the exact baseline, discovers bounded alternatives, and persists the complete snapshot |
 | Window generator | generate(context, constraints) -> windows | Pure deterministic enumeration of feasible local date windows; no ranking or provider calls |
 | Window ranker | rank(windows, policy) -> ranked | Scores, explains, applies candidate caps, and selects a diverse top N |
 | Constraint interpreter | interpret(text) -> proposal | One Pydantic AI implementation validates text input and schema-constrained model output, then adds the country workweek default; search remains outside the model |
 | Workweek policy | default_weekend_days(country_code) -> days | Pure, replaceable rule: Israel has Friday/Saturday off; every other country has Saturday/Sunday off. User edits remain authoritative at search time |
 | Holiday calendar | calendar(country, months, override) -> calendar | Adapter seam for locale defaults, observed holidays, and working week overrides |
-| Session repository | load, save_session, save_search, save_feedback | SQLAlchemy adapter hides PostgreSQL tables and transaction details |
+| Persistence repositories | Session, Search, comparison snapshot, and feedback operations | SQLAlchemy adapters hide PostgreSQL tables and transaction details |
 | Travel enricher in phase 1 | enrich(windows, travel_constraints) -> enriched | Selects candidates, finds destinations and live flights, normalizes results, and fails clearly when live data is unavailable |
 | Opportunity detector in phase 1 | detect(context, calendar, policy) -> opportunities | Scans bounded future windows, scores and thresholds them deterministically, and explains why qualifying windows merit a separate section; no LLM or flight dependency |
 
@@ -48,13 +52,26 @@ Use a modular monolith for the POC: a React and TypeScript frontend calls a Fast
 1. Pydantic validation checks required months, integer whole-day values, country or calendar selection, and configured limits. The allowed-negative allowance defaults to zero and rejects values outside zero through five.
 1. The holiday calendar adapter resolves observed holidays and the effective weekend pattern for the local date range.
 
-The temporary workweek policy covers any country code, but this does not expand holiday-calendar support: the production calendar adapter currently supports Israel only.
+The temporary workweek policy covers any country code, but the production calendar adapter supports only Israel (`IL`), U.S. federal holidays (`US`), and England & Wales bank holidays (`GB`, provider subdivision `ENG`). Editable weekends are separate from observed-holiday rules; see [calendar scope](runbook.md#supported-holiday-calendars).
+
 1. The pure window generator enumerates candidate windows within a configurable safety cap. Starts must fall in a selected future local month or its unelapsed portion; ends may cross that month's boundary. Total length counts inclusive consecutive local dates, while PTO is charged only for effective working dates. Nonworking dates may occur at either edge. An incomplete enumeration caused by the cap yields a coded narrow-the-search outcome with no ranked recommendations.
 1. The ranker computes deterministic features, a normalized score and its weighted components, warnings, and fact based explanation inputs. It groups equal-outcome dates before applying the shortlist limit, tries later equivalent dates when the first overlaps another selected result, then removes remaining near duplicates.
 1. The workflow persists an immutable search snapshot and its recommendations in one transaction.
 1. The backend returns typed JSON. The React frontend owns labels, colors, ordering display, empty states, and warning presentation.
 
-## Phase 1 request flow
+## Phase 0.5 comparison flow
+
+1. Both manual dates and any visible Search date open the same desktop comparison workspace. Search results, drafts, and feedback remain available when returning.
+2. The browser supplies its IANA time zone when creating the anonymous session. Both workflows derive today's date in that zone from an injected clock. Clients omitting the field and migrated sessions use `Asia/Jerusalem`; calendar selection never changes the zone.
+3. `POST /comparisons` authenticates the session, validates inclusive start/end dates, and verifies ownership of an optional originating Search ID. Changed planning context creates a separate session and omits the original Search ID.
+4. The service resolves the effective holiday calendar for the full candidate neighborhood. The shared pure evaluator calculates exact charged dates and balance for the baseline, including an over-budget baseline.
+5. Bounded discovery returns two goal-specific groups: the same length for fewer vacation days, or a longer break for no more vacation days. Alternatives must be future dated and feasible. The service ranks by gain, date movement, and stable dates, selects distinct outcomes, and computes deltas without reusing the Search score.
+6. The service persists a complete immutable input/calendar/policy/output snapshot before returning success. A generation-cap hit returns `COMPARISON_TOO_BROAD` without a partial shortlist.
+7. Editing dates marks results stale until explicit recalculation; selecting an alternative preserves the baseline. No-improvement and over-budget states keep the exact accounting visible.
+
+Policy defaults and API examples are maintained in the [runbook](runbook.md#phase-05-exact-date-comparison); the [comparison plan](phase-0.5-plan.md) and [acceptance record](phase-0.5-acceptance.md) cover the detailed contract and verification.
+
+## Phase 1 request flow (planned)
 
 Phase 1 keeps the phase 0 window generator and ranker intact. After a pre score selects a bounded set of useful windows, the travel enricher proposes destinations and calls the flight adapter. The adapter returns normalized live flight options for the required passenger count, one origin, and economy cabin by default. A final scorer combines the existing window facts with destination fit, price, and flight convenience. The system presents no travel recommendation when live flight data is unavailable and returns a clear provider error. Booking remains out of scope.
 
@@ -66,10 +83,12 @@ Alongside the explicit search, the workflow may run a separate, bounded future-w
 
 | **Type** | **Required data** | **Notes** |
 | --- | --- | --- |
-| UserVacationContext | session_id, balance_days, allowed_negative_days, country_code, weekend_days | Anonymous and session scoped; allowed_negative_days is a whole-day value from 0 to 5, default 0 |
+| UserVacationContext | session_id, balance_days, allowed_negative_days, country_code, weekend_days, time_zone | Anonymous and session scoped; allowed_negative_days is a whole-day value from 0 to 5, default 0 |
 | SearchConstraints | months, preferred_length_days, result_limit | Months constrain the start date, not the end date; optional flexibility, notice, text intent, and calendar override fields |
 | VacationWindow | start_date, end_date, total_days, vacation_days_used, holiday_dates | Pure generated value with no rank; total_days is inclusive local calendar length and vacation_days_used counts effective working dates only |
 | Recommendation | window, rank, score, score_breakdown, alternative_windows, matching_window_count, explanation, remaining_balance, warnings | Equivalent dates share one rank; Phase 1 adds optional travel_enrichment without replacing the window |
+| ComparisonInput | start_date, end_date, optional source_search_id | Exact baseline; no month or preferred-length inputs |
+| ComparisonResult | comparison_id, baseline, save_leave, longer_break, policy, notices | Exact accounting, feasibility, warnings, and signed deltas; separate from Search ranking |
 | TravelConstraints | origin, passenger_count, cabin | Phase 1; cabin defaults to economy and one origin is supported |
 | FlightOption | provider_id, destination, outbound, inbound, price, currency, itinerary | Normalized provider response; availability is point in time |
 | Feedback | session_id, recommendation_id, value | Value is thumbs_up or thumbs_down; no free text |
@@ -84,13 +103,14 @@ Alongside the explicit search, the workflow may run a separate, bounded future-w
 
 ## External API
 
-The POC exposes POST /recommendations as the main search interface. Its request contains an anonymous session identifier and confirmed structured context and constraints; optional source text may be retained as snapshot context but is not interpreted during search. POST /interpret is a separate optional text-to-proposal step. The recommendation response contains recommendations and notices, plus an optional separate opportunities collection in phase 1. Health and feedback endpoints are separate operational conveniences. The backend returns codes plus short developer messages for errors; the frontend maps those codes to user wording.
+The POC exposes POST /recommendations as the main search interface. A bearer token identifies the anonymous session holding balance, calendar, weekend, and time-zone context; the request supplies confirmed search constraints. Optional source text may be retained as snapshot context but is not interpreted during search. POST /interpret is a separate optional text-to-proposal step. The recommendation response contains recommendations and notices, plus an optional separate opportunities collection in phase 1. POST /comparisons evaluates exact dates and bounded nearby alternatives independently of Search. Health and feedback endpoints are separate operational conveniences. The backend returns codes plus short developer messages for errors; the frontend maps those codes to user wording.
 
 | **Endpoint** | **Purpose** |
 | --- | --- |
 | POST /sessions | Create an anonymous session and return an opaque token |
 | POST /interpret | Turn optional conversational text into an editable structured proposal; never start a search |
-| POST /recommendations | Run the phase appropriate recommendation workflow |
+| POST /recommendations | Run the deterministic Search workflow |
+| POST /comparisons | Evaluate exact dates, discover nearby improvements, and persist the complete comparison |
 | POST /recommendations/{id}/feedback | Record thumbs up or thumbs down |
 | GET /health | Verify application and database readiness |
 
@@ -98,10 +118,11 @@ The POC exposes POST /recommendations as the main search interface. Its request 
 
 | **Table** | **Key fields** | **Purpose** |
 | --- | --- | --- |
-| anonymous_sessions | id, token_hash, balance_days, country_code, created_at, expires_at | Retain session state without an account |
-| searches | id, session_id, source_text, constraints_json, engine_version, created_at | Immutable input snapshot for reproduction and debugging |
-| recommendations | id, search_id, rank, dates, score, explanation, warnings_json, result_json | Persist exact outputs, including future optional travel data |
-| feedback | id, recommendation_id, session_id, value, created_at | Store simple response quality signal |
+| anonymous_sessions | id, token_hash, balance_days, allowed_negative_days, country_code, weekend_days, time_zone, created_at, expires_at | Retain session state without an account |
+| searches | id, session_id, source_text, structured_input, engine_version, created_at | Immutable input snapshot for reproduction and debugging |
+| recommendations | id, search_id, rank, result, warnings | Persist exact outputs, including future optional travel data |
+| comparisons | id, session_id, structured_input, result, created_at | Immutable exact-date context, effective calendar/policy, and complete output |
+| feedback | id, recommendation_id, session_id, value, created_at, updated_at | Store simple response quality signal |
 
 SQLAlchemy models implement these tables; Alembic owns every schema change. JSON fields hold versioned snapshots, while frequently queried identifiers and timestamps remain relational columns. The workflow writes a search and its recommendations atomically. Raw conversational text may be stored for debugging, but secrets and provider credentials must never be stored with the search.
 
@@ -115,7 +136,7 @@ A phase 1 additive migration stores the effective opportunity policy and exact o
 - The ranker derives explicit features such as efficiency, total days, length deviation, balance remaining, and warning flags.
 - A qualifying zero-PTO window remains a candidate. The phase 0 efficiency feature must be finite without division by zero; length fit and diversity keep trivial free weekends from displacing materially useful longer breaks. Negative remaining balance always yields a warning, even when within the explicit allowance.
 - Weights are configuration owned by the backend and versioned with the search snapshot. The phase 0 response exposes per-result weighted point contributions and possible points for an on-demand explanation, without presenting the score as a probability.
-- Initial Phase 0 tunable defaults are 0.50 efficiency, 0.30 total duration, and 0.20 preferred-length fit (summing to 1), a generation cap of 5,000, near-duplicate overlap ratio of 0.80, material score gap of 5, and five results. These are product starting values, not scientifically established constants; the versioned effective policy is saved with each search when persistence is added.
+- Initial Phase 0 tunable defaults are 0.50 efficiency, 0.30 total duration, and 0.20 preferred-length fit (summing to 1), a generation cap of 5,000, near-duplicate overlap ratio of 0.80, material score gap of 5, and five results. These are product starting values, not scientifically established constants; the versioned effective policy is saved with each search.
 - Tie handling records the decisive feature so explanations can state the real trade off.
 - Near duplicate selection operates after scoring and keeps two similar windows only when their material feature differences exceed a configured threshold.
 - Explanations are grounded in computed facts. Phase 0 uses a deterministic formatter; the configured language model only proposes search fields and cannot add or change ranking facts.
@@ -132,7 +153,7 @@ A phase 1 additive migration stores the effective opportunity policy and exact o
 | **Seam** | **Phase 0 adapter** | **Additional phase 1 adapter** |
 | --- | --- | --- |
 | Constraint interpreter | Pydantic AI with a selected Google or xAI model; Pydantic AI test model for tests | Same interface; a later phase may add travel proposal fields |
-| Holiday calendar | Locked `python-holidays` dataset, initially Israel (`IL`), with a deterministic fake | Same interface |
+| Holiday calendar | Locked `python-holidays` dataset for Israel, U.S. federal, and England & Wales holidays, with a deterministic fake | Same interface |
 | Persistence | PostgreSQL through SQLAlchemy; in memory fake for domain tests | Same interface and additive travel fields |
 | Flight search | No seam in the running workflow | Mock adapter first, then SerpApi compatible live adapter |
 
@@ -192,9 +213,6 @@ Phase 1 opportunity tests use fixed calendars, clocks, and policies to cover fea
 
 The POC can run through a local compose setup with separate frontend, backend, and PostgreSQL processes. Deployment must run Alembic upgrade before starting the backend. `INTERPRET_PROVIDER` selects Google/Gemini or xAI/Grok for the same Pydantic AI interpreter; the selected provider needs its own server-side key. Missing configuration disables only Interpret. Provider choice does not change domain behavior or response types.
 
-## Open operational choices
+## Operational decisions
 
-- Revisit the initial Israel-only supported-country list after the Phase 0 pilot establishes demand.
-- Set anonymous session expiry and raw text retention before any external pilot.
-- Choose final lint and formatting tools during repository bootstrap; the plan assumes Ruff for Python and ESLint plus Prettier for TypeScript.
-- Confirm current GitHub plan capabilities when configuring protected branch rules; CI must run regardless of enforcement availability.
+Calendar coverage, retention defaults, interpretation providers, and quality tools are settled for the local POC. The [operational decision record](open-decisions.md) separates those defaults from future provider and external-pilot choices. Deployment settings are maintained in the [runbook](runbook.md).

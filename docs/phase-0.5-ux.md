@@ -1,6 +1,6 @@
 # Phase 0.5 comparison design
 
-P05 01 design decision: one comparison workspace, reachable from the existing shortlist or from **Compare my dates**. This is an inspectable design prototype; its examples are fixed fixtures, not live recommendations.
+P05 01 design decision: one comparison workspace, reachable from the existing shortlist or from **Compare my dates**. This is the retained design walkthrough for the comparison workspace delivered on `main`; its examples are fixed fixtures, not live recommendations. See the [acceptance record](phase-0.5-acceptance.md) for the implemented journeys and review evidence.
 
 ## Desktop composition
 

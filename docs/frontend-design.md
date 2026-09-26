@@ -2,9 +2,11 @@
 
 This document records the product-specific interface decisions and the visual completion gate for the Phase 0 planner. It exists so a passing test suite cannot be mistaken for a finished user experience.
 
+Phase 0 Search is delivered on `main`. This remains its visual and interaction contract; the [Phase 0.5 UX](phase-0.5-ux.md) extends it with the delivered comparison workspace.
+
 ## Design read
 
-Vacation Window Planner is a desktop decision-support workspace for people trying to stretch a finite leave balance. Its visual language is calm, optimistic, and trustworthy: warm neutral surfaces, deep green planning cues, and a restrained coral action color. The interface prioritizes a single task—enter constraints, confirm them, and compare explainable vacation windows.
+Vacation Window Planner is a desktop decision-support workspace for people trying to stretch a finite leave balance. Its visual language is calm, optimistic, and trustworthy: warm neutral surfaces, deep green planning cues, and a restrained coral action color. The Search interface prioritizes entering constraints, confirming them, and reviewing explainable vacation windows. Phase 0.5 adds Compare my dates and comparison from Search while keeping Search the default task.
 
 ## Information hierarchy
 

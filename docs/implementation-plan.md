@@ -1,14 +1,16 @@
 # Vacation Window Recommendation Implementation Task Plan
 
-Small test backed tasks for phase 0 and phase 1
+Delivered Phase 0 tasks and planned Phase 1 work; Phase 0.5 has a linked companion plan
 
 This plan turns the agreed product and architecture into mergeable tasks. Each task has one responsibility, named verification, and a concrete definition of done. Phase 0 ends with a usable vacation window POC. Phase 1 adds destinations, live flights, and independent proactive vacation opportunities through the prepared seams.
 
 | Field | Value |
 | --- | --- |
-| **Status** | Approved planning baseline |
+| **Status** | Phase 0 and Phase 0.5 delivered; Phase 1 planned |
 | **Prepared for** | POC product and engineering implementation |
-| **Version date** | 2026-09-25 |
+| **Version date** | 2026-09-26 |
+
+Delivery and original PR links are recorded in the [progress tracker](progress.md). Phase 0.5 requirements and task details are maintained in the [comparison plan](phase-0.5-plan.md), with completed validation in the [acceptance record](phase-0.5-acceptance.md).
 
 ## Delivery rules
 
@@ -21,12 +23,13 @@ This plan turns the agreed product and architecture into mergeable tasks. Each t
 
 ## Milestones
 
-| **Milestone** | **Outcome** | **Exit gate** |
-| --- | --- | --- |
-| M0 Foundation | A typed full stack skeleton with PostgreSQL and green CI | Frontend displays backend health and all required checks pass |
-| M1 Domain core | Validated contracts, calendar resolution, pure window generation, deterministic ranking | Golden and property tests pass without external providers |
-| M2 Phase 0 product | Anonymous sessions, persistence, Gemini interpretation, React workflow, feedback | Representative user journey passes and search snapshots reproduce results |
-| M3 Phase 1 | Destination and live-flight enrichment plus separate proactive vacation opportunities | Provider tests pass; deterministic score, threshold, explanation, and separate-section tests pass |
+| **Milestone** | **Outcome** | **Exit gate** | **Status** |
+| --- | --- | --- | --- |
+| M0 Foundation | A typed full stack skeleton with PostgreSQL and green CI | Frontend displays backend health and all required checks pass | Done |
+| M1 Domain core | Validated contracts, calendar resolution, pure window generation, deterministic ranking | Golden and property tests pass without external providers | Done |
+| M2 Phase 0 product | Anonymous sessions, persistence, optional interpretation, React workflow, feedback | Representative user journey passes and search snapshots reproduce results | Done |
+| Phase 0.5 comparison | Manual and Search-origin exact-date comparison with nearby alternatives | Shared accounting, persistence, desktop journeys, and quality gates pass | Done |
+| M3 Phase 1 | Destination and live-flight enrichment plus separate proactive vacation opportunities | Provider tests pass; deterministic score, threshold, explanation, and separate-section tests pass | Planned |
 
 ## Phase 0 tasks
 
@@ -182,11 +185,11 @@ This plan turns the agreed product and architecture into mergeable tasks. Each t
 
 **Definition of done**  The endpoint returns data only and never embeds display colors or UI instructions.
 
-### P0 20 Add the Gemini constraint interpreter
+### P0 20 Add the constraint interpreter
 
-**Scope**  Implement a Gemini adapter and POST /interpret endpoint that return an editable typed proposal from conversational input without starting a search. Keep direct structured search independent of Gemini.
+**Scope**  Provide a Pydantic AI interpreter using configured Google/Gemini or xAI/Grok and a POST /interpret endpoint that returns an editable typed proposal without starting a search. Keep direct structured search independent of the provider.
 
-**Tests**  Use a fake adapter and schema fixtures for malformed, missing, and valid model output; assert interpretation alone never creates recommendations.
+**Tests**  Use Pydantic AI test models and schema fixtures for malformed, missing, and valid model output; disable real model requests and assert interpretation alone never creates recommendations.
 
 **Definition of done**  Model output is validated before entering the domain and cannot calculate recommendations.
 
@@ -194,7 +197,7 @@ This plan turns the agreed product and architecture into mergeable tasks. Each t
 
 **Scope**  Create a conversational input area plus editable structured confirmation for balance, an optional allowed-negative allowance (default 0, maximum 5 whole days), calendar, months, length, and overrides. Apply an interpretation proposal to editable fields only; submit confirmed fields on explicit Search.
 
-**Tests**  Test required fields, allowance bounds and default, local edits, no search on interpretation, manual Search behavior, structured-only use without Gemini, and accessible labels.
+**Tests**  Test required fields, allowance bounds and default, local edits, no search on interpretation, manual Search behavior, structured-only use without interpretation-provider configuration, and accessible labels.
 
 **Definition of done**  The user can confirm interpreted constraints before starting a search.
 
@@ -360,16 +363,19 @@ The repository starts public as agreed, with branch protection configured to req
 
 ## Recommended execution order
 
+Sequences 1–5 are delivered. New implementation starts with the planned Phase 1 work in sequence 6.
+
 | **Sequence** | **Tasks** | **Reason** |
 | --- | --- | --- |
 | 1 | P0 01 through P0 05 | Create the full stack and quality gate before domain work |
 | 2 | P0 06 through P0 15 | Lock contracts and deterministic behavior with fast tests |
-| 3 | P0 16 through P0 20 | Add state, persistence, orchestration, HTTP, and the Gemini seam |
+| 3 | P0 16 through P0 20 | Add state, persistence, orchestration, HTTP, and the interpretation seam |
 | 4 | P0 21 through P0 25 | Complete the user journey and harden the POC |
-| 5 | P1 09 through P1 13 | Add proactive detection and a separate UI without a flight provider |
-| 6 | P1 01 through P1 04 | Add travel contracts, cost bounds, fake flight search, and destinations |
-| 7 | P1 14 | Prove opportunity independence once the fake flight interface exists |
-| 8 | P1 05 through P1 08 | Add live flights, final ranking, UI, and live operational safeguards |
+| 5 | P05 01 through P05 10, then P05 F01–F02 | Delivered exact-date comparison and follow-ups; see the [Phase 0.5 plan](phase-0.5-plan.md) |
+| 6 | P1 09 through P1 13 | Add proactive detection and a separate UI without a flight provider |
+| 7 | P1 01 through P1 04 | Add travel contracts, cost bounds, fake flight search, and destinations |
+| 8 | P1 14 | Prove opportunity independence once the fake flight interface exists |
+| 9 | P1 05 through P1 08 | Add live flights, final ranking, UI, and live operational safeguards |
 
 ## Phase completion checklists
 
@@ -382,7 +388,7 @@ The repository starts public as agreed, with branch protection configured to req
 - Near duplicates are handled according to the diversity rule.
 - A cap-hit search produces a clear narrow-the-search outcome, never a partial ranked list.
 - Search inputs and outputs are persisted and reproducible.
-- The frontend supports editable text-interpretation proposals, manual search and rerun, direct structured use without Gemini, and feedback.
+- The frontend supports editable text-interpretation proposals, manual search and rerun, direct structured use without interpretation-provider configuration, and feedback.
 - All GitHub Actions jobs pass with no real provider secrets required.
 
 ### Phase 1 complete when

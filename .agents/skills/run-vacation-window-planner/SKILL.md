@@ -15,4 +15,4 @@ If the user asks only how to run the app, give the README steps without starting
 4. Confirm the frontend's `/api/health` response through its mapped local port. Derive the port from `docker compose ps` or `docker compose port frontend 5173`, so a `WEB_PORT` override still works.
 5. If startup or health fails, inspect only the relevant service's recent Compose logs, report the concrete failure, and make the smallest in-scope repair if asked. Leave existing data volumes intact.
 
-Report the verified local URL and that the current app is only the foundation health screen. Stop after that result. If asked to stop the app, use `docker compose down` without deleting volumes.
+Report the verified local URL and health result. Use the README for current product capabilities; claim a Search or Compare journey was verified only if you exercised it. Stop after the requested local-run verification. If asked to stop the app, use `docker compose down` without deleting volumes.
