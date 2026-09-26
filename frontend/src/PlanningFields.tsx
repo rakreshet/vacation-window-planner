@@ -1,3 +1,4 @@
+import { FieldError, useFieldValidation } from './FieldValidation'
 import PersonalCalendarFields from './PersonalCalendarFields'
 import { changePlanningCountry, resolveCalendarCountry, type PlanningDraft } from './planning'
 
@@ -14,15 +15,18 @@ export default function PlanningFields({
   prefix?: string
   annual?: boolean
 }) {
+  const field = useFieldValidation()
+  const balanceId = annual ? field('context.balance_days').id : `${prefix}balance`
   return (
     <>
       <div className="field">
-        <label htmlFor={`${prefix}balance`}>
+        <label htmlFor={balanceId}>
           {annual ? 'Available leave for included trips' : 'Vacation balance'} <span>Required</span>
         </label>
         <div className="input-with-suffix">
           <input
-            id={`${prefix}balance`}
+            {...(annual ? field('context.balance_days') : {})}
+            id={balanceId}
             aria-label={annual ? 'Available leave for included trips' : 'Vacation balance'}
             type="number"
             min="0"
@@ -33,6 +37,7 @@ export default function PlanningFields({
           />
           <span>days</span>
         </div>
+        {annual && <FieldError field="context.balance_days" />}
         <small>
           {annual
             ? 'Includes leave allocated to your locked trips. Excludes past trips and future accrual.'
@@ -79,7 +84,11 @@ export default function PlanningFields({
         </small>
       </div>
       {value.pendingCountry && (
-        <div className="field field--wide form-notice">
+        <div
+          className="field field--wide form-notice"
+          tabIndex={-1}
+          {...(annual ? field('context.country_code') : {})}
+        >
           <p>Keep or clear your date overrides before changing the public holiday calendar.</p>
           <button type="button" onClick={() => onChange(resolveCalendarCountry(value, true))}>
             Keep date overrides

@@ -1,3 +1,4 @@
+import { FieldLink } from './FieldValidation'
 import AnnualExportActions from './AnnualExportActions'
 import type { AnnualResult } from './savedAnnualPlans'
 import { useId } from 'react'
@@ -63,7 +64,18 @@ export default function AnnualPlanResults({
                     `Break ${result.input.slots.findIndex((slot) => slot.slot_id === id) + 1}`,
                 )
                 .join(', ')}
-              .
+              .{' '}
+              {!stale &&
+                conflict.slot_ids.map((id) => {
+                  const slotIndex = result.input.slots.findIndex((slot) => slot.slot_id === id)
+                  return (
+                    <span key={id}>
+                      <FieldLink field={`slots.${slotIndex}`}>
+                        Edit Break {slotIndex + 1}
+                      </FieldLink>{' '}
+                    </span>
+                  )
+                })}
             </li>
           ))}
         </ul>

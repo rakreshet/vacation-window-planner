@@ -1,0 +1,232 @@
+{
+  "host": "macOS-26.6-arm64-arm-64bit",
+  "measurement_python": "3.12.13",
+  "measured_on": "2026-09-26",
+  "fixtures": [
+    {
+      "name": "default",
+      "country": "IL",
+      "session_context": {
+        "balance_days": 18,
+        "allowed_negative_days": 0,
+        "country_code": "IL",
+        "time_zone": "Asia/Jerusalem",
+        "weekend_days": [
+          4,
+          5
+        ]
+      },
+      "input": {
+        "year": 2027,
+        "reserve_days": 3,
+        "minimum_gap_days": 7,
+        "allowed_start_months": [
+          1,
+          2,
+          3,
+          4,
+          5,
+          6,
+          7,
+          8,
+          9,
+          10,
+          11,
+          12
+        ],
+        "slots": [
+          {
+            "slot_id": "long",
+            "min_days": 7,
+            "max_days": 14
+          },
+          {
+            "slot_id": "short-1",
+            "min_days": 3,
+            "max_days": 5
+          },
+          {
+            "slot_id": "short-2",
+            "min_days": 3,
+            "max_days": 5
+          }
+        ]
+      },
+      "policy": {
+        "version": "annual-v1",
+        "candidate_limit": 12000,
+        "state_limit": 500000,
+        "transition_limit": 5000000,
+        "time_limit_seconds": 5
+      },
+      "first_request_seconds": 1.2361677089938894,
+      "warm_seconds": [],
+      "warm_p95_seconds": null,
+      "warm_median_seconds": null,
+      "observations": [
+        {
+          "status": "complete",
+          "full_mix_feasibility": "feasible",
+          "counters": {
+            "candidates": 3930,
+            "states": 105193,
+            "transitions": 3286105
+          },
+          "limit_reason": null
+        }
+      ],
+      "backend_process_peak_memory": "VmHWM:\t  161860 kB",
+      "fresh_backend_process": true
+    },
+    {
+      "name": "default",
+      "country": "US",
+      "session_context": {
+        "balance_days": 18,
+        "allowed_negative_days": 0,
+        "country_code": "US",
+        "time_zone": "America/New_York",
+        "weekend_days": [
+          5,
+          6
+        ]
+      },
+      "input": {
+        "year": 2027,
+        "reserve_days": 3,
+        "minimum_gap_days": 7,
+        "allowed_start_months": [
+          1,
+          2,
+          3,
+          4,
+          5,
+          6,
+          7,
+          8,
+          9,
+          10,
+          11,
+          12
+        ],
+        "slots": [
+          {
+            "slot_id": "long",
+            "min_days": 7,
+            "max_days": 14
+          },
+          {
+            "slot_id": "short-1",
+            "min_days": 3,
+            "max_days": 5
+          },
+          {
+            "slot_id": "short-2",
+            "min_days": 3,
+            "max_days": 5
+          }
+        ]
+      },
+      "policy": {
+        "version": "annual-v1",
+        "candidate_limit": 12000,
+        "state_limit": 500000,
+        "transition_limit": 5000000,
+        "time_limit_seconds": 5
+      },
+      "first_request_seconds": 1.46504520799499,
+      "warm_seconds": [],
+      "warm_p95_seconds": null,
+      "warm_median_seconds": null,
+      "observations": [
+        {
+          "status": "complete",
+          "full_mix_feasibility": "feasible",
+          "counters": {
+            "candidates": 3930,
+            "states": 122320,
+            "transitions": 3959726
+          },
+          "limit_reason": null
+        }
+      ],
+      "backend_process_peak_memory": "VmHWM:\t  159948 kB",
+      "fresh_backend_process": true
+    },
+    {
+      "name": "default",
+      "country": "GB",
+      "session_context": {
+        "balance_days": 18,
+        "allowed_negative_days": 0,
+        "country_code": "GB",
+        "time_zone": "Europe/London",
+        "weekend_days": [
+          5,
+          6
+        ]
+      },
+      "input": {
+        "year": 2027,
+        "reserve_days": 3,
+        "minimum_gap_days": 7,
+        "allowed_start_months": [
+          1,
+          2,
+          3,
+          4,
+          5,
+          6,
+          7,
+          8,
+          9,
+          10,
+          11,
+          12
+        ],
+        "slots": [
+          {
+            "slot_id": "long",
+            "min_days": 7,
+            "max_days": 14
+          },
+          {
+            "slot_id": "short-1",
+            "min_days": 3,
+            "max_days": 5
+          },
+          {
+            "slot_id": "short-2",
+            "min_days": 3,
+            "max_days": 5
+          }
+        ]
+      },
+      "policy": {
+        "version": "annual-v1",
+        "candidate_limit": 12000,
+        "state_limit": 500000,
+        "transition_limit": 5000000,
+        "time_limit_seconds": 5
+      },
+      "first_request_seconds": 1.4571830000495538,
+      "warm_seconds": [],
+      "warm_p95_seconds": null,
+      "warm_median_seconds": null,
+      "observations": [
+        {
+          "status": "complete",
+          "full_mix_feasibility": "feasible",
+          "counters": {
+            "candidates": 3930,
+            "states": 117485,
+            "transitions": 3773542
+          },
+          "limit_reason": null
+        }
+      ],
+      "backend_process_peak_memory": "VmHWM:\t  159900 kB",
+      "fresh_backend_process": true
+    }
+  ]
+}
