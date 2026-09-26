@@ -72,6 +72,31 @@ export default function AnnualLockEditor({
           {slot.dates ? 'Edit locked dates' : 'Add exact dates'}
         </button>
       )}
+      {slot.dates && !open && (
+        <button
+          type="button"
+          disabled={disabled}
+          onClick={() => {
+            const minimum = Number(slot.minimum)
+            const maximum = Number(slot.maximum)
+            if (
+              !Number.isInteger(minimum) ||
+              !Number.isInteger(maximum) ||
+              minimum < 3 ||
+              maximum > 28 ||
+              minimum > maximum
+            ) {
+              setError('Choose a generated range of 3 to 28 days before unlocking')
+              return
+            }
+            setError(null)
+            onChange({ ...slot, dates: undefined })
+          }}
+        >
+          Unlock dates
+        </button>
+      )}
+      {!open && error && <p role="alert">{error}</p>}
       {open && (
         <>
           <p>These dates fill this break. Their leave cost will use your annual calendar.</p>

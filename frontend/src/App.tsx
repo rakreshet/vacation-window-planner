@@ -111,6 +111,10 @@ export default function App() {
     heading?.scrollIntoView?.({ block: 'start' })
   }, [results])
 
+  useEffect(() => {
+    if (mode === 'annual') document.getElementById('annual-heading')?.focus({ preventScroll: true })
+  }, [mode])
+
   const message = {
     checking: 'Checking service…',
     ready: 'Service ready',

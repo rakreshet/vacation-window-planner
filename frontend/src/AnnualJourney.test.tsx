@@ -42,6 +42,9 @@ test('annual planning starts with an independent three-break mix and protected r
   vi.stubGlobal('scrollTo', vi.fn())
   fireEvent.click(screen.getByRole('button', { name: 'Find dates' }))
   expect(screen.getByLabelText('Vacation balance')).toHaveValue(18)
+  fireEvent.click(screen.getByRole('button', { name: 'Plan my year' }))
+  expect(screen.getByLabelText('Available leave for included trips')).toHaveValue(12)
+  expect(screen.getByRole('heading', { name: 'Plan my year' })).toHaveFocus()
 })
 
 test('explicit generation shows aggregate leave and chronological charged dates', async () => {
