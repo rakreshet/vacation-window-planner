@@ -1,6 +1,6 @@
 # Annual planning acceptance — AP 10
 
-Measured September 26, 2026. AP 01–09 are stacked review PRs #62–#70; AP 10 completes the implementation stack without merging it. Base: AP 09 `1b2950b`. The application changes and evidence in this PR are the acceptance candidate. The prerequisite Phase 0.75 stack is still required. See [progress](progress.md#annual-planning--several-vacations-one-budget) and the [approved test matrix](annual-plans-testing.md).
+Measured September 26, 2026. AP 01–09 are stacked review PRs #62–#70; AP 10 completes the implementation stack without merging it. Original review base: AP 09 `1b2950b`; subsequent AP09 CI test-query fixes are incorporated through the dependent branch. The application changes and evidence in this PR are the acceptance candidate. The prerequisite Phase 0.75 stack is still required. See [progress](progress.md#annual-planning--several-vacations-one-budget) and the [approved test matrix](annual-plans-testing.md).
 
 **Conditional release acceptance:** automated correctness, normal-request performance, resource limits and the recorded browser journeys pass. Actual calendar-file delivery from the in-app browser and imports into Google Calendar plus a second client remain unverified. This is not a claim of complete export-client acceptance.
 
@@ -16,7 +16,7 @@ Measured September 26, 2026. AP 01–09 are stacked review PRs #62–#70; AP 10 
 | `cd frontend && npm test` | 122 passed in 22 files |
 | `npm run lint`, `npm run format:check`, `npm run build` in frontend | Passed; build includes TypeScript checking and Vite production output |
 
-AP 10 added red/green rendered regressions for invalid reserve, invalid break bounds, server locked-date errors, empty balance, conflict repair links and unfinished personal-calendar edits. A separate failing storage regression established that an invalid saved time zone could be reopened and crash; validation now isolates that record. No backend optimizer changes or limit increases were necessary.
+AP 10 added red/green rendered regressions for invalid reserve, invalid break bounds, server locked-date errors, empty balance, conflict repair links and unfinished personal-calendar edits. A separate failing storage regression established that an invalid saved time zone could be reopened and crash; validation now isolates that record. No backend optimizer changes or limit increases were necessary. Review also fixed the acceptance-test clock and replaced the collapsing dense fixture. AP09 CI exposed a five-second timeout in the complete saved-plan journey; scoped panel queries and a ten-second integration-test ceiling preserve its assertions while allowing slower runners.
 
 ## Performance gate
 
@@ -30,26 +30,26 @@ The target is warm p95 <=2 seconds; all normal fixtures met it. A complete full 
 | --- | --- | ---: | --- | --- |
 | GB | current-year | 0.338 | 982 / 24,358 / 672,868 | complete |
 | GB | default | 1.717 | 3,930 / 117,485 / 3,773,542 | complete |
-| GB | dense-rules | 1.175 | 3,930 / 80,543 / 2,521,938 | complete |
+| GB | dense-rules | 0.729 | 3,930 / 47,208 / 1,400,694 | complete |
 | GB | locked-tight-reserve | 0.076 | 1,086 / 19,509 / 112,084 | complete |
 | GB | reduction | 0.011 | 31 / 4,606 / 4,608 | infeasible |
 | GB | six-broad-slots-zero-cost-islands | 5.009 single run | 9,113 / 72,550 / 4,623,292 | too_broad (deadline) |
 | IL | current-year | 0.353 | 982 / 25,215 / 676,369 | complete |
 | IL | default | 1.515 | 3,930 / 105,193 / 3,286,105 | complete |
-| IL | dense-rules | 1.272 | 3,930 / 88,316 / 2,795,383 | complete |
+| IL | dense-rules | 0.739 | 3,930 / 47,858 / 1,420,143 | complete |
 | IL | locked-tight-reserve | 0.090 | 1,086 / 20,119 / 125,517 | complete |
 | IL | reduction | 0.015 | 31 / 4,606 / 4,608 | infeasible |
 | IL | six-broad-slots-zero-cost-islands | 5.016 single run | 9,113 / 70,676 / 4,197,156 | too_broad (deadline) |
 | US | current-year | 0.359 | 982 / 25,645 / 730,371 | complete |
 | US | default | 1.802 | 3,930 / 122,320 / 3,959,726 | complete |
-| US | dense-rules | 1.210 | 3,930 / 82,744 / 2,602,880 | complete |
+| US | dense-rules | 0.662 | 3,930 / 41,708 / 1,234,741 | complete |
 | US | locked-tight-reserve | 0.094 | 1,086 / 22,033 / 131,477 | complete |
 | US | reduction | 0.010 | 31 / 4,606 / 4,608 | infeasible |
 | US | six-broad-slots-zero-cost-islands | 5.009 single run | 9,113 / 70,237 / 4,603,351 | too_broad (deadline) |
 
 Fresh-process default timings: IL 1.236s, US 1.465s, GB 1.457s.
 
-The dense fixture submits 100 override ranges and 100 unavailable ranges covering the first 100 dates. Canonicalization merges adjacent equivalent ranges; this exercises the maximum submitted count, not 100 disjoint effective islands. The six-slot extreme uses lengths 3–28, all months, available 366, reserve 3, and twelve seven-day personal-day-off islands. All three extremes exercised the five-second engine deadline. HTTP completion takes another 9–16 ms for outcome construction/persistence/transport; a five-second planning budget is not a five-second HTTP SLA.
+The dense fixture has 100 disjoint unavailable single dates on alternating days and 100 disjoint overrides on the intervening dates, alternating personal days off and extra working days. Every response is checked to retain 100 normalized ranges in each collection. Later dates remain open so all three requested breaks must fit. A preliminary adjacent-range fixture was replaced after review because normalization collapsed it; the table and raw evidence contain the corrected measurements. The six-slot extreme uses lengths 3–28, all months, available 366, reserve 3, and twelve seven-day personal-day-off islands. All three extremes exercised the five-second engine deadline. HTTP completion takes another 9–16 ms for outcome construction/persistence/transport; a five-second planning budget is not a five-second HTTP SLA.
 
 Peak backend process resident memory (`/proc/1/status` `VmHWM`) was 201,252 KiB in the warm matrix. This is the process lifetime high-water mark, including earlier requests, not a separately attributable per-fixture allocation or a container memory limit. Fresh-process default high-water marks were 161,860 / 159,948 / 159,900 KiB for IL / US / GB. All measurements, every run's counters, inputs and effective policies are retained in [warm evidence](annual-evidence/performance.json) and [cold evidence](annual-evidence/performance-cold.json).
 
