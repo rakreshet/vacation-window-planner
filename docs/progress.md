@@ -85,8 +85,8 @@ The [Phase 0.75 plan](phase-0.75-plan.md) defines ten behavior PRs plus this des
 | P075 02 | Personal context persistence and typed calculation results | [#52](https://github.com/rakreshet/vacation-window-planner/pull/52) | In review |
 | P075 03 | Personal calendar controls in Find and Compare | [#53](https://github.com/rakreshet/vacation-window-planner/pull/53) | In review |
 | P075 04 | Opportunity policy, scoring, and bounded detection | [#54](https://github.com/rakreshet/vacation-window-planner/pull/54) | In review |
-| P075 05 | Opportunity workflow and atomic snapshots | — | In review |
-| P075 06 | Separate opportunities section and comparison entry | — | Planned |
+| P075 05 | Opportunity workflow and atomic snapshots | [#55](https://github.com/rakreshet/vacation-window-planner/pull/55) | In review |
+| P075 06 | Separate opportunities section and comparison entry | — | In review |
 | P075 07 | Complete action snapshots for every visible date | — | Planned |
 | P075 08 | Same-browser Saved options journey | — | Planned |
 | P075 09 | Calendar export and leave-request copy | — | Planned |

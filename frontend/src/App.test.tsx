@@ -444,3 +444,38 @@ test('a Search response arriving after an edit cannot become current results', a
   expect(screen.queryByText('Search complete')).not.toBeInTheDocument()
   expect(screen.queryByText('No feasible vacation windows found.')).not.toBeInTheDocument()
 })
+
+test('explicit Search requests opportunities and displays them separately', async () => {
+  const searches: unknown[] = []
+  vi.stubGlobal(
+    'fetch',
+    vi.fn(async (input: RequestInfo | URL, init?: RequestInit) => {
+      if (String(input).endsWith('/recommendations')) {
+        searches.push(JSON.parse(String(init?.body)))
+        return {
+          ok: true,
+          json: async () => ({
+            search_id: 'search',
+            recommendations: [],
+            opportunities: { status: 'complete', items: [] },
+          }),
+        }
+      }
+      return {
+        ok: true,
+        json: async () =>
+          String(input).endsWith('/sessions')
+            ? { token: 'token' }
+            : { status: 'ok', database: 'connected' },
+      }
+    }),
+  )
+  render(<App />)
+  await screen.findByText('Service ready')
+  expect(searches).toHaveLength(0)
+  fillRequiredSearchFields()
+  fireEvent.click(screen.getByRole('button', { name: 'Search' }))
+  await screen.findByRole('heading', { name: 'Other opportunities' })
+  expect(searches[0]).toMatchObject({ include_opportunities: true })
+  expect(screen.getByText('No feasible vacation windows found.')).toBeInTheDocument()
+})

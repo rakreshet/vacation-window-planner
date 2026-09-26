@@ -38,7 +38,33 @@ export type Recommendation = {
   } | null
 }
 
+export type Opportunity = {
+  opportunity_id: string
+  window: Recommendation['window']
+  assessment: WindowAssessment
+  score: number
+  raw_points: number
+  score_breakdown: Record<
+    'efficiency' | 'length' | 'low_leave_use',
+    { points: number; max_points: number }
+  >
+  explanation: string
+  criteria_differences: (
+    | { code: 'start_month_outside_selection'; actual_month: YearMonth }
+    | {
+        code: 'length_outside_tolerance'
+        actual_days: number
+        minimum_days: number
+        maximum_days: number
+      }
+  )[]
+}
+export type OpportunityResponse = {
+  status: 'complete' | 'too_broad' | 'unavailable'
+  items: Opportunity[]
+}
 export type RecommendationResponse = {
+  opportunities?: OpportunityResponse
   search_id: string
   recommendations: Recommendation[]
   notice?: string | null
@@ -60,6 +86,7 @@ export type SessionInput = {
 }
 
 export type SearchInput = {
+  include_opportunities?: boolean
   months: YearMonth[]
   preferred_length_days: number
   result_limit: number

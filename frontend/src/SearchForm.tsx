@@ -112,6 +112,7 @@ export default function SearchForm({
         months: [{ year, month: selectedMonth }],
         preferred_length_days: lengthDays,
         result_limit: 5,
+        include_opportunities: true,
         source_text: sourceText.trim() || null,
       })
       if (!alive.current || requestRevision !== revision.current) return
