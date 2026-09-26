@@ -31,7 +31,7 @@ Backend application logs are JSON and contain only the HTTP method, path without
 
 ## Phase 0.5: exact-date comparison
 
-Create an anonymous session with the same balance, allowance, country, and weekend fields as Search. The optional `time_zone` field accepts an IANA name, such as `Asia/Jerusalem`; browser clients send their local zone. Existing clients and migrated sessions default to `Asia/Jerusalem`, the supported country calendar's zone. Both Search and comparison use the session's local date to exclude past starts; dates themselves remain inclusive date-only values.
+Create an anonymous session with the same balance, allowance, country, and weekend fields as Search. The optional `time_zone` field accepts an IANA name, such as `Asia/Jerusalem`; browser clients send their local zone. Clients that omit the field and migrated sessions retain the legacy `Asia/Jerusalem` fallback. Calendar selection does not change the user’s time zone; API clients should send their local IANA zone explicitly. Both Search and comparison use the session's local date to exclude past starts; dates themselves remain inclusive date-only values.
 
 `POST /comparisons` requires `Authorization: Bearer <session token>` and this JSON body:
 
@@ -55,3 +55,26 @@ The response includes `comparison_id`, exact `baseline`, `save_leave`, `longer_b
 These are backend settings, never request fields. Compose forwards them from `.env`; recreate the backend after changing them. Increment the policy version when changing product behavior. The generation cap rejects incomplete discovery with `422 COMPARISON_TOO_BROAD`; it never returns a partial shortlist. Other expected errors include `401 SESSION_EXPIRED`, `404 NOT_FOUND` for another session's Search origin, `422 INVALID_COMPARISON`, and `503 PERSISTENCE_ERROR`.
 
 For a smoke check, use **Compare my dates**, an 8-day balance, and January 3–7, 2027. With Friday/Saturday weekends and the Israeli calendar, it should show 5 vacation days used, an alternative of the same length using 3, and a 9-day break using 5. Use future dates if running this check after January 2027. Also compare from a grouped Search date, then return and verify feedback remains selected. See the [acceptance record](phase-0.5-acceptance.md) for the completed checks.
+
+
+## Supported holiday calendars
+
+The same offline, deterministic calendar provider serves Search and Compare. No LLM or network holiday lookup is needed.
+
+| UI choice | Session `country_code` | Holiday scope | Default weekend |
+| --- | --- | --- | --- |
+| Israel | `IL` | Existing Israeli public holidays | Friday / Saturday |
+| United States — federal holidays | `US` | Federal public holidays and standard observed dates | Saturday / Sunday |
+| England & Wales — bank holidays | `GB` | England & Wales bank holidays and substitute dates | Saturday / Sunday |
+
+For this PoC, `GB` explicitly resolves the provider’s `ENG` subdivision. Scotland and Northern Ireland have different holidays and are not offered. U.S. state holidays and employer-specific leave rules are not modeled. As with Israel, listed holidays are treated as nonworking dates. A custom weekend changes nonworking weekdays but does not recalculate holiday substitution rules.
+
+Changing the calendar updates weekends only when the current selection matches the previous calendar’s default. Other selections, including an empty selection, are retained. The weekday controls always remain editable. No session or snapshot migration is needed; comparison snapshots retain their resolved holiday dates. Future additional UK regions should have an explicit region field rather than changing what existing `GB` sessions mean.
+
+Regression fixtures were checked against [OPM’s federal holiday schedule](https://www.opm.gov/policy-data-oversight/pay-leave/federal-holidays/) and [GOV.UK’s regional bank holiday lists](https://www.gov.uk/bank-holidays):
+
+- U.S., July 2–5, 2027: 4 total days, 1 vacation day used, with July 5 observed.
+- England & Wales, August 27–30, 2027: 4 total days, 1 vacation day used. The Scottish August 2 holiday must not appear in this calendar.
+- U.S., December 31, 2027–January 2, 2028: 3 total days, no vacation days used, including the observed New Year holiday.
+
+Use an 8-day balance and Saturday/Sunday weekends for these smoke checks. Also switch from Israel to either new calendar, customize the weekends, switch again, and confirm the custom selection stays. Search for a month containing a listed holiday, open a result in Compare, and verify the same vacation-day cost and calendar are preserved.

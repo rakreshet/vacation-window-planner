@@ -2,6 +2,8 @@
 
 A Docker-based proof of concept for finding useful vacation dates. Phase 0 recommends ranked date windows from an anonymous session, effective holiday calendar, editable structured constraints, and optional AI text interpretation. Phase 0.5 adds exact-date comparison with nearby ways to save vacation days or extend a break; phase 1 will add destinations, live flights, and separate proactive vacation opportunities. The core Phase 0 product rules are in the PRD; remaining operational choices are in [docs/open-decisions.md](docs/open-decisions.md).
 
+Search and Compare support Israel, U.S. federal holidays, and England & Wales bank holidays. Weekend days remain editable; see [calendar scope and examples](docs/runbook.md#supported-holiday-calendars).
+
 ## Product and implementation documents
 
 - [Product requirements (PRD)](docs/prd.md)

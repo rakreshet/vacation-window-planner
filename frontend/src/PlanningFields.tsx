@@ -1,4 +1,4 @@
-import type { PlanningDraft } from './planning'
+import { changePlanningCountry, type PlanningDraft } from './planning'
 
 const weekdays = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday']
 
@@ -53,16 +53,28 @@ export default function PlanningFields({
         <select
           id={`${prefix}country`}
           aria-label="Country calendar"
+          aria-describedby={`${prefix}calendar-scope`}
           value={value.country}
-          onChange={(e) => onChange({ ...value, country: e.target.value })}
+          onChange={(e) => onChange(changePlanningCountry(value, e.target.value))}
         >
           <option value="IL">Israel</option>
+          <option value="US">United States — federal holidays</option>
+          <option value="GB">England &amp; Wales — bank holidays</option>
         </select>
-        <small>Observed public holidays</small>
+        <small id={`${prefix}calendar-scope`}>
+          {value.country === 'US'
+            ? 'Federal holidays with observed dates; state and employer holidays may differ.'
+            : value.country === 'GB'
+              ? 'Bank holidays for England & Wales, including substitute days.'
+              : 'Observed public holidays'}
+        </small>
       </div>
       <fieldset className="field field--wide weekend-field">
         <legend>Weekend days</legend>
-        <small>Choose the days that are normally free for you</small>
+        <small>
+          Choose the days that are normally free for you. Usual weekends follow the calendar; custom
+          selections are kept.
+        </small>
         <div className="day-picker">
           {weekdays.map((day, index) => (
             <label key={day}>

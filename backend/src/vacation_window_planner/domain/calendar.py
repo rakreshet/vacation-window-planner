@@ -29,7 +29,7 @@ class CalendarProvider(Protocol):
 class FakeCalendarProvider:
     """A fixed calendar for deterministic tests and offline development."""
 
-    SUPPORTED_COUNTRIES = frozenset({"IL", "US"})
+    SUPPORTED_COUNTRIES = frozenset({"IL", "US", "GB"})
 
     def __init__(self, observed_holidays: Mapping[str, frozenset[date]] | None = None) -> None:
         self.observed_holidays = observed_holidays or {}
@@ -58,7 +58,7 @@ class FakeCalendarProvider:
 class PythonHolidaysCalendarProvider:
     """Production calendar backed by the offline ``python-holidays`` dataset."""
 
-    SUPPORTED_COUNTRIES = frozenset({"IL"})
+    SUPPORTED_COUNTRIES = frozenset({"IL", "US", "GB"})
 
     def resolve(
         self,
@@ -76,6 +76,8 @@ class PythonHolidaysCalendarProvider:
             country_code,
             years=range(start_date.year, end_date.year + 1),
             observed=True,
+            # GB is the explicitly supported England & Wales scope, not all UK regions.
+            subdiv="ENG" if country_code == "GB" else None,
         )
         return HolidayCalendar(
             country_code=country_code,

@@ -14,6 +14,18 @@ export const emptyPlanning: PlanningDraft = {
   weekendDays: [4, 5],
 }
 
+export function changePlanningCountry(draft: PlanningDraft, country: string): PlanningDraft {
+  const previousDefault = draft.country === 'IL' ? [4, 5] : [5, 6]
+  const followsDefault =
+    draft.weekendDays.length === previousDefault.length &&
+    previousDefault.every((day) => draft.weekendDays.includes(day))
+  return {
+    ...draft,
+    country,
+    weekendDays: followsDefault ? (country === 'IL' ? [4, 5] : [5, 6]) : draft.weekendDays,
+  }
+}
+
 export function planningSession(draft: PlanningDraft): SessionInput {
   const balance = Number(draft.balance)
   const allowance = Number(draft.allowedNegative)

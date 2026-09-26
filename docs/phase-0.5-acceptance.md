@@ -60,3 +60,14 @@ Desktop is the supported experience. Keep mobile work focused on future presenta
 - Baseline and alternative regions, semantic metrics, and day labels use flexible CSS layouts. Existing breakpoint groundwork remains, but there is no separate mobile state machine, API, or forked component tree.
 
 A future mobile project can adapt navigation, density, date controls, and layout and then add device-specific acceptance checks without replacing the core behavior.
+
+## Calendar follow-up (P05 F02)
+
+Adds U.S. federal holidays and England & Wales bank holidays to the shared Search/Compare calendar selector. See the [runbook](runbook.md#supported-holiday-calendars) for precise scope, official fixture sources, and API compatibility.
+
+- TDD: production U.S. and England & Wales calendar tests failed before support was enabled; UI options/default-weekend and custom-weekend tests failed before their implementation.
+- Backend: 157 tests passed with disposable PostgreSQL; Ruff formatting/lint and mypy passed. The existing Pydantic AI deprecation warning remains.
+- Frontend: 36 tests passed; ESLint, Prettier, TypeScript, and Vite production build passed. Both manual comparison and Search-to-Compare journeys cover all three calendars.
+- Live desktop check: U.S. July 2027 Search returned July 3–5 at zero vacation days. Opening Compare retained that cost and showed July 5 as a public holiday.
+- Live desktop check: switching the comparison to England & Wales for August 27–30, 2027 returned four total days and one vacation day used; August 30 was shown as a public holiday. The expanded settings fit the desktop layout with the scope label visible.
+- Local frontend API health check passed after rebuilding both app services. Existing database volumes were retained.

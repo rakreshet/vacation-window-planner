@@ -2,11 +2,15 @@ from dataclasses import replace
 from datetime import UTC, datetime, timedelta
 from uuid import UUID
 
+import pytest
 from fastapi.testclient import TestClient
 
 from vacation_window_planner.api import create_app
 from vacation_window_planner.comparison_workflow import ComparisonWorkflow
-from vacation_window_planner.domain.calendar import FakeCalendarProvider
+from vacation_window_planner.domain.calendar import (
+    FakeCalendarProvider,
+    PythonHolidaysCalendarProvider,
+)
 from vacation_window_planner.domain.comparison import ComparisonPolicy
 from vacation_window_planner.repositories.sessions import AnonymousSessionState
 
@@ -174,3 +178,52 @@ def test_all_alternatives_are_feasible_and_deterministic_across_month_boundary()
             assert option["evaluation"]["feasible"] is True
             assert option["evaluation"]["remaining_balance"] >= -1
             assert option["delta"]["vacation_days_saved"] >= 0
+
+
+@pytest.mark.parametrize(
+    ("country", "start", "end", "holidays", "charged"),
+    [
+        ("US", "2027-07-02", "2027-07-05", ["2027-07-04", "2027-07-05"], ["2027-07-02"]),
+        ("GB", "2027-08-27", "2027-08-30", ["2027-08-30"], ["2027-08-27"]),
+        ("US", "2027-12-31", "2028-01-02", ["2027-12-31", "2028-01-01"], []),
+    ],
+)
+def test_production_calendars_account_for_observed_holidays_in_comparisons(
+    country: str,
+    start: str,
+    end: str,
+    holidays: list[str],
+    charged: list[str],
+) -> None:
+    workflow = ComparisonWorkflow(
+        calendar_provider=PythonHolidaysCalendarProvider(),
+        policy=ComparisonPolicy(_env_file=None),
+        clock=lambda: NOW,
+        snapshot_writer=MemorySnapshots(),
+        source_search_owned=lambda search, session: False,
+    )
+    app = create_app(
+        database_probe=lambda: True,
+        session_lookup=lambda token, now: (
+            replace(
+                SESSION,
+                country_code=country,
+                weekend_days=frozenset({5, 6}),
+            )
+            if token == "valid"
+            else None
+        ),
+        comparison_service=workflow.compare,
+    )
+    with TestClient(app) as api:
+        response = api.post(
+            "/comparisons",
+            headers={"Authorization": "Bearer valid"},
+            json={"start_date": start, "end_date": end},
+        )
+    assert response.status_code == 200
+    baseline = response.json()["baseline"]
+    assert sorted(baseline["window"]["holiday_dates"]) == holidays
+    assert sorted(baseline["charged_dates"]) == charged
+    assert baseline["window"]["vacation_days_used"] == len(charged)
+    assert baseline["remaining_balance"] == 2 - len(charged)
