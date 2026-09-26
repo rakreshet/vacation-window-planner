@@ -48,3 +48,25 @@ remove/Undo, another-tab changes, reload and preserved workspace. Offline openin
 verified with a rejecting HTTP boundary in rendered tests; the live browser check above
 was performed with the local service available. Limits are 20 records and 256 KiB each.
 Annual records use their own namespace and leave existing vacation records unchanged.
+
+## AP 09: whole-plan export and copy
+
+September 26, 2026: opened the real saved annual result and its copy preview. It listed
+April 15–28, May 11–15, and September 29–October 3 with 12 aggregate leave days and
+the original timestamp. Budget/reserve inclusion was unchecked, and preview text did
+not include those values. [Preview capture](annual-evidence/ap09-preview-1440.png).
+
+Independent `ical.js` parsing verifies one tentative, transparent all-day event per
+break, distinct stable UIDs, exclusive ends, Unicode escaping/UTF-8 folding, no attendees,
+reduced-plan omissions and opt-in budget text. Literal year-end, leap-day and DST-boundary
+cases pass. Rendered tests cover denied clipboard fallback, stale preview closure even
+after recalculation with identical result identity, and download remaining available
+when saving is blocked. The full 112-test frontend suite passed before three additional
+boundary cases (115 total); focused cases and production build pass after changes.
+
+Actual file delivery is **not verified** in the available in-app browser: native
+Download annual calendar was invoked, its download-event wait timed out, and no matching
+file appeared in the local Downloads directory. This is not counted as a successful
+download. Google Calendar and a second-client import remain pending, as in Phase 0.75.
+Release acceptance stays conditional until those client checks are recorded; parser
+and download-adapter tests do not replace them.

@@ -109,8 +109,8 @@ Base verified September 26, 2026: `origin/main` = `20df229`; #50 merged; #51–#
 | AP 05 | Structured annual workspace and first integrated planning journey | AP 04 | [#66](https://github.com/rakreshet/vacation-window-planner/pull/66) | In review |
 | AP 06 | Year view, whole-plan comparison and lock/recalculate UX | AP 05 | [#67](https://github.com/rakreshet/vacation-window-planner/pull/67) | 94 frontend tests; live generated alternatives, preserved lock and keyboard details verified |
 | AP 07 | Optional interpretation with proposal review and explicit references | AP 06 | [#68](https://github.com/rakreshet/vacation-window-planner/pull/68) | Typed proposal/review flow; 269 backend and 100 frontend tests pass |
-| AP 08 | Same-browser saved annual plans and explicit reopening/recalculation | AP 07 | Preparing PR | Immutable browser snapshots; 108 frontend tests; live reload and separate recalculation verified |
-| AP 09 | Whole-plan calendar download and leave-request copy | AP 08 | — | Planned |
+| AP 08 | Same-browser saved annual plans and explicit reopening/recalculation | AP 07 | [#69](https://github.com/rakreshet/vacation-window-planner/pull/69) | Immutable browser snapshots; 108 frontend tests; live reload and separate recalculation verified |
+| AP 09 | Whole-plan calendar download and leave-request copy | AP 08 | Preparing PR | 115 frontend tests; parser and live preview verified; actual download/client imports pending |
 | AP 10 | Integrated acceptance, performance, accessibility and runbook | AP 09 | — | Planned |
 
 The [ordered breakdown](annual-plans-plan.md#ordered-dependent-pr-breakdown) supplies each task's scope, acceptance evidence, and stacking policy. Do not create implementation PRs or mark work Done in advance. Planning review/merge alone is not permission to implement.
