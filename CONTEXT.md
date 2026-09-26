@@ -27,3 +27,19 @@ _Avoid_: Search boundary, travel month
 **Zero-PTO window**:
 A vacation window that uses no vacation days because none of its dates are effective working dates.
 _Avoid_: Free vacation
+
+**Effective calendar**:
+The observed holidays and nonworking weekdays applicable to a vacation search after the user's workweek override, if any, is applied to the selected country.
+_Avoid_: Provider calendar, public-holiday list
+
+**Default workweek**:
+The temporary country-based weekday rule used when proposing weekend days: Israel works Sunday through Thursday (Friday/Saturday weekend); all other countries work Monday through Friday (Saturday/Sunday weekend). This default is separate from observed public holidays and can be overridden by the user's editable weekday selection.
+_Avoid_: Holiday calendar, immutable country rule
+
+**Search proposal**:
+Editable vacation-search fields inferred from optional conversational text before the user confirms a search.
+_Avoid_: Search result, recommendation
+
+**Interpretation provider**:
+The configured language-model provider used only to turn conversational text into a search proposal. It does not choose vacation windows or start a search.
+_Avoid_: Recommendation engine, search provider

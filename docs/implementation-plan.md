@@ -114,7 +114,7 @@ This plan turns the agreed product and architecture into mergeable tasks. Each t
 
 **Scope**  Enumerate feasible windows with inclusive local calendar-day length and the agreed start-month rule. Charge PTO only for effective working days; allow weekends and observed holidays at either edge and qualifying zero-PTO windows. Enforce the explicit negative allowance without scoring.
 
-**Tests**  Use table driven tests for weekend and observed-holiday edges, consecutive days, cross-month ends, zero-PTO length eligibility, default-zero and explicit 1-to-5-day negative allowance, and generation cap behavior.
+**Tests**  Use table driven tests for weekend and observed-holiday edges, consecutive days, cross-month ends, zero-PTO length eligibility, default-zero and explicit 1-to-5-day negative allowance, and a cap-hit outcome that never exposes partial candidates as ranked results.
 
 **Definition of done**  The pure function returns repeatable windows with exact charged vacation days.
 
@@ -170,7 +170,7 @@ This plan turns the agreed product and architecture into mergeable tasks. Each t
 
 **Scope**  Compose validation, calendar resolution, clipping, generation, ranking, explanation, and persistence behind recommend(request).
 
-**Tests**  Use fake adapters to test success, empty results, invalid requests, cap notices, and persistence failures.
+**Tests**  Use fake adapters to test success, empty results, invalid requests, a coded SEARCH_TOO_BROAD outcome with no partial ranking, and persistence failures.
 
 **Definition of done**  One interface exercises the entire phase 0 behavior without HTTP or real providers.
 
@@ -184,17 +184,17 @@ This plan turns the agreed product and architecture into mergeable tasks. Each t
 
 ### P0 20 Add the Gemini constraint interpreter
 
-**Scope**  Implement a Gemini adapter that converts conversational input to the existing Pydantic constraints schema and records the original text.
+**Scope**  Implement a Gemini adapter and POST /interpret endpoint that return an editable typed proposal from conversational input without starting a search. Keep direct structured search independent of Gemini.
 
-**Tests**  Use a fake adapter for unit tests and schema fixtures for malformed, missing, and valid model output.
+**Tests**  Use a fake adapter and schema fixtures for malformed, missing, and valid model output; assert interpretation alone never creates recommendations.
 
 **Definition of done**  Model output is validated before entering the domain and cannot calculate recommendations.
 
 ### P0 21 Build the phase 0 search interface
 
-**Scope**  Create a conversational input area plus editable structured confirmation for balance, an optional allowed-negative allowance (default 0, maximum 5 whole days), calendar, months, length, and overrides.
+**Scope**  Create a conversational input area plus editable structured confirmation for balance, an optional allowed-negative allowance (default 0, maximum 5 whole days), calendar, months, length, and overrides. Apply an interpretation proposal to editable fields only; submit confirmed fields on explicit Search.
 
-**Tests**  Test required fields, allowance bounds and default, local edits, manual search behavior, and accessible labels.
+**Tests**  Test required fields, allowance bounds and default, local edits, no search on interpretation, manual Search behavior, structured-only use without Gemini, and accessible labels.
 
 **Definition of done**  The user can confirm interpreted constraints before starting a search.
 
@@ -218,7 +218,7 @@ This plan turns the agreed product and architecture into mergeable tasks. Each t
 
 **Scope**  Exercise anonymous session creation, interpreted and structured searches, persisted results, manual rerun, and feedback.
 
-**Tests**  Use a real PostgreSQL test database and fake Gemini and holiday adapters.
+**Tests**  Use a real PostgreSQL test database and fake Gemini and holiday adapters; assert no search before confirmation and no partial recommendations after a cap-hit outcome.
 
 **Definition of done**  The representative user journey passes locally and in GitHub Actions.
 
@@ -380,8 +380,9 @@ The repository starts public as agreed, with branch protection configured to req
 - Selected-month starts, cross-month ends, nonworking edges, default-zero/explicit-negative limits, and zero-PTO eligibility pass deterministic tests.
 - Five ranked results by default show score, explanation, balance impact, and warnings.
 - Near duplicates are handled according to the diversity rule.
+- A cap-hit search produces a clear narrow-the-search outcome, never a partial ranked list.
 - Search inputs and outputs are persisted and reproducible.
-- The frontend supports manual rerun and feedback.
+- The frontend supports editable text-interpretation proposals, manual search and rerun, direct structured use without Gemini, and feedback.
 - All GitHub Actions jobs pass with no real provider secrets required.
 
 ### Phase 1 complete when

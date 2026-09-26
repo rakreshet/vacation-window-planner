@@ -1,8 +1,7 @@
-# Remaining product decisions before the recommendation engine
+# Remaining operational choices
 
-The foundation intentionally does not encode these remaining rules yet. Balance allowance, vacation-window length and boundaries, and zero-PTO eligibility are now specified in the [PRD](prd.md), [HLD](hld.md), and [implementation task plan](implementation-plan.md).
+The core Phase 0 behavior choices are now specified in the [PRD](prd.md), [HLD](hld.md), and [implementation task plan](implementation-plan.md). A capped search returns no partial ranking, and text interpretation returns editable fields for explicit confirmation before search.
 
-1. Search completeness: define bounded enumeration and what happens if the generation cap would omit candidates. A partial search must not silently claim to return the best windows.
-2. Interpretation flow: define how the frontend receives Gemini-interpreted fields for user confirmation before a manual search.
+The Phase 0 calendar source is the offline `python-holidays` library, initially with Israel (`IL`) as the only production-supported country. Its version is locked with the backend dependencies and recorded date cases protect provider-data changes.
 
-Before a public pilot, also choose the supported-country set and holiday source, session expiry, and raw-text retention period. Phase 1 flight-provider selection can wait.
+Phase 0 sessions expire after 30 days, and conversational source text is purged after 30 days by default; both periods are bounded environment settings. Phase 1 flight-provider selection can wait.
