@@ -33,7 +33,7 @@ def exhaustive_plan(
                 if end <= horizon_end and not covered & unavailable:
                     options.append((start, end, covered))
         choices.append(options)
-    ranked: list[tuple[int, int, tuple[tuple[date, date, int], ...]]] = []
+    ranked: list[tuple[int, int, tuple[tuple[date, date], ...], tuple[int, ...]]] = []
     for combination in product(*choices):
         ordered = sorted(enumerate(combination), key=lambda entry: entry[1][0])
         valid = True
@@ -48,8 +48,13 @@ def exhaustive_plan(
         spent = len(covered & working)
         if spent <= spendable:
             ranked.append(
-                (-len(covered), spent, tuple((item[0], item[1], index) for index, item in ordered))
+                (
+                    -len(covered),
+                    spent,
+                    tuple((item[0], item[1]) for _, item in ordered),
+                    tuple(index for index, _ in ordered),
+                )
             )
     if not ranked:
         return None
-    return tuple((start, end) for start, end, _ in min(ranked)[2])
+    return min(ranked)[2]

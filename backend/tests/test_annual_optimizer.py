@@ -165,3 +165,44 @@ def test_calendar_facts_must_match_the_submitted_common_context() -> None:
     )
     with pytest.raises(ValueError, match="calendar"):
         plan_year(request, calendar)
+
+
+def test_equal_objectives_compare_all_dates_before_slot_assignments() -> None:
+    context = UserVacationContext.model_validate(
+        {
+            "session_id": UUID(int=1),
+            "balance_days": 8,
+            "country_code": "IL",
+            "weekend_days": [4, 5],
+            "personal_calendar": {
+                "unavailable_ranges": [
+                    {"start_date": "2027-01-21", "end_date": "2027-12-31"},
+                ]
+            },
+        }
+    )
+    calendar = prepare_calendar(
+        HolidayCalendar(country_code="IL", weekend_days={4, 5}),
+        context,
+        (date(2027, 1, 1), date(2027, 12, 31)),
+        date(2027, 1, 1),
+    )
+    request = AnnualRequest.model_validate(
+        {
+            "year": 2027,
+            "minimum_gap_days": 0,
+            "allowed_start_months": [1],
+            "slots": [
+                {"slot_id": "long", "min_days": 4, "max_days": 6},
+                {"slot_id": "short1", "min_days": 4, "max_days": 5},
+                {"slot_id": "short2", "min_days": 4, "max_days": 5},
+            ],
+        }
+    )
+    plan = plan_year(request, calendar).plans[0]
+    assert [(item.window.start_date, item.window.end_date) for item in plan.breaks] == [
+        (date(2027, 1, 1), date(2027, 1, 4)),
+        (date(2027, 1, 6), date(2027, 1, 9)),
+        (date(2027, 1, 11), date(2027, 1, 16)),
+    ]
+    assert (plan.accounting.total_days_away, plan.accounting.total_leave_used) == (14, 8)

@@ -64,6 +64,7 @@ def annual_candidates(
 
 type Selection = tuple[tuple[int, AnnualCandidate], ...]
 type StateKey = tuple[int, int]
+type DateOrder = tuple[tuple[tuple[date, date], ...], tuple[int, ...]]
 
 
 @dataclass(frozen=True)
@@ -72,8 +73,11 @@ class PlanPrefix:
     selection: Selection = ()
 
     @property
-    def dates(self) -> tuple[tuple[date, date, int], ...]:
-        return tuple((item.start_date, item.end_date, slot) for slot, item in self.selection)
+    def dates(self) -> DateOrder:
+        return (
+            tuple((item.start_date, item.end_date) for _, item in self.selection),
+            tuple(slot for slot, _ in self.selection),
+        )
 
 
 def keep_prefix(
@@ -154,7 +158,7 @@ def solve_annual_graph(graph: CandidateGraph, budget: WorkBudget) -> Selection |
     states: list[dict[StateKey, PlanPrefix]] = [{} for _ in range(len(graph.by_start) + 1)]
     budget.state()
     states[0][(graph.locked_mask, graph.locked_cost)] = PlanPrefix()
-    best: tuple[int, int, tuple[tuple[date, date, int], ...]] | None = None
+    best: tuple[int, int, DateOrder] | None = None
     selected: Selection | None = None
     for cursor, current in enumerate(states):
         for key, prefix in current.items():
