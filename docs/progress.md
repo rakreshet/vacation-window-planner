@@ -56,11 +56,11 @@ These gaps are relative to the existing task plan, not regressions in the runnin
 
 ## Phase 0.5 — compare vacation dates
 
-The [Phase 0.5 plan](phase-0.5-plan.md) is proposed in [#35](https://github.com/rakreshet/vacation-window-planner/pull/35), based on the open Phase 0 tip at PR #34. The tasks below are planned; no implementation PR has opened. Add each real PR link and update its status as the stack progresses. Keep Search, its results, and feedback working at each step.
+The [Phase 0.5 plan](phase-0.5-plan.md) is proposed in [#35](https://github.com/rakreshet/vacation-window-planner/pull/35), based on the open Phase 0 tip at PR #34. Phase 0.5 delivery is in progress in the open stack below. Add each real PR link and update its status as the stack progresses. Keep Search, its results, and feedback working at each step.
 
 | Task | Deliverable | PR(s) | Status |
 | --- | --- | --- | --- |
-| P05 01 | Comparison UX prototype | — | Planned |
+| P05 01 | Comparison UX prototype | [#36](https://github.com/rakreshet/vacation-window-planner/pull/36) | PR open |
 | P05 02 | Shared exact-window accounting | — | Planned |
 | P05 03 | Local-date context | — | Planned |
 | P05 04 | Comparison policy and contracts | — | Planned |
