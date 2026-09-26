@@ -106,7 +106,7 @@ Base verified September 26, 2026: `origin/main` = `20df229`; #50 merged; #51–#
 | AP 02 | Complete annual candidates and exact full-mix optimizer | AP 01 | [#63](https://github.com/rakreshet/vacation-window-planner/pull/63) | In review |
 | AP 03 | Diverse full plans, labeled reductions and truthful diagnostics | AP 02 | [#64](https://github.com/rakreshet/vacation-window-planner/pull/64) | In review |
 | AP 04 | Authenticated workflow/HTTP, annual snapshots and resource controls | AP 03 | [#65](https://github.com/rakreshet/vacation-window-planner/pull/65) | In review |
-| AP 05 | Structured annual workspace and first integrated planning journey | AP 04 | — | Planned |
+| AP 05 | Structured annual workspace and first integrated planning journey | AP 04 | — | Preparing PR |
 | AP 06 | Year view, whole-plan comparison and lock/recalculate UX | AP 05 | — | Planned |
 | AP 07 | Optional interpretation with proposal review and explicit references | AP 06 | — | Planned |
 | AP 08 | Same-browser saved annual plans and explicit reopening/recalculation | AP 07 | — | Planned |
