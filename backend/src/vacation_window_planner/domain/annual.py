@@ -390,8 +390,9 @@ def diagnose_full_mix(
     graph: CandidateGraph,
     budget: WorkBudget,
 ) -> MixBudgetConflict | MixConstraintsConflict:
+    maximum_mix_leave = sum(slot.max_days for slot in request.slots)
     selection = solve_annual_graph(
-        replace(graph, spendable=168), budget, objective="fewer_leave_days"
+        replace(graph, spendable=maximum_mix_leave), budget, objective="fewer_leave_days"
     )
     slot_ids = tuple(slot.slot_id for slot in request.slots)
     if selection is None:
