@@ -24,31 +24,34 @@ function luminance(color: string) {
   return channels[0] * 0.2126 + channels[1] * 0.7152 + channels[2] * 0.0722
 }
 
-test('every slider hue retains readable text on the surfaces that actually contain it', () => {
-  const pairs = [
-    ['accent', 'paper'],
-    ['ink', 'canvas'],
-    ['focus-ring', 'canvas'],
-    ['focus-ring', 'surface-tint'],
-    ['brand-ink', 'surface-selected'],
-    ['ink-soft', 'assistant-start'],
-    ['ink-soft', 'surface-tint'],
-  ]
-  for (let hue = 0; hue <= 360; hue++) {
-    applyTheme(hue)
-    for (const [foreground, background] of pairs) {
-      const values = [luminance(token(foreground)), luminance(token(background))].sort(
-        (a, b) => a - b,
-      )
-      expect(
-        (values[1] + 0.05) / (values[0] + 0.05),
-        `${foreground} on ${background}, hue ${hue}`,
-      ).toBeGreaterThanOrEqual(4.5)
+test.each(Array.from({ length: 13 }, (_, index) => index * 30))(
+  'slider hues starting at %i retain readable text on their actual surfaces',
+  (startHue) => {
+    const pairs = [
+      ['accent', 'paper'],
+      ['ink', 'canvas'],
+      ['focus-ring', 'canvas'],
+      ['focus-ring', 'surface-tint'],
+      ['brand-ink', 'surface-selected'],
+      ['ink-soft', 'assistant-start'],
+      ['ink-soft', 'surface-tint'],
+    ]
+    for (let hue = startHue; hue <= Math.min(startHue + 29, 360); hue++) {
+      applyTheme(hue)
+      for (const [foreground, background] of pairs) {
+        const values = [luminance(token(foreground)), luminance(token(background))].sort(
+          (a, b) => a - b,
+        )
+        expect(
+          (values[1] + 0.05) / (values[0] + 0.05),
+          `${foreground} on ${background}, hue ${hue}`,
+        ).toBeGreaterThanOrEqual(4.5)
+      }
+      expect(token('danger')).toBe('#a23932')
+      expect(token('success')).toBe('#2f6757')
     }
-    expect(token('danger')).toBe('#a23932')
-    expect(token('success')).toBe('#2f6757')
-  }
-})
+  },
+)
 
 test.each(['null', '"215"', '{}', '[]', 'true', '-1', '361', 'broken', '1e999'])(
   'malformed saved hue %s falls back to the configured default',
