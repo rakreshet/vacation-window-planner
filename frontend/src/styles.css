@@ -27,7 +27,7 @@ html {
 }
 
 body {
-  min-width: 1024px;
+  min-width: 320px;
   min-height: 100vh;
   margin: 0;
   background:
@@ -52,7 +52,7 @@ input:focus-visible,
 select:focus-visible,
 textarea:focus-visible,
 a:focus-visible {
-  outline: 3px solid rgba(242, 111, 79, 0.3);
+  outline: 3px solid var(--forest-bright);
   outline-offset: 2px;
 }
 
@@ -360,6 +360,7 @@ a:focus-visible {
   border-bottom: 1px solid var(--line);
 }
 
+.planner-heading h1,
 .planner-heading h2 {
   margin: 5px 0 0;
   font-family: 'Avenir Next', Avenir, 'Segoe UI', Helvetica, Arial, sans-serif;
@@ -729,7 +730,7 @@ a:focus-visible {
 }
 
 .day-picker input:focus-visible + span {
-  outline: 3px solid rgba(242, 111, 79, 0.3);
+  outline: 3px solid var(--forest-bright);
   outline-offset: 2px;
 }
 
@@ -801,12 +802,12 @@ a:focus-visible {
   min-width: 210px;
   min-height: 50px;
   color: #fff;
-  background: var(--coral);
+  background: #b74731;
   box-shadow: 0 12px 26px rgba(216, 88, 61, 0.22);
 }
 
 .button--primary:hover:not(:disabled) {
-  background: var(--coral-dark);
+  background: #9e3925;
   box-shadow: 0 15px 30px rgba(216, 88, 61, 0.26);
 }
 
@@ -1482,7 +1483,7 @@ a:focus-visible {
   border-radius: 20px;
   background: var(--mint-light);
 }
-.window-summary h3 {
+.window-summary h2 {
   font-size: 21px;
   letter-spacing: -0.03em;
   line-height: 1.4;
@@ -1552,7 +1553,7 @@ a:focus-visible {
   font-size: 10px;
   line-height: 1.5;
 }
-.comparison-group h3 {
+.comparison-group h2 {
   font-size: 20px;
   margin: 0 0 14px;
   letter-spacing: -0.03em;
@@ -1658,7 +1659,8 @@ summary:focus-visible {
   .planner-card {
     padding: 28px;
   }
-  .planner-heading {
+  .planner-heading,
+  .results-heading {
     grid-template-columns: 1fr;
     gap: 18px;
   }
@@ -1739,6 +1741,7 @@ summary:focus-visible {
     margin-bottom: 20px;
     padding-bottom: 20px;
   }
+  .planner-heading h1,
   .planner-heading h2 {
     font-size: 29px;
   }
@@ -1782,7 +1785,7 @@ summary:focus-visible {
   .window-summary {
     padding: 18px;
   }
-  .window-summary h3 {
+  .window-summary h2 {
     font-size: 19px;
   }
   .comparison-metrics strong {
@@ -1894,4 +1897,8 @@ summary:focus-visible {
 }
 .comparison-table thead th {
   font-size: 11px;
+}
+
+.comparison-editor > .button--primary:hover:not(:disabled) {
+  background: var(--forest-bright);
 }

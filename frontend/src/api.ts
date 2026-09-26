@@ -202,30 +202,38 @@ export async function compareDates(
   dates: DateRange,
   sourceSearchId?: string,
 ): Promise<ComparisonResponse> {
-  const response = await fetch(`${baseUrl()}/comparisons`, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
-    body: JSON.stringify({
-      ...dates,
-      ...(sourceSearchId ? { source_search_id: sourceSearchId } : {}),
-    }),
-  })
-  const body: unknown = await response.json()
-  if (
-    !response.ok ||
-    !isObject(body) ||
-    !isObject(body.baseline) ||
-    !Array.isArray(body.save_leave) ||
-    !Array.isArray(body.longer_break)
-  ) {
-    const code =
-      isObject(body) && isObject(body.error) && typeof body.error.code === 'string'
-        ? body.error.code
-        : 'COMPARISON_ERROR'
+  try {
+    const response = await fetch(`${baseUrl()}/comparisons`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+      body: JSON.stringify({
+        ...dates,
+        ...(sourceSearchId ? { source_search_id: sourceSearchId } : {}),
+      }),
+    })
+    const body: unknown = await response.json()
+    if (
+      !response.ok ||
+      !isObject(body) ||
+      !isObject(body.baseline) ||
+      !Array.isArray(body.save_leave) ||
+      !Array.isArray(body.longer_break)
+    ) {
+      const code =
+        isObject(body) && isObject(body.error) && typeof body.error.code === 'string'
+          ? body.error.code
+          : 'COMPARISON_ERROR'
+      throw new ComparisonError(
+        errorMessage(body, 'Comparison is unavailable. Your dates have been kept; try again.'),
+        code,
+      )
+    }
+    return body as ComparisonResponse
+  } catch (error) {
+    if (error instanceof ComparisonError) throw error
     throw new ComparisonError(
-      errorMessage(body, 'Comparison is unavailable. Your dates have been kept; try again.'),
-      code,
+      'Comparison is unavailable. Your dates have been kept; try again.',
+      'COMPARISON_ERROR',
     )
   }
-  return body as ComparisonResponse
 }

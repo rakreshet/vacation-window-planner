@@ -114,9 +114,9 @@ export default function ComparisonWorkspace({
       <header className="planner-heading">
         <div>
           <p className="section-kicker">A little flexibility, more possibility</p>
-          <h2 id="comparison-heading" tabIndex={-1}>
+          <h1 id="comparison-heading" tabIndex={-1}>
             Could nearby dates work better?
-          </h2>
+          </h1>
         </div>
         <p>
           Compare the dates you have in mind. Keep the length, save leave—or stretch your break.

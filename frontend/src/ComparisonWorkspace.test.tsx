@@ -132,3 +132,119 @@ test('no improvement explains the limit and an over-budget baseline remains visi
     '-3 vacation days remaining',
   )
 })
+
+test('a non-JSON service failure keeps edited dates and offers a clear retry', async () => {
+  const fetch = setup()
+  await screen.findByRole('button', { name: /Same 5 days off/ })
+  fireEvent.click(screen.getByRole('button', { name: 'Move 1 day later' }))
+  fetch.mockImplementationOnce(async () => ({ ok: true, json: async () => ({ token: 'token' }) }))
+  fetch.mockImplementationOnce(async () => ({
+    ok: false,
+    json: async () => {
+      throw new SyntaxError('Unexpected token')
+    },
+  }))
+  fireEvent.click(screen.getByRole('button', { name: 'Update comparison' }))
+  expect(await screen.findByRole('alert')).toHaveTextContent(
+    'Comparison is unavailable. Your dates have been kept; try again.',
+  )
+  expect(screen.getByLabelText('Start date')).toHaveValue('2027-01-04')
+  expect(screen.queryByRole('button', { name: /Same 5 days off/ })).not.toBeInTheDocument()
+  fireEvent.click(screen.getByRole('button', { name: 'Update comparison' }))
+  expect(await screen.findByRole('button', { name: /Same 5 days off/ })).toBeInTheDocument()
+})
+
+test('expired Search-origin sessions recover explicitly without claiming the old search', async () => {
+  const requests: Array<{ url: string; body: Record<string, unknown> }> = []
+  let attempts = 0
+  vi.stubGlobal(
+    'fetch',
+    vi.fn(async (input: RequestInfo | URL, init?: RequestInit) => {
+      const url = String(input)
+      requests.push({ url, body: JSON.parse(String(init?.body)) })
+      if (url.endsWith('/sessions')) return { ok: true, json: async () => ({ token: 'fresh' }) }
+      attempts += 1
+      return attempts === 1
+        ? {
+            ok: false,
+            json: async () => ({ error: { code: 'SESSION_EXPIRED', message: 'Expired' } }),
+          }
+        : { ok: true, json: async () => response }
+    }),
+  )
+  const draft: ComparisonDraft = {
+    dates: { start_date: '2027-01-03', end_date: '2027-01-07' },
+    planning: { balance: '8', allowedNegative: '0', country: 'IL', weekendDays: [4, 5] },
+  }
+  const context = {
+    balance_days: 8,
+    allowed_negative_days: 0,
+    country_code: 'IL',
+    weekend_days: [4, 5],
+    time_zone: Intl.DateTimeFormat().resolvedOptions().timeZone,
+  }
+  render(
+    <ComparisonWorkspace
+      draft={draft}
+      onDraftChange={() => {}}
+      onClose={() => {}}
+      origin={{ token: 'expired', searchId: 'original-search', context }}
+    />,
+  )
+  expect(await screen.findByRole('alert')).toHaveTextContent('Your session expired. Compare again')
+  expect(requests).toHaveLength(1)
+  fireEvent.click(screen.getByRole('button', { name: 'Compare dates' }))
+  await screen.findByRole('region', { name: 'Your dates' })
+  expect(requests).toHaveLength(3)
+  expect(requests[0].body.source_search_id).toBe('original-search')
+  expect(requests[2].body).not.toHaveProperty('source_search_id')
+})
+
+test('editing comparison balance creates a separate session from its Search origin', async () => {
+  const requests: Array<{ url: string; body: Record<string, unknown> }> = []
+  vi.stubGlobal(
+    'fetch',
+    vi.fn(async (input: RequestInfo | URL, init?: RequestInit) => {
+      const url = String(input)
+      requests.push({ url, body: JSON.parse(String(init?.body)) })
+      return {
+        ok: true,
+        json: async () => (url.endsWith('/sessions') ? { token: 'changed-context' } : response),
+      }
+    }),
+  )
+  const origin = {
+    token: 'search-token',
+    searchId: 'search-id',
+    context: {
+      balance_days: 8,
+      allowed_negative_days: 0,
+      country_code: 'IL',
+      weekend_days: [4, 5],
+      time_zone: Intl.DateTimeFormat().resolvedOptions().timeZone,
+    },
+  }
+  function OriginHarness() {
+    const [draft, setDraft] = useState<ComparisonDraft>({
+      dates: { start_date: '2027-01-03', end_date: '2027-01-07' },
+      planning: { balance: '8', allowedNegative: '0', country: 'IL', weekendDays: [4, 5] },
+    })
+    return (
+      <ComparisonWorkspace
+        draft={draft}
+        onDraftChange={setDraft}
+        origin={origin}
+        onClose={() => {}}
+      />
+    )
+  }
+  render(<OriginHarness />)
+  await screen.findByRole('region', { name: 'Your dates' })
+  fireEvent.click(screen.getByText('Calendar and balance · 8 vacation days'))
+  fireEvent.change(screen.getByLabelText('Vacation balance'), { target: { value: '9' } })
+  expect(requests).toHaveLength(1)
+  fireEvent.click(screen.getByRole('button', { name: 'Update comparison' }))
+  await screen.findByRole('button', { name: /Same 5 days off/ })
+  expect(requests[1].body.balance_days).toBe(9)
+  expect(requests[2].body).not.toHaveProperty('source_search_id')
+})

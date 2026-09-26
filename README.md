@@ -1,15 +1,17 @@
 # Vacation Window Planner
 
-A Docker-based proof of concept for finding useful vacation dates. Phase 0 recommends ranked date windows from an anonymous session, effective holiday calendar, editable structured constraints, and optional AI text interpretation; phase 1 will add destinations, live flights, and separate proactive vacation opportunities. The core Phase 0 product rules are in the PRD; remaining operational choices are in [docs/open-decisions.md](docs/open-decisions.md).
+A Docker-based proof of concept for finding useful vacation dates. Phase 0 recommends ranked date windows from an anonymous session, effective holiday calendar, editable structured constraints, and optional AI text interpretation. Phase 0.5 adds exact-date comparison with nearby ways to save vacation days or extend a break; phase 1 will add destinations, live flights, and separate proactive vacation opportunities. The core Phase 0 product rules are in the PRD; remaining operational choices are in [docs/open-decisions.md](docs/open-decisions.md).
 
 ## Product and implementation documents
 
 - [Product requirements (PRD)](docs/prd.md)
 - [High-level design (HLD)](docs/hld.md)
+- [Phase 0.5 comparison plan](docs/phase-0.5-plan.md)
+- [Phase 0.5 acceptance record](docs/phase-0.5-acceptance.md)
 - [Implementation task plan](docs/implementation-plan.md)
 - [Delivery progress and PR map](docs/progress.md)
 - [Open product decisions](docs/open-decisions.md)
-- [Phase 0 runbook](docs/runbook.md)
+- [Local runbook](docs/runbook.md)
 - [Phase 0 frontend design contract](docs/frontend-design.md)
 - [Security guidance](SECURITY.md)
 - [Domain language](CONTEXT.md)

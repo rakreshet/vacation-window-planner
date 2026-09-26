@@ -15,8 +15,8 @@ function range(value: DateRange): string {
 function outcome(option: ComparisonAlternative): string {
   const { extra_days: extra, vacation_days_saved: saved } = option.delta
   return extra === 0
-    ? `Same ${option.evaluation.window.total_days} days off, ${saved} fewer vacation days`
-    : `${extra} more days off, ${saved ? `${saved} fewer vacation days` : 'no extra vacation days'}`
+    ? `Same ${option.evaluation.window.total_days} days off, ${saved} fewer vacation ${saved === 1 ? 'day' : 'days'}`
+    : `${extra} more ${extra === 1 ? 'day' : 'days'} off, ${saved ? `${saved} fewer vacation ${saved === 1 ? 'day' : 'days'}` : 'no extra vacation days'}`
 }
 function movement(days: number): string {
   return days === 0
@@ -38,7 +38,7 @@ export function WindowSummary({
   return (
     <section className="window-summary" aria-label={label}>
       <p className="section-kicker">{label}</p>
-      <h3>{range(value.window)}</h3>
+      <h2>{range(value.window)}</h2>
       {compareTo ? (
         <table className="comparison-table">
           <caption>How the dates compare</caption>
@@ -160,8 +160,8 @@ export default function ComparisonResults({
       <div className="comparison-options">
         {stale ? (
           <p className="comparison-empty">
-            Your inputs changed. Update comparison to see suggestions for these inputs. Your last
-            calculated dates remain here for reference.
+            Update comparison to see current suggestions. Your last calculated dates remain here for
+            reference.
           </p>
         ) : (
           <>
@@ -210,7 +210,7 @@ export default function ComparisonResults({
               ] as const
             ).map((group) => (
               <section key={group.key} aria-label={group.title} className="comparison-group">
-                <h3>{group.title}</h3>
+                <h2>{group.title}</h2>
                 {result[group.key].length ? (
                   <ul>
                     {result[group.key].map((option) => (

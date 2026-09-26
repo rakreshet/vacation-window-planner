@@ -76,10 +76,15 @@ def discover_alternatives(
                 end_shift_days=(end - window.end_date).days,
             )
             explanation = (
-                f"Same {length} days off, {savings} fewer vacation days."
+                f"Same {length} days off, {savings} fewer vacation "
+                f"{'day' if savings == 1 else 'days'}."
                 if extra == 0
-                else f"{extra} more days off, "
-                + (f"{savings} fewer vacation days." if savings else "no extra vacation days.")
+                else f"{extra} more {'day' if extra == 1 else 'days'} off, "
+                + (
+                    f"{savings} fewer vacation {'day' if savings == 1 else 'days'}."
+                    if savings
+                    else "no extra vacation days."
+                )
             )
             alternative = ComparisonAlternative(
                 evaluation=evaluated, delta=delta, explanation=explanation

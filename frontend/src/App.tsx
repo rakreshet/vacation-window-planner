@@ -75,7 +75,7 @@ export default function App() {
     if (results === null) return
     const heading = document.getElementById('results-heading')
     heading?.focus({ preventScroll: true })
-    heading?.scrollIntoView?.({ behavior: 'smooth', block: 'start' })
+    heading?.scrollIntoView?.({ block: 'start' })
   }, [results])
 
   const message = {

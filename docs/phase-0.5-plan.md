@@ -2,6 +2,8 @@
 
 **Status:** Approved for gradual implementation by the user; delivery tracked in progress.md
 
+**Supported surface:** Desktop. The user clarified on September 26, 2026 that mobile is future scope. Keep shared state, API contracts, and presentation components reusable so a later mobile layout does not require a major refactor. Existing responsive groundwork may remain, but mobile refinement and certification are not Phase 0.5 gates.
+
 **Starting point:** PR #34 (`codex/phase0-accurate-no-account-copy`)
 
 **Delivery:** A new stack of small PRs based on #34 and then on each preceding Phase 0.5 PR. Nothing in this plan requires merging the Phase 0 stack into `main` first.
@@ -46,13 +48,13 @@ The two entry points share one comparison component and one backend contract. Sw
 
 ## UX quality bar
 
-- The workspace has a predictable reading order: **Your dates** and its exact cost first, then the two improvement groups, then the detailed day-by-day view. On wide screens the baseline stays in view beside the selected alternative; on narrow screens the same information stacks without hiding the baseline behind a tab.
+- The workspace has a predictable reading order: **Your dates** and its exact cost first, then the two improvement groups, then the detailed day-by-day view. On desktop the baseline stays in view beside the selected alternative. Preserve this semantic reading order independently of the visual layout so a future mobile layout can stack the same components.
 - Lead with the concrete outcome: **“Same 8 days off, 2 fewer vacation days”** or **“2 more days off, no extra vacation days.”** Dates and calendar context immediately support the claim. Show the 0–100 Search score only on Search cards; do not reuse it for comparison, where the user's goal and baseline are different.
 - Keep **Your dates** visible while exploring suggestions. Never silently replace the baseline or make a selected alternative appear to have been the person's original choice.
 - Explain charged dates, not only totals. Use date-only values, inclusive endpoints, and the same effective weekend and observed-holiday calendar as Search. Name an observed holiday only if the provider supplies a verified name; otherwise label it “Public holiday.”
 - Show the size of the move (for example, “starts 3 days later”) so a large shift cannot masquerade as a small improvement. State that work and personal availability on suggested dates have not been checked.
 - Show the best few *distinct* alternatives in each group; do not fill the view with adjacent near duplicates. If there is no improvement within the bounded neighborhood, say so plainly and keep the exact baseline useful.
-- Design desktop and mobile deliberately, including the shared input form and existing Search results needed to reach comparison. Calendar cells, date inputs, and alternative cards must work with keyboard, touch, and screen readers. Do not require drag gestures. Test focus return, announcements for recalculation, contrast, and reduced motion.
+- Design desktop deliberately, including the shared input form and existing Search results needed to reach comparison. Calendar cells, date inputs, and alternative cards must work with keyboard and screen readers. Do not require drag gestures. Test focus return, announcements for recalculation, contrast, and reduced motion.
 - Preserve the Phase 0 visual language while giving comparison a clear visual identity: a persistent baseline, emphasized deltas, and a legible day-by-day strip. Review real rendered states before calling the UI complete.
 
 ## Calculation and API design
@@ -113,7 +115,7 @@ For each behavior PR, pick one observable behavior, write a failing test at a co
 
 | Order | Task | Deliverable and main acceptance evidence |
 | --- | --- | --- |
-| 1 | P05 01 — Comparison UX prototype | Produce reviewable desktop/mobile wireframes, screen copy, calendar/day-type language, keyboard path, and states for no improvement, over budget, and failures. Walk both entry journeys with realistic date fixtures before backend contract and frontend implementation. |
+| 1 | P05 01 — Comparison UX prototype | Produce reviewable desktop wireframes (the earlier mobile sketch is future reference), screen copy, calendar/day-type language, keyboard path, and states for no improvement, over budget, and failures. Walk both entry journeys with realistic date fixtures before backend contract and frontend implementation. |
 | 2 | P05 02 — Shared exact-window accounting | Extract one pure evaluator for Search and comparison. Golden and property tests prove unchanged Phase 0 results, observed holidays, weekend overrides, inclusive edges, cross-year dates, and zero-PTO windows. |
 | 3 | P05 03 — Local-date context | Add optional validated IANA time zone to anonymous sessions, a documented calendar-zone fallback for old clients, and shared local-date clipping. Migration and fixed-clock tests cover midnight boundaries and unchanged date-only accounting. |
 | 4 | P05 04 — Comparison policy and contracts | Versioned bounds, typed baseline/alternative/delta models, validation, and deterministic goal-specific ordering rules. Contract tests cover invalid ranges and stable serialization. No endpoint or UI yet. |
@@ -121,8 +123,8 @@ For each behavior PR, pick one observable behavior, write a failing test at a co
 | 6 | P05 06 — Comparison snapshots | Add a migration and repository for immutable comparison inputs, effective calendar/policy, and outputs. Migration up/down and PostgreSQL tests prove reproducibility and session isolation. |
 | 7 | P05 07 — Nearby improvement discovery | Add both bounded candidate groups, deterministic ranking, variety, explanations, and cap behavior. Fixed-calendar tests cover all edge cases above, especially zero-PTO and no-improvement cases. |
 | 8 | P05 08 — Shared frontend context and both entry points | Keep Search as the default task. Add Compare my dates without requiring month/length and Compare nearby dates on every visible Search date, including grouped alternatives. Component tests prove draft retention, session-context changes, no implicit Search, and intact feedback. |
-| 9 | P05 09 — Comparison workspace | Build responsive baseline/alternative layout, date and day-type view, explicit shift/edit/update actions, two goal groups, deltas, no-improvement and error states. Accessibility and interaction tests cover keyboard, focus, screen reader labels, and stale-result handling. |
-| 10 | P05 10 — End-to-end experience and hardening | Exercise manual and Search-origin journeys against the real backend and PostgreSQL, verify both paths use the same accounting, review 1,440-pixel desktop and 360-pixel mobile states across Search and comparison, measure response time, and fix UX or regression gaps. Phase 0 acceptance tests remain green. |
+| 9 | P05 09 — Comparison workspace | Build a flexible desktop baseline/alternative layout, date and day-type view, explicit shift/edit/update actions, two goal groups, deltas, no-improvement and error states. Accessibility and interaction tests cover keyboard, focus, screen reader labels, and stale-result handling. |
+| 10 | P05 10 — End-to-end experience and hardening | Exercise manual and Search-origin journeys against the real backend and PostgreSQL, verify both paths use the same accounting, review 1,440-pixel desktop states across Search and comparison, measure response time, and fix UX or regression gaps. Phase 0 acceptance tests remain green. |
 
 P05 07 may be split into separate backend PRs for the two improvement goals if review size warrants it; each would keep a typed complete response and tests. P05 08–09 can be split along user-visible vertical slices if the frontend diff becomes too large. The stack order remains the dependency order above.
 
@@ -132,7 +134,7 @@ P05 07 may be split into separate backend PRs for the two improvement goals if r
 - Exact dates and every displayed delta match the effective calendar and leave balance. The two improvement groups satisfy their literal promises.
 - A person can answer, from the UI alone: which dates changed, how many days off they gain, how many vacation days they save or spend, and which exact dates are charged.
 - No-improvement, over-budget, zero-PTO, expired-session, provider failure, and changed-input states are understandable and recoverable.
-- Desktop and mobile views pass a deliberate visual review; keyboard and screen reader navigation do not depend on the graphical calendar.
+- Desktop views pass a deliberate visual review; keyboard and screen reader navigation do not depend on the graphical calendar.
 - Existing Phase 0 API, interpretation, ranking, grouped results, feedback, and test journeys keep working.
 - The plan's 21-day and 7-day defaults are checked against representative real holiday cases before release; any change is documented with its effect on suggestions and response time.
 

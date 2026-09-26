@@ -1,5 +1,5 @@
-import { cleanup, fireEvent, render, screen, within } from '@testing-library/react'
-import { afterEach, expect, test, vi } from 'vitest'
+import { cleanup, fireEvent, render, screen, waitFor, within } from '@testing-library/react'
+import { afterEach, beforeEach, expect, test, vi } from 'vitest'
 import App from './App'
 
 export const comparison = {
@@ -30,6 +30,10 @@ export const comparison = {
   },
   notices: [],
 }
+
+beforeEach(() => {
+  vi.stubGlobal('scrollTo', vi.fn())
+})
 
 afterEach(() => {
   cleanup()
@@ -115,7 +119,9 @@ test('a matching result date opens comparison and returning preserves Search and
   fireEvent.click(screen.getByRole('button', { name: 'Thumbs up recommendation 1' }))
   await screen.findByText('Feedback saved')
   fireEvent.click(screen.getByText('2 matching date options · same score and vacation-day cost'))
-  fireEvent.click(screen.getByRole('button', { name: 'Compare Jan 10 – Jan 14, 2027' }))
+  const opener = screen.getByRole('button', { name: 'Compare Jan 10 – Jan 14, 2027' })
+  opener.focus()
+  fireEvent.click(opener)
   const workspace = within(screen.getByRole('region', { name: 'Could nearby dates work better?' }))
   await workspace.findByRole('region', { name: 'Your dates' })
   expect(workspace.getByLabelText('Start date')).toHaveValue('2027-01-10')
@@ -126,6 +132,8 @@ test('a matching result date opens comparison and returning preserves Search and
     source_search_id: 'search-id',
   })
   fireEvent.click(workspace.getByRole('button', { name: '← Back to my results' }))
+  await waitFor(() => expect(opener).toHaveFocus())
+  expect(window.scrollTo).toHaveBeenCalled()
   expect(screen.getByRole('button', { name: 'Thumbs up recommendation 1' })).toHaveAttribute(
     'aria-pressed',
     'true',

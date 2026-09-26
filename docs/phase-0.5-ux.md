@@ -28,7 +28,9 @@ YOUR DATES                     SELECTED ALTERNATIVE
 
 Keep original dates in the comparison summary while dates are edited. Editing creates a visible pending draft, not a silently changed baseline. Update comparison deliberately establishes the next baseline. Reset restores the original entry dates. Selecting a suggestion never establishes a new baseline.
 
-## Mobile composition (360 px)
+## Future reference: mobile composition (360 px)
+
+This exploratory sketch predates the desktop-only scope clarification. Mobile is not a delivery or acceptance requirement for Phase 0.5.
 
 ```text
 Vacation Window Planner
