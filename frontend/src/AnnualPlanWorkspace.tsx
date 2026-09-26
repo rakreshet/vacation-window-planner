@@ -1,3 +1,5 @@
+import { createAnnualSnapshot } from './savedAnnualPlans'
+import { browserAnnualPlans, notifyAnnualPlansChanged } from './browserAnnualPlans'
 import AnnualInterpretation from './AnnualInterpretation'
 import { useEffect, useRef, useState } from 'react'
 import type { PlanningDraft } from './planning'
@@ -12,10 +14,16 @@ import AnnualMixFields from './AnnualMixFields'
 
 export default function AnnualPlanWorkspace({
   initialPlanning,
+  initialDraft,
+  idPrefix = 'annual-',
 }: {
   initialPlanning: PlanningDraft
+  initialDraft?: AnnualDraft
+  idPrefix?: string
 }) {
-  const [draft, setDraft] = useState(() => newAnnualDraft(initialPlanning))
+  const [draft, setDraft] = useState(() =>
+    initialDraft ? structuredClone(initialDraft) : newAnnualDraft(initialPlanning),
+  )
   const [result, setResult] = useState<AnnualRun | null>(null)
   const [failedOutcome, setFailedOutcome] = useState<AnnualRun | null>(null)
   const revision = useRef(0)
@@ -51,6 +59,23 @@ export default function AnnualPlanWorkspace({
   }
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  async function save(plan: AnnualPlan) {
+    if (!result || stale || busy) return
+    const submittedRevision = revision.current
+    try {
+      const snapshot = await createAnnualSnapshot(result, plan.plan_id)
+      if (revision.current !== submittedRevision) return
+      const outcome = browserAnnualPlans().save(snapshot)
+      setNotice(
+        outcome.status === 'saved'
+          ? 'Annual plan saved in this browser'
+          : 'Annual plan already saved; its name was kept',
+      )
+      notifyAnnualPlansChanged()
+    } catch (caught) {
+      setError(caught instanceof Error ? caught.message : 'Could not save annual plan')
+    }
+  }
   async function generate() {
     if (active.current) return
     const controller = new AbortController()
@@ -89,11 +114,11 @@ export default function AnnualPlanWorkspace({
     }
   }
   return (
-    <section className="planner-card annual-workspace" aria-labelledby="annual-heading">
+    <section className="planner-card annual-workspace" aria-labelledby={`${idPrefix}heading`}>
       <header className="planner-heading">
         <div>
           <p className="section-kicker">Several breaks. One leave budget.</p>
-          <h1 id="annual-heading" tabIndex={-1}>
+          <h1 id={`${idPrefix}heading`} tabIndex={-1}>
             Plan my year
           </h1>
         </div>
@@ -113,7 +138,7 @@ export default function AnnualPlanWorkspace({
           <div className="field-grid">
             <PlanningFields
               annual
-              prefix="annual-"
+              prefix={idPrefix}
               value={draft.planning}
               onChange={(planning) => edit({ ...draft, planning })}
             />
@@ -144,6 +169,7 @@ export default function AnnualPlanWorkspace({
           busy={busy}
           previousPlan={previousPlan}
           onLock={lockDates}
+          onSave={(plan) => void save(plan)}
           onUseReduced={(plan) =>
             edit({
               ...draft,

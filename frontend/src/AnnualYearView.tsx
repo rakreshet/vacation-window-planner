@@ -1,11 +1,20 @@
-import type { AnnualPlan, AnnualRun } from './annualContracts'
+import type { AnnualResult } from './savedAnnualPlans'
+import type { AnnualPlan } from './annualContracts'
 
-export function annualDetailsId(plan: AnnualPlan, slotId: string): string {
-  return `annual-details-${plan.plan_id}-${slotId}`
+export function annualDetailsId(prefix: string, plan: AnnualPlan, slotId: string): string {
+  return `${prefix}-details-${plan.plan_id}-${slotId}`
 }
-export default function AnnualYearView({ result, plan }: { result: AnnualRun; plan: AnnualPlan }) {
+export default function AnnualYearView({
+  result,
+  plan,
+  detailPrefix,
+}: {
+  result: AnnualResult
+  plan: AnnualPlan
+  detailPrefix: string
+}) {
   function showDetails(slotId: string) {
-    const element = document.getElementById(annualDetailsId(plan, slotId))
+    const element = document.getElementById(annualDetailsId(detailPrefix, plan, slotId))
     if (element instanceof HTMLDetailsElement) element.open = true
     element?.focus()
     element?.scrollIntoView?.({ block: 'center', behavior: 'auto' })

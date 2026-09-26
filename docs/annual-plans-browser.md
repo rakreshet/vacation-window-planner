@@ -31,3 +31,20 @@ short-slot unlocking, failed recalculation preservation, explicit reduced-mix ad
 cost deltas and independent draft navigation. Frontend: 94 tests, lint, formatting,
 type checking and production build pass. Further accessibility and operational acceptance
 remain AP 10; this milestone is not a claim that all final acceptance scenarios passed.
+
+## AP 08: browser-only saved annual plans
+
+September 26, 2026: generated a real three-break plan, saved it, reloaded the page,
+and opened Saved → Annual plans. The historical result retained 12 used, 6 remaining,
+3 reserved and its original calculation timestamp. Recalculate opened a separate draft
+with the original generated slots still unlocked. Back restored focus to Recalculate
+this plan. [Saved calculation capture](annual-evidence/ap08-saved-1440.png).
+
+The full frontend suite passes 107 tests plus lint, formatting, type checking and
+production build. Storage and rendered seams cover stable identity, immutable selected
+plan captures, no server run IDs, duplicate names, changed constraints, strict accounting
+and year-fact validation, corrupt/unsupported/oversized items, capacity, quota, rename,
+remove/Undo, another-tab changes, reload and preserved workspace. Offline opening is
+verified with a rejecting HTTP boundary in rendered tests; the live browser check above
+was performed with the local service available. Limits are 20 records and 256 KiB each.
+Annual records use their own namespace and leave existing vacation records unchanged.

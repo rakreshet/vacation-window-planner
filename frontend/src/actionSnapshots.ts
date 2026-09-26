@@ -14,7 +14,7 @@ export type ActionSnapshot = {
   context: CalculationContext
 }
 
-function canonicalJson(value: unknown): string {
+export function canonicalJson(value: unknown): string {
   if (Array.isArray(value)) return `[${value.map(canonicalJson).join(',')}]`
   if (value !== null && typeof value === 'object') {
     return `{${Object.entries(value)

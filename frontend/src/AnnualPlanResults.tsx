@@ -1,8 +1,9 @@
+import type { AnnualResult } from './savedAnnualPlans'
 import { useId } from 'react'
 import AnnualPlanComparison from './AnnualPlanComparison'
 import AnnualYearView, { annualDetailsId } from './AnnualYearView'
 import AnnualPlanChanges from './AnnualPlanChanges'
-import type { AnnualBreak, AnnualConflict, AnnualPlan, AnnualRun } from './annualContracts'
+import type { AnnualBreak, AnnualConflict, AnnualPlan } from './annualContracts'
 
 export default function AnnualPlanResults({
   result,
@@ -13,14 +14,16 @@ export default function AnnualPlanResults({
   selectedId,
   onSelect,
   onUseReduced,
+  onSave,
 }: {
-  result: AnnualRun
+  result: AnnualResult
   stale?: boolean
   busy?: boolean
   previousPlan?: AnnualPlan | null
   onLock?: (item: AnnualBreak) => void
   selectedId?: string
   onSelect?: (id: string) => void
+  onSave?: (plan: AnnualPlan) => void
   onUseReduced?: (plan: AnnualPlan) => void
 }) {
   const headingId = useId()
@@ -105,7 +108,12 @@ export default function AnnualPlanResults({
             <p>{plan.accounting.unallocated_days} days unallocated</p>
             <p>{plan.accounting.total_days_away} days away</p>
           </div>
-          <AnnualYearView result={result} plan={plan} />
+          {onSave && (
+            <button type="button" disabled={stale || busy} onClick={() => onSave(plan)}>
+              Save this plan
+            </button>
+          )}
+          <AnnualYearView result={result} plan={plan} detailPrefix={headingId} />
           <ol>
             {plan.breaks.map((item) => (
               <li key={item.slot_id}>
@@ -133,7 +141,7 @@ export default function AnnualPlanResults({
                   </button>
                 )}
                 <details
-                  id={annualDetailsId(plan, item.slot_id)}
+                  id={annualDetailsId(headingId, plan, item.slot_id)}
                   tabIndex={-1}
                   aria-label={`Break ${result.input.slots.findIndex((slot) => slot.slot_id === item.slot_id) + 1} charged dates and day details`}
                 >
