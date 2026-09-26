@@ -267,20 +267,16 @@ def create_app(
         except SearchSnapshotPersistenceError:
             return _error(503, "PERSISTENCE_ERROR", "Search could not be saved")
 
-    @app.post("/comparisons", response_model=ComparisonResult)
-    def comparisons(
-        body: ComparisonInput,
-        authorization: Annotated[str | None, Header()] = None,
-    ) -> ComparisonResult | JSONResponse:
-        if session_lookup is None or comparison_service is None:
-            return _error(503, "SERVICE_UNAVAILABLE", "Comparison service is unavailable")
+    def authenticated_context(authorization: str | None) -> UserVacationContext | JSONResponse:
+        if session_lookup is None:
+            return _error(503, "SERVICE_UNAVAILABLE", "Session service is unavailable")
         if authorization is None or not authorization.startswith("Bearer "):
             return _error(401, "INVALID_SESSION", "A bearer session token is required")
         token = authorization.removeprefix("Bearer ").strip()
         session = session_lookup(token, clock()) if token else None
         if session is None:
             return _error(401, "SESSION_EXPIRED", "Session is expired or unknown")
-        context = UserVacationContext(
+        return UserVacationContext(
             session_id=session.id,
             balance_days=session.balance_days,
             allowed_negative_days=session.allowed_negative_days,
@@ -289,6 +285,17 @@ def create_app(
             time_zone=session.time_zone,
             personal_calendar=session.personal_calendar,
         )
+
+    @app.post("/comparisons", response_model=ComparisonResult)
+    def comparisons(
+        body: ComparisonInput,
+        authorization: Annotated[str | None, Header()] = None,
+    ) -> ComparisonResult | JSONResponse:
+        if session_lookup is None or comparison_service is None:
+            return _error(503, "SERVICE_UNAVAILABLE", "Comparison service is unavailable")
+        context = authenticated_context(authorization)
+        if isinstance(context, JSONResponse):
+            return context
         try:
             return comparison_service(ComparisonRequest(context=context, dates=body))
         except ComparisonTooBroadError as error:
@@ -307,21 +314,9 @@ def create_app(
     ) -> AnnualRun | JSONResponse:
         if session_lookup is None or annual_service is None:
             return _error(503, "SERVICE_UNAVAILABLE", "Annual planning is unavailable")
-        if authorization is None or not authorization.startswith("Bearer "):
-            return _error(401, "INVALID_SESSION", "A bearer session token is required")
-        token = authorization.removeprefix("Bearer ").strip()
-        session = session_lookup(token, clock()) if token else None
-        if session is None:
-            return _error(401, "SESSION_EXPIRED", "Session is expired or unknown")
-        context = UserVacationContext(
-            session_id=session.id,
-            balance_days=session.balance_days,
-            allowed_negative_days=session.allowed_negative_days,
-            country_code=session.country_code,
-            weekend_days=session.weekend_days,
-            time_zone=session.time_zone,
-            personal_calendar=session.personal_calendar,
-        )
+        context = authenticated_context(authorization)
+        if isinstance(context, JSONResponse):
+            return context
         try:
             return annual_service(AnnualPlanningRequest(context=context, input=body))
         except AnnualPlannerBusy:

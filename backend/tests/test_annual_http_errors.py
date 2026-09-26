@@ -1,13 +1,15 @@
 from dataclasses import replace
-from datetime import UTC, datetime, timedelta
+from datetime import UTC, date, datetime, timedelta
 from uuid import UUID
 
 from fastapi.testclient import TestClient
+from httpx2 import Response
 
 from vacation_window_planner.annual_workflow import AnnualWorkflow
 from vacation_window_planner.api import create_app
 from vacation_window_planner.domain.annual import AnnualPolicy
-from vacation_window_planner.domain.calendar import FakeCalendarProvider
+from vacation_window_planner.domain.calendar import CalendarProvider, FakeCalendarProvider
+from vacation_window_planner.domain.contracts import HolidayCalendar
 from vacation_window_planner.repositories.sessions import AnonymousSessionState
 
 NOW = datetime(2026, 9, 26, tzinfo=UTC)
@@ -31,7 +33,11 @@ class MemorySnapshots:
         self.runs.append(values)
 
 
-def api(session=SESSION, provider=None, policy=None):
+def api(
+    session: AnonymousSessionState = SESSION,
+    provider: CalendarProvider | None = None,
+    policy: AnnualPolicy | None = None,
+) -> tuple[TestClient, MemorySnapshots]:
     store = MemorySnapshots()
     workflow = AnnualWorkflow(
         calendar_provider=provider or FakeCalendarProvider(),
@@ -68,7 +74,13 @@ def test_provider_failure_is_retryable_and_does_not_fabricate_a_run() -> None:
     from vacation_window_planner.domain.calendar import CalendarResolutionUnavailable
 
     class UnavailableCalendar:
-        def resolve(self, *args, **kwargs):
+        def resolve(
+            self,
+            country_code: str,
+            start_date: date,
+            end_date: date,
+            weekend_override: frozenset[int] | None = None,
+        ) -> HolidayCalendar:
             raise CalendarResolutionUnavailable("private provider detail")
 
     client, store = api(provider=UnavailableCalendar())
@@ -83,7 +95,7 @@ def test_failed_persistence_cannot_return_a_successful_plan() -> None:
     from vacation_window_planner.repositories.annual_plans import AnnualPersistenceError
 
     class FailedSnapshots:
-        def save_completed(self, **values):
+        def save_completed(self, **values: object) -> None:
             raise AnnualPersistenceError("private database detail")
 
     workflow = AnnualWorkflow(
@@ -116,18 +128,24 @@ def test_third_active_calculation_is_busy_and_permits_are_released() -> None:
     class BlockingCalendar(FakeCalendarProvider):
         calls = 0
 
-        def resolve(self, *args, **kwargs):
+        def resolve(
+            self,
+            country_code: str,
+            start_date: date,
+            end_date: date,
+            weekend_override: frozenset[int] | None = None,
+        ) -> HolidayCalendar:
             with guard:
                 self.calls += 1
                 call = self.calls
             if call <= 2:
                 entered.wait(timeout=5)
                 assert release.wait(timeout=5)
-            return super().resolve(*args, **kwargs)
+            return super().resolve(country_code, start_date, end_date, weekend_override)
 
     client, store = api(provider=BlockingCalendar())
 
-    def submit():
+    def submit() -> Response:
         return client.post("/annual-plans", json=REQUEST, headers={"Authorization": "Bearer valid"})
 
     with ThreadPoolExecutor(max_workers=2) as executor:
