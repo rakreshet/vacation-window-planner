@@ -9,6 +9,7 @@ from vacation_window_planner.domain.contracts import (
     VacationWindow,
 )
 from vacation_window_planner.domain.date_ranges import StartDateRange
+from vacation_window_planner.domain.evaluation import evaluate_window
 
 
 class SearchTooBroadError(ValueError):
@@ -63,22 +64,11 @@ def generate_vacation_windows(
                 if identity in seen:
                     continue
                 seen.add(identity)
-                dates = _dates_between(start_date, end_date)
-                holidays = frozenset(day for day in dates if day in calendar.observed_holidays)
-                vacation_days_used = sum(
-                    day.weekday() not in calendar.weekend_days and day not in holidays
-                    for day in dates
+                evaluation = evaluate_window(
+                    start_date, end_date, calendar, balance_days=context.balance_days
                 )
-                if vacation_days_used > context.balance_days + context.allowed_negative_days:
+                if evaluation.remaining_balance < -context.allowed_negative_days:
                     continue
-                windows.append(
-                    VacationWindow(
-                        start_date=start_date,
-                        end_date=end_date,
-                        total_days=total_days,
-                        vacation_days_used=vacation_days_used,
-                        holiday_dates=holidays,
-                    )
-                )
+                windows.append(evaluation.window)
 
     return tuple(windows)
