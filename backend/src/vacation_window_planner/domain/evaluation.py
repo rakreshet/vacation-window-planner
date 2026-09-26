@@ -1,8 +1,15 @@
 """Exact, inclusive date accounting shared by Search and comparison."""
 
-from datetime import date, timedelta
+from datetime import date
+from uuid import UUID
 
-from vacation_window_planner.domain.contracts import DomainValue, HolidayCalendar, VacationWindow
+from vacation_window_planner.domain.assessment import assess_window, prepare_calendar
+from vacation_window_planner.domain.contracts import (
+    DomainValue,
+    HolidayCalendar,
+    UserVacationContext,
+    VacationWindow,
+)
 
 
 class WindowEvaluation(DomainValue):
@@ -19,23 +26,16 @@ def evaluate_window(
     balance_days: int,
 ) -> WindowEvaluation:
     """Evaluate exact dates without filtering out an over-budget window."""
-    if end_date < start_date:
-        raise ValueError("end date must not precede start date")
-    dates = tuple(
-        start_date + timedelta(days=offset) for offset in range((end_date - start_date).days + 1)
+    context = UserVacationContext(
+        session_id=UUID(int=0),
+        balance_days=balance_days,
+        country_code=calendar.country_code,
+        weekend_days=calendar.weekend_days,
     )
-    holidays = frozenset(day for day in dates if day in calendar.observed_holidays)
-    charged = tuple(
-        day for day in dates if day.weekday() not in calendar.weekend_days and day not in holidays
-    )
+    prepared = prepare_calendar(calendar, context, (start_date, end_date), start_date)
+    assessment = assess_window(start_date, end_date, prepared)
     return WindowEvaluation(
-        window=VacationWindow(
-            start_date=start_date,
-            end_date=end_date,
-            total_days=len(dates),
-            vacation_days_used=len(charged),
-            holiday_dates=holidays,
-        ),
-        charged_dates=charged,
-        remaining_balance=balance_days - len(charged),
+        window=assessment.window,
+        charged_dates=assessment.charged_dates,
+        remaining_balance=assessment.remaining_balance,
     )
