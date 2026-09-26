@@ -225,3 +225,14 @@ def test_cap_hit_returns_coded_error_without_partial_results_or_persistence() ->
 def test_persistence_failure_is_not_hidden() -> None:
     with pytest.raises(RuntimeError, match="database unavailable"):
         workflow(FakeSnapshotWriter(fail=True)).recommend(request())
+
+
+def test_future_date_clipping_uses_the_effective_local_date() -> None:
+    result = RecommendationWorkflow(
+        calendar_provider=FakeCalendarProvider(),
+        snapshot_writer=FakeSnapshotWriter(),
+        policy=RecommendationPolicy(_env_file=None),
+        clock=lambda: datetime(2026, 9, 25, 22, tzinfo=UTC),
+    ).recommend(request())
+    assert result.notice == "Past start dates were excluded; search begins on 2026-09-26."
+    assert all(item.window.start_date >= date(2026, 9, 26) for item in result.recommendations)

@@ -22,6 +22,7 @@ class AnonymousSession(Base):
     allowed_negative_days: Mapped[int] = mapped_column(Integer(), nullable=False, default=0)
     country_code: Mapped[str] = mapped_column(String(2), nullable=False)
     weekend_days: Mapped[list[int]] = mapped_column(JSON(), nullable=False)
+    time_zone: Mapped[str] = mapped_column(Text(), nullable=False, default="Asia/Jerusalem")
 
 
 class SearchRecord(Base):

@@ -40,3 +40,18 @@ def test_anonymous_session_creation_returns_opaque_token() -> None:
     assert response.status_code == 201
     assert response.json() == {"session_id": str(SESSION_ID), "token": "opaque-token"}
     assert captured[1] == NOW
+
+
+def test_invalid_time_zone_is_rejected_before_session_creation() -> None:
+    client = TestClient(create_app(database_probe=lambda: True))
+    response = client.post(
+        "/sessions",
+        json={
+            "balance_days": 8,
+            "country_code": "IL",
+            "weekend_days": [4, 5],
+            "time_zone": "Mars/Olympus",
+        },
+    )
+    assert response.status_code == 422
+    assert "body.time_zone" in response.json()["error"]["fields"]

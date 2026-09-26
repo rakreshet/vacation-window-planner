@@ -7,6 +7,8 @@ from uuid import UUID
 
 from pydantic import BaseModel, ConfigDict, Field, StrictInt, field_validator, model_validator
 
+from vacation_window_planner.domain.local_dates import DEFAULT_TIME_ZONE, validate_time_zone
+
 
 class DomainValue(BaseModel):
     model_config = ConfigDict(frozen=True, extra="forbid")
@@ -14,6 +16,10 @@ class DomainValue(BaseModel):
 
 class UserVacationContext(DomainValue):
     session_id: UUID
+    time_zone: str = DEFAULT_TIME_ZONE
+
+    _validate_time_zone = field_validator("time_zone")(validate_time_zone)
+
     balance_days: StrictInt
     allowed_negative_days: StrictInt = Field(default=0, ge=0, le=5)
     country_code: str = Field(pattern=r"^[A-Z]{2}$")

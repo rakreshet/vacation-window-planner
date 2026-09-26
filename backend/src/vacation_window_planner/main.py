@@ -53,6 +53,7 @@ def create_session(request: SessionHttpRequest, now: datetime) -> CreatedAnonymo
             allowed_negative_days=request.allowed_negative_days,
             country_code=request.country_code,
             weekend_days=request.weekend_days,
+            time_zone=request.time_zone,
             now=now,
             expires_at=now + timedelta(days=settings.session_expiry_days),
         )

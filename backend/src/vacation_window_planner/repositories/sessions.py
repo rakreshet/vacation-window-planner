@@ -11,6 +11,7 @@ from sqlalchemy import select
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
 
+from vacation_window_planner.domain.local_dates import DEFAULT_TIME_ZONE, validate_time_zone
 from vacation_window_planner.models import AnonymousSession
 
 
@@ -33,6 +34,7 @@ class AnonymousSessionState:
     weekend_days: frozenset[int]
     created_at: datetime
     expires_at: datetime
+    time_zone: str = DEFAULT_TIME_ZONE
 
 
 def _token_hash(token: str) -> str:
@@ -57,6 +59,7 @@ class AnonymousSessionRepository:
         weekend_days: frozenset[int],
         now: datetime,
         expires_at: datetime,
+        time_zone: str = DEFAULT_TIME_ZONE,
     ) -> CreatedAnonymousSession:
         if expires_at <= now:
             raise ValueError("session expiry must be after creation")
@@ -70,6 +73,7 @@ class AnonymousSessionRepository:
             allowed_negative_days=allowed_negative_days,
             country_code=country_code,
             weekend_days=sorted(weekend_days),
+            time_zone=validate_time_zone(time_zone),
         )
         self._session.add(record)
         try:
@@ -96,4 +100,5 @@ class AnonymousSessionRepository:
             weekend_days=frozenset(record.weekend_days),
             created_at=record.created_at,
             expires_at=record.expires_at,
+            time_zone=record.time_zone,
         )

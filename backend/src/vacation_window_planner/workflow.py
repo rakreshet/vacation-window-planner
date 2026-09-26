@@ -19,6 +19,7 @@ from vacation_window_planner.domain.explanations import (
     ExplanationFormatter,
 )
 from vacation_window_planner.domain.generator import generate_vacation_windows
+from vacation_window_planner.domain.local_dates import local_today
 from vacation_window_planner.domain.policy import RecommendationPolicy
 from vacation_window_planner.domain.scoring import score_vacation_windows
 from vacation_window_planner.repositories.searches import RecommendationSnapshotInput
@@ -69,7 +70,9 @@ class RecommendationWorkflow:
 
     def recommend(self, request: RecommendationRequest) -> RecommendationResult:
         now = self._clock()
-        normalized = normalize_selected_months(request.constraints.months, now.date())
+        normalized = normalize_selected_months(
+            request.constraints.months, local_today(now, request.context.time_zone)
+        )
         calendar_start = normalized.start_dates[0].start_date
         latest_start = normalized.start_dates[-1].end_date
         maximum_length = (

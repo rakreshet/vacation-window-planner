@@ -25,6 +25,7 @@ from vacation_window_planner.domain.contracts import (
 )
 from vacation_window_planner.domain.date_ranges import PastSearchRangeError
 from vacation_window_planner.domain.generator import SearchTooBroadError
+from vacation_window_planner.domain.local_dates import DEFAULT_TIME_ZONE, validate_time_zone
 from vacation_window_planner.interpreter import (
     ConstraintProposal,
     InterpretationError,
@@ -69,6 +70,9 @@ class FeedbackHttpResponse(BaseModel):
 
 class SessionHttpRequest(BaseModel):
     model_config = ConfigDict(extra="forbid")
+
+    time_zone: str = DEFAULT_TIME_ZONE
+    _validate_time_zone = field_validator("time_zone")(validate_time_zone)
 
     balance_days: StrictInt = Field(ge=0)
     allowed_negative_days: StrictInt = Field(default=0, ge=0, le=5)
@@ -194,6 +198,7 @@ def create_app(
         request = RecommendationRequest(
             context=UserVacationContext(
                 session_id=session.id,
+                time_zone=session.time_zone,
                 balance_days=session.balance_days,
                 allowed_negative_days=session.allowed_negative_days,
                 country_code=session.country_code,

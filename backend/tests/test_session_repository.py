@@ -28,6 +28,7 @@ def test_token_creation_stores_only_hash_and_round_trips_context(session: Sessio
 
     created = repository.create(
         balance_days=8,
+        time_zone="America/New_York",
         allowed_negative_days=1,
         country_code="IL",
         weekend_days=frozenset({4, 5}),
@@ -42,6 +43,7 @@ def test_token_creation_stores_only_hash_and_round_trips_context(session: Sessio
     assert len(stored.token_hash) == 64
     resumed = repository.find_active(created.token, now=now + timedelta(days=1))
     assert resumed is not None
+    assert resumed.time_zone == "America/New_York"
     assert resumed.balance_days == 8
     assert resumed.allowed_negative_days == 1
     assert resumed.country_code == "IL"
