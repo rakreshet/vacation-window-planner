@@ -111,7 +111,7 @@ Base verified September 26, 2026: `origin/main` = `20df229`; #50 merged; #51–#
 | AP 07 | Optional interpretation with proposal review and explicit references | AP 06 | [#68](https://github.com/rakreshet/vacation-window-planner/pull/68) | In review |
 | AP 08 | Same-browser saved annual plans and explicit reopening/recalculation | AP 07 | [#69](https://github.com/rakreshet/vacation-window-planner/pull/69) | In review |
 | AP 09 | Whole-plan calendar download and leave-request copy | AP 08 | [#70](https://github.com/rakreshet/vacation-window-planner/pull/70) | In review |
-| AP 10 | Integrated acceptance, performance, accessibility and runbook | AP 09 | Preparing PR | Final review; [acceptance evidence](annual-plans-acceptance.md) |
+| AP 10 | Integrated acceptance, performance, accessibility and runbook | AP 09 | Preparing PR | In review; [acceptance evidence](annual-plans-acceptance.md) |
 
 The [ordered breakdown](annual-plans-plan.md#ordered-dependent-pr-breakdown) supplies each task's scope, acceptance evidence, and stacking policy. Do not create implementation PRs or mark work Done in advance. Planning review/merge alone is not permission to implement.
 
