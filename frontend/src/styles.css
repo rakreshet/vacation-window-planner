@@ -2022,3 +2022,20 @@ summary:focus-visible {
 .saved-options details {
   margin-block: 1rem;
 }
+
+.copy-preview {
+  flex-basis: 100%;
+  border: 1px solid var(--border);
+  border-radius: 0.75rem;
+  padding: 1rem;
+  background: #f5faf7;
+}
+.copy-preview textarea {
+  display: block;
+  width: 100%;
+  padding: 0.75rem;
+  margin-block: 0.75rem;
+  font: inherit;
+  line-height: 1.5;
+  resize: vertical;
+}
