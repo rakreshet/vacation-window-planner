@@ -1,9 +1,21 @@
 import { cleanup, fireEvent, render, screen, within } from '@testing-library/react'
-import { afterEach, expect, test, vi } from 'vitest'
+import { afterEach, beforeEach, expect, test, vi } from 'vitest'
 import App from './App'
+
+beforeEach(() => {
+  vi.useFakeTimers({ toFake: ['Date'] })
+  vi.setSystemTime(new Date('2026-09-26T12:00:00Z'))
+  const options = new Intl.DateTimeFormat().resolvedOptions()
+  vi.spyOn(Intl.DateTimeFormat.prototype, 'resolvedOptions').mockReturnValue({
+    ...options,
+    timeZone: 'Asia/Jerusalem',
+  })
+  vi.stubGlobal('scrollTo', vi.fn())
+})
 
 afterEach(() => {
   cleanup()
+  vi.useRealTimers()
   vi.unstubAllGlobals()
   vi.restoreAllMocks()
 })
@@ -86,7 +98,7 @@ test('year, months, spacing and ordered slots are explicit draft edits', async (
   fireEvent.click(screen.getByRole('button', { name: 'Plan my year' }))
   const workspace = within(screen.getByRole('region', { name: 'Plan my year' }))
   fireEvent.change(workspace.getByLabelText('Plan year'), {
-    target: { value: String(new Date().getFullYear()) },
+    target: { value: '2026' },
   })
   fireEvent.change(workspace.getByLabelText('Minimum dates between breaks'), {
     target: { value: '10' },
@@ -180,4 +192,21 @@ test('unfinished exact dates cannot be bypassed through another slot', async () 
   expect(second.getByRole('button', { name: 'Add exact dates' })).toBeDisabled()
   fireEvent.click(first.getByRole('button', { name: 'Cancel dates' }))
   expect(second.getByRole('button', { name: 'Add exact dates' })).toBeEnabled()
+})
+
+test('removing the slot being edited releases the remaining date editors', async () => {
+  vi.stubGlobal(
+    'fetch',
+    vi
+      .fn()
+      .mockResolvedValue({ ok: true, json: async () => ({ status: 'ok', database: 'connected' }) }),
+  )
+  render(<App />)
+  await screen.findByText('Service ready')
+  fireEvent.click(screen.getByRole('button', { name: 'Plan my year' }))
+  const first = within(screen.getByRole('group', { name: 'Break 1' }))
+  fireEvent.click(first.getByRole('button', { name: 'Add exact dates' }))
+  fireEvent.click(first.getByRole('button', { name: 'Remove break' }))
+  const remaining = within(screen.getByRole('group', { name: 'Break 1' }))
+  expect(remaining.getByRole('button', { name: 'Add exact dates' })).toBeEnabled()
 })

@@ -158,7 +158,11 @@ export default function AnnualMixFields({
               type="button"
               disabled={draft.slots.length === 1}
               onClick={() =>
-                onChange({ ...draft, slots: draft.slots.filter((item) => item.id !== slot.id) })
+                onChange({
+                  ...draft,
+                  editingSlotId: draft.editingSlotId === slot.id ? undefined : draft.editingSlotId,
+                  slots: draft.slots.filter((item) => item.id !== slot.id),
+                })
               }
             >
               {slot.dates ? 'Remove locked break' : 'Remove break'}

@@ -1,3 +1,4 @@
+import { inclusiveCalendarDays } from './calendarDays'
 import { z } from 'zod'
 
 const day = z.iso.date()
@@ -19,10 +20,7 @@ export const annualSlotSchema = z
   .refine((slot) => {
     if (slot.min_days > slot.max_days) return false
     if (!slot.locked_dates) return slot.min_days >= 3
-    const length =
-      (Date.parse(slot.locked_dates.end_date) - Date.parse(slot.locked_dates.start_date)) /
-        86400000 +
-      1
+    const length = inclusiveCalendarDays(slot.locked_dates.start_date, slot.locked_dates.end_date)
     return (
       length >= slot.min_days &&
       length <= slot.max_days &&
@@ -141,8 +139,7 @@ export const annualPlanSchema = z
       pool.total_days_away === plan.breaks.reduce((sum, item) => sum + item.window.total_days, 0) &&
       plan.breaks.every((item, index) => {
         remaining -= item.window.vacation_days_used
-        const length =
-          (Date.parse(item.window.end_date) - Date.parse(item.window.start_date)) / 86400000 + 1
+        const length = inclusiveCalendarDays(item.window.start_date, item.window.end_date)
         return (
           remaining === item.balance_after_break &&
           (!index || item.window.start_date > plan.breaks[index - 1].window.end_date) &&
@@ -200,37 +197,77 @@ const common = {
   locked_assessments: z.array(annualBreakSchema).max(6),
   year_calendar: z.array(annualDaySchema).max(366),
 }
-export const annualRunSchema = z.discriminatedUnion('status', [
-  z.strictObject({
-    ...common,
-    status: z.literal('complete'),
-    full_mix_feasibility: z.literal('feasible'),
-    plans: z.array(annualPlanSchema).min(1).max(3),
-    conflicts: z.array(annualConflictSchema).max(0),
-  }),
-  z.strictObject({
-    ...common,
-    status: z.literal('infeasible'),
-    full_mix_feasibility: z.literal('infeasible'),
-    plans: z.array(annualPlanSchema).max(3),
-    conflicts: z.array(annualConflictSchema).min(1),
-  }),
-  z.strictObject({
-    ...common,
-    status: z.literal('conflict'),
-    full_mix_feasibility: z.literal('not_evaluated'),
-    plans: z.array(annualPlanSchema).max(0),
-    conflicts: z.array(annualConflictSchema).min(1),
-  }),
-  z.strictObject({
-    ...common,
-    status: z.literal('too_broad'),
-    full_mix_feasibility: z.literal('unknown'),
-    plans: z.array(annualPlanSchema).max(0),
-    conflicts: z.array(annualConflictSchema),
-    limit_reason: limitReason,
-  }),
-])
+export const annualRunSchema = z
+  .discriminatedUnion('status', [
+    z.strictObject({
+      ...common,
+      status: z.literal('complete'),
+      full_mix_feasibility: z.literal('feasible'),
+      plans: z.array(annualPlanSchema).min(1).max(3),
+      conflicts: z.array(annualConflictSchema).max(0),
+    }),
+    z.strictObject({
+      ...common,
+      status: z.literal('infeasible'),
+      full_mix_feasibility: z.literal('infeasible'),
+      plans: z.array(annualPlanSchema).max(3),
+      conflicts: z.array(annualConflictSchema).min(1),
+    }),
+    z.strictObject({
+      ...common,
+      status: z.literal('conflict'),
+      full_mix_feasibility: z.literal('not_evaluated'),
+      plans: z.array(annualPlanSchema).max(0),
+      conflicts: z.array(annualConflictSchema).min(1),
+    }),
+    z.strictObject({
+      ...common,
+      status: z.literal('too_broad'),
+      full_mix_feasibility: z.literal('unknown'),
+      plans: z.array(annualPlanSchema).max(0),
+      conflicts: z.array(annualConflictSchema),
+      limit_reason: limitReason,
+    }),
+  ])
+  .refine(
+    (run) =>
+      run.plans.every((plan) => {
+        const selectedIds = plan.breaks.map((item) => item.slot_id)
+        const selected = new Set(selectedIds)
+        const retained = run.input.slots
+          .filter((slot) => selected.has(slot.slot_id))
+          .map((slot) => slot.slot_id)
+        const omitted = run.input.slots
+          .filter((slot) => !selected.has(slot.slot_id))
+          .map((slot) => slot.slot_id)
+        return (
+          selected.size === selectedIds.length &&
+          JSON.stringify(retained) === JSON.stringify(plan.retained_slot_ids) &&
+          JSON.stringify(omitted) === JSON.stringify(plan.omitted_slot_ids) &&
+          (plan.fulfillment === 'reduced') === omitted.length > 0 &&
+          (run.status === 'infeasible') === (plan.fulfillment === 'reduced') &&
+          plan.accounting.available_days === run.calculation_context.planning.balance_days &&
+          plan.accounting.reserve_days === run.input.reserve_days &&
+          run.input.slots.every((slot) => !slot.locked_dates || selected.has(slot.slot_id)) &&
+          plan.breaks.every((item) => {
+            const slot = run.input.slots.find((slot) => slot.slot_id === item.slot_id)
+            return (
+              slot &&
+              item.window.total_days >= slot.min_days &&
+              item.window.total_days <= slot.max_days &&
+              item.locked === Boolean(slot.locked_dates) &&
+              (!slot.locked_dates ||
+                (item.window.start_date === slot.locked_dates.start_date &&
+                  item.window.end_date === slot.locked_dates.end_date)) &&
+              item.window.start_date.startsWith(`${run.input.year}-`) &&
+              item.window.end_date.startsWith(`${run.input.year}-`)
+            )
+          })
+        )
+      }),
+    'Annual fulfillment does not match the request',
+  )
+
 export type AnnualRequest = z.infer<typeof annualRequestSchema>
 export type AnnualRun = z.infer<typeof annualRunSchema>
 export type AnnualPlan = z.infer<typeof annualPlanSchema>

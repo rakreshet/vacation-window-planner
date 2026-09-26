@@ -1,12 +1,25 @@
 import { cleanup, fireEvent, render, screen } from '@testing-library/react'
-import { afterEach, expect, test, vi } from 'vitest'
+import { afterEach, beforeEach, expect, test, vi } from 'vitest'
 import AnnualPlanWorkspace from './AnnualPlanWorkspace'
 import { annualFixture } from './annualFixtures'
 import { emptyPlanning } from './planning'
 
+beforeEach(() => {
+  vi.useFakeTimers({ toFake: ['Date'] })
+  vi.setSystemTime(new Date('2026-09-26T12:00:00Z'))
+  const options = new Intl.DateTimeFormat().resolvedOptions()
+  vi.spyOn(Intl.DateTimeFormat.prototype, 'resolvedOptions').mockReturnValue({
+    ...options,
+    timeZone: 'Asia/Jerusalem',
+  })
+  vi.stubGlobal('scrollTo', vi.fn())
+})
+
 afterEach(() => {
   cleanup()
+  vi.useRealTimers()
   vi.unstubAllGlobals()
+  vi.restoreAllMocks()
 })
 
 function submitResponse(body: unknown) {
@@ -92,4 +105,14 @@ test('a response with broken aggregate accounting cannot become a usable result'
     'The annual result could not be verified',
   )
   expect(screen.queryByText('8 vacation days used')).not.toBeInTheDocument()
+})
+
+test('a complete response cannot mislabel a plan or invent slot assignments', async () => {
+  const broken = annualFixture()
+  broken.plans[0].fulfillment = 'reduced'
+  broken.plans[0].breaks[0].slot_id = 'unrequested'
+  submitResponse(broken)
+  expect(await screen.findByRole('alert')).toHaveTextContent(
+    'The annual result could not be verified',
+  )
 })
