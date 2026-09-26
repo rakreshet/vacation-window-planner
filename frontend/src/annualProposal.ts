@@ -1,3 +1,4 @@
+import { localCalendarDate } from './calendarDays'
 import { z } from 'zod'
 import { annualSlotSchema } from './annualContracts'
 import type { AnnualDraft } from './annualDraft'
@@ -37,12 +38,7 @@ export const annualProposalSchema = z
 export type AnnualProposal = z.infer<typeof annualProposalSchema>
 
 export async function interpretAnnual(text: string, draft: AnnualDraft): Promise<AnnualProposal> {
-  const localToday = new Intl.DateTimeFormat('en-CA', {
-    year: 'numeric',
-    month: '2-digit',
-    day: '2-digit',
-    timeZone: draft.planning.timeZone,
-  }).format(new Date())
+  const localToday = localCalendarDate(draft.planning.timeZone)
   const base = (import.meta.env.VITE_API_BASE_URL || '/api').replace(/\/$/, '')
   const response = await fetch(`${base}/annual-plans/interpret`, {
     method: 'POST',

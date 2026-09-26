@@ -1,3 +1,5 @@
+import DateRangeFields from './DateRangeFields'
+import { annualDateBounds } from './calendarDays'
 import { useState } from 'react'
 import { browserSavedOptions } from './browserSavedOptions'
 import type { SavedOption } from './savedOptions'
@@ -10,11 +12,15 @@ export type AnnualReferenceResolution = {
 }
 export default function AnnualReferenceFields({
   description,
+  year,
+  timeZone,
   slots,
   value,
   onChange,
 }: {
   description: string
+  year: string
+  timeZone?: string
   slots: string[]
   value: AnnualReferenceResolution
   onChange: (value: AnnualReferenceResolution) => void
@@ -63,26 +69,13 @@ export default function AnnualReferenceFields({
           ))}
         </select>
       </label>
-      <label className="field">
-        Start date for {description}
-        <input
-          type="date"
-          value={value.start_date}
-          onChange={(event) =>
-            onChange({ ...value, savedId: undefined, start_date: event.target.value })
-          }
-        />
-      </label>
-      <label className="field">
-        End date for {description}
-        <input
-          type="date"
-          value={value.end_date}
-          onChange={(event) =>
-            onChange({ ...value, savedId: undefined, end_date: event.target.value })
-          }
-        />
-      </label>
+      <DateRangeFields
+        value={value}
+        onChange={(dates) => onChange({ ...value, ...dates, savedId: undefined })}
+        {...annualDateBounds(year, timeZone)}
+        startLabel={`Start date for ${description}`}
+        endLabel={`End date for ${description}`}
+      />
       <label className="field">
         Slot for {description}
         <select

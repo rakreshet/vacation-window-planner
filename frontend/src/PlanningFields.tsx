@@ -19,7 +19,7 @@ export default function PlanningFields({
   const balanceId = annual ? field('context.balance_days').id : `${prefix}balance`
   return (
     <>
-      <div className="field">
+      <div className="field planning-balance">
         <label htmlFor={balanceId}>
           {annual ? 'Available leave for included trips' : 'Vacation balance'} <span>Required</span>
         </label>
@@ -37,12 +37,14 @@ export default function PlanningFields({
           />
           <span>days</span>
         </div>
-        {annual && <FieldError field="context.balance_days" />}
-        <small>
-          {annual
-            ? 'Includes leave allocated to your locked trips. Excludes past trips and future accrual.'
-            : 'Available before this break'}
-        </small>
+        <div>
+          {annual && <FieldError field="context.balance_days" />}
+          <small>
+            {annual
+              ? 'Includes leave allocated to your locked trips. Excludes past trips and future accrual.'
+              : 'Available before this break'}
+          </small>
+        </div>
       </div>
       {!annual && (
         <div className="field">
@@ -62,7 +64,7 @@ export default function PlanningFields({
           <small>How far below zero you will accept</small>
         </div>
       )}
-      <div className="field">
+      <div className="field planning-country">
         <label htmlFor={`${prefix}country`}>Public holiday calendar</label>
         <select
           id={`${prefix}country`}

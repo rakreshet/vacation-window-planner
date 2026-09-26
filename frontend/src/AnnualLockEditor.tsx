@@ -1,4 +1,5 @@
-import { inclusiveCalendarDays } from './calendarDays'
+import DateRangeFields from './DateRangeFields'
+import { annualDateBounds, inclusiveCalendarDays } from './calendarDays'
 import { useState } from 'react'
 import { browserSavedOptions } from './browserSavedOptions'
 import type { SavedOption } from './savedOptions'
@@ -7,16 +8,19 @@ import type { AnnualSlotDraft } from './annualDraft'
 export default function AnnualLockEditor({
   slot,
   year,
+  timeZone,
   onChange,
   onEditing,
   disabled = false,
 }: {
   slot: AnnualSlotDraft
   year: string
+  timeZone?: string
   onChange: (slot: AnnualSlotDraft) => void
   onEditing: (editing: boolean) => void
   disabled?: boolean
 }) {
+  const bounds = annualDateBounds(year, timeZone)
   const [saved, setSaved] = useState<SavedOption[] | null>(null)
   const [selectedSaved, setSelectedSaved] = useState<SavedOption | null>(null)
   const [open, setOpen] = useState(false)
@@ -30,6 +34,11 @@ export default function AnnualLockEditor({
     setMismatch(false)
   }
   function keep(convert = false) {
+    if (dates.start_date && dates.start_date < bounds.minimum) {
+      setMismatch(false)
+      setError('Choose a start date today or later within the plan year')
+      return
+    }
     const length = inclusiveCalendarDays(dates.start_date, dates.end_date)
     if (
       !Number.isInteger(length) ||
@@ -148,24 +157,13 @@ export default function AnnualLockEditor({
               days under its saved calendar
             </p>
           )}
-          <div className="field-grid">
-            <label className="field">
-              Locked start date
-              <input
-                type="date"
-                value={dates.start_date}
-                onChange={(event) => setDates({ ...dates, start_date: event.target.value })}
-              />
-            </label>
-            <label className="field">
-              Locked end date
-              <input
-                type="date"
-                value={dates.end_date}
-                onChange={(event) => setDates({ ...dates, end_date: event.target.value })}
-              />
-            </label>
-          </div>
+          <DateRangeFields
+            value={dates}
+            onChange={setDates}
+            {...bounds}
+            startLabel="Locked start date"
+            endLabel="Locked end date"
+          />
           {error && <p role="alert">{error}</p>}
           <button type="button" onClick={() => keep()}>
             Keep these dates

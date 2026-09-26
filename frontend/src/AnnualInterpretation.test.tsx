@@ -197,3 +197,24 @@ test('an unfinished date edit cannot be discarded by applying a replacement mix'
     screen.getByText('Keep or cancel your unfinished exact dates before applying a proposal.'),
   ).toBeInTheDocument()
 })
+
+test('reference dates use the proposed year and reject past manual selections before applying', async () => {
+  openWorkspace({ year: 2026, references: [{ description: 'my trip' }], assumptions: [] })
+  fireEvent.change(screen.getByLabelText('Describe your year'), {
+    target: { value: 'Keep my trip this year' },
+  })
+  fireEvent.click(screen.getByRole('button', { name: 'Interpret annual request' }))
+  const review = within(await screen.findByRole('region', { name: 'Review annual proposal' }))
+  expect(review.getByLabelText('Start date for my trip')).toHaveAttribute('min', '2026-09-26')
+  expect(review.getByLabelText('Start date for my trip')).toHaveAttribute('max', '2026-12-31')
+  fireEvent.change(review.getByLabelText('Start date for my trip'), {
+    target: { value: '2026-09-01' },
+  })
+  fireEvent.change(review.getByLabelText('End date for my trip'), {
+    target: { value: '2026-09-07' },
+  })
+  fireEvent.change(review.getByLabelText('Slot for my trip'), { target: { value: '0' } })
+  fireEvent.click(review.getByRole('button', { name: 'Apply proposal' }))
+  expect(screen.queryByText(/^Locked:/)).not.toBeInTheDocument()
+  expect(screen.getByRole('alert')).toHaveTextContent('today or later')
+})

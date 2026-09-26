@@ -146,6 +146,7 @@ export default function AnnualMixFields({
             disabled={Boolean(draft.editingSlotId && draft.editingSlotId !== slot.id)}
             slot={slot}
             year={draft.year}
+            timeZone={draft.planning.timeZone}
             onChange={(next) =>
               onChange({
                 ...draft,

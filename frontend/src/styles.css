@@ -2252,3 +2252,11 @@ summary:focus-visible {
   resize: vertical;
   font: inherit;
 }
+
+.annual-workspace .planning-balance,
+.annual-workspace .planning-country {
+  display: grid;
+  grid-template-rows: subgrid;
+  grid-row: span 3;
+  row-gap: 0;
+}
