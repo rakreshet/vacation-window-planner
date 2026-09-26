@@ -68,6 +68,7 @@ export type Opportunity = {
   )[]
 }
 export type OpportunityResponse = {
+  policy?: { version: string }
   status: 'complete' | 'too_broad' | 'unavailable'
   items: Opportunity[]
 }

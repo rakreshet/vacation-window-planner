@@ -1,13 +1,21 @@
+import WindowActions from './WindowActions'
+import type { CalculationContext } from './api'
 import type { OpportunityResponse, Recommendation } from './api'
 import { displayDate } from './ComparisonResults'
 
 type OpportunitySectionProps = {
+  context?: CalculationContext
   result: OpportunityResponse
   stale: boolean
   onCompare: (window: Recommendation['window']) => void
 }
 
-export default function OpportunitySection({ result, stale, onCompare }: OpportunitySectionProps) {
+export default function OpportunitySection({
+  result,
+  stale,
+  onCompare,
+  context,
+}: OpportunitySectionProps) {
   if (stale) return null
   const emptyMessage = {
     complete: 'No additional opportunities matched your calendar rules.',
@@ -45,6 +53,19 @@ export default function OpportunitySection({ result, stale, onCompare }: Opportu
                 ))}
               </dl>
             </details>
+            {context && (
+              <WindowActions
+                source="opportunity"
+                window={opportunity.window}
+                assessment={opportunity.assessment}
+                context={context}
+                stale={stale}
+                metadata={{
+                  explanation: opportunity.explanation,
+                  policy_version: result.policy?.version,
+                }}
+              />
+            )}
             <button
               className="button button--secondary"
               type="button"

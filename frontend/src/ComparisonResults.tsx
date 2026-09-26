@@ -1,3 +1,4 @@
+import WindowActions from './WindowActions'
 import { useEffect, useRef, useState } from 'react'
 import type { ComparedWindow, ComparisonAlternative, ComparisonResponse, DateRange } from './api'
 
@@ -174,7 +175,18 @@ export default function ComparisonResults({
   return (
     <div className="comparison-layout">
       <div className="comparison-anchor">
-        <WindowSummary value={result.baseline} label="Your dates" />
+        <WindowSummary value={result.baseline} label="Your dates">
+          {result.calculation_context && result.baseline.assessment && (
+            <WindowActions
+              source="comparison_baseline"
+              window={result.baseline.window}
+              assessment={result.baseline.assessment}
+              context={result.calculation_context}
+              stale={stale}
+              metadata={{ policy_version: result.policy.version }}
+            />
+          )}
+        </WindowSummary>
       </div>
       <div className="comparison-options">
         {stale ? (
@@ -196,6 +208,19 @@ export default function ComparisonResults({
                   label="Selected alternative"
                   compareTo={result.baseline}
                 >
+                  {result.calculation_context && selected.evaluation.assessment && (
+                    <WindowActions
+                      source="comparison_alternative"
+                      window={selected.evaluation.window}
+                      assessment={selected.evaluation.assessment}
+                      context={result.calculation_context}
+                      stale={stale}
+                      metadata={{
+                        explanation: selected.explanation,
+                        policy_version: result.policy.version,
+                      }}
+                    />
+                  )}
                   <p className="comparison-outcome">{outcome(selected)}</p>
                   <p>
                     Starts {movement(selected.delta.start_shift_days)} · Ends{' '}
