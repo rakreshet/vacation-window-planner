@@ -20,8 +20,8 @@ explicit date selection and slot assignment even for a single item, and also all
 manual dates. The original bookmark is unchanged. Dates must fit the target range;
 users can discard the proposal and edit the structured range when needed.
 
-Verification: six backend tests at the interpreter/HTTP seams, five rendered browser
-journeys, full PostgreSQL backend suite (269 tests), full frontend suite (99 tests),
+Verification: six backend tests at the interpreter/HTTP seams, six rendered browser
+journeys, full PostgreSQL backend suite (269 tests), full frontend suite (100 tests),
 Ruff, formatting, mypy, ESLint, TypeScript and production build. Model tests use the
 provider test adapter; they do not call a live model or establish extraction quality
 for arbitrary language.

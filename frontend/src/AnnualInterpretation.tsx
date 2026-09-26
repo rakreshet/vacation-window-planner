@@ -44,7 +44,14 @@ export default function AnnualInterpretation({
       return value && value.slot !== '' && value.start_date && value.end_date
     }) ?? false
   function apply() {
-    if (!review || review.original !== draft || !mappingComplete || !referencesComplete) return
+    if (
+      !review ||
+      draft.editingSlotId ||
+      review.original !== draft ||
+      !mappingComplete ||
+      !referencesComplete
+    )
+      return
     const proposal = review.proposal
     const slots =
       proposal.slots?.map((proposed, index) => {
@@ -206,7 +213,12 @@ export default function AnnualInterpretation({
           )}
           <button
             type="button"
-            disabled={review.original !== draft || !mappingComplete || !referencesComplete}
+            disabled={
+              Boolean(draft.editingSlotId) ||
+              review.original !== draft ||
+              !mappingComplete ||
+              !referencesComplete
+            }
             onClick={apply}
           >
             Apply proposal
