@@ -1,13 +1,14 @@
 # Delivery progress and pull request map
 
-This is the versioned record of what has been merged and which pull request delivered each task. The [implementation task plan](implementation-plan.md) defines each task's scope, tests, and definition of done; this file tracks delivery, not a second copy of the plan.
+This is the versioned record of what has been merged and which pull request delivered each task. The [Phase 0 and Phase 1 implementation task plan](implementation-plan.md) and [Phase 0.5 comparison plan](phase-0.5-plan.md) define each task's scope, tests, and definition of done; this file tracks delivery, not a second copy of the plans.
 
 ## How to use this tracker
 
-- Use one task ID per pull request by default, with its tests in the same PR. For the approved Phase 0 stack, give each PR an ordered title and base it on the preceding branch; the user will review and merge in order after the latest branch is runnable.
+- Use one task ID per pull request by default, with its tests in the same PR. Give stacked PRs ordered titles and base each on the preceding branch; the user will review and merge in order after the latest branch is runnable.
+- For Phase 0.5 behavior work, write one failing test at an agreed public seam, implement only that behavior, and repeat within the same PR. Keep the Phase 0 regression suite green at every PR tip.
 - Add the PR link when it opens. Use **Done** only when the task's scope, tests, and definition of done are merged with passing checks. Use **Partial** when a merged PR delivered only part of the task; list the remaining work below.
 - If a PR combines tasks, record the same PR against each task and explain the exception. PR #1 bundled the initial foundation (P0 01–05).
-- Keep documentation-only PRs in the history below; they do not complete an implementation task.
+- Keep documentation-only PRs without an explicit task in the history below. A planned design task such as P05 01 is tracked in its phase table.
 - Do not assign future PR numbers in advance. A blank PR cell means no PR has been opened yet.
 
 Phase 0 implementation and its production desktop UI are complete in the open, numbered stack through the accurate hero-copy follow-up [#34](https://github.com/rakreshet/vacation-window-planner/pull/34). Review, rebase, and merge the PRs in numeric order; the latest branch is runnable without an interpretation provider key. The core Phase 0 product and operational decisions have been resolved.
@@ -52,6 +53,23 @@ These gaps are relative to the existing task plan, not regressions in the runnin
 | P0 03 | Typed SQLAlchemy session management is addressed by [#6](https://github.com/rakreshet/vacation-window-planner/pull/6), pending merge. Database connectivity and Alembic upgrade/downgrade tests already exist. |
 | P0 04 | Typed health API client, explicit frontend environment configuration, and loading/failure tests are addressed by [#7](https://github.com/rakreshet/vacation-window-planner/pull/7), pending merge. The Vite shell and success-state test already exist. |
 | P0 05 | Docker build caching and the planned frontend lint/format checks are addressed by [#8](https://github.com/rakreshet/vacation-window-planner/pull/8), pending merge. Backend and frontend jobs already run, and both are required checks on `main`. |
+
+## Phase 0.5 — compare vacation dates
+
+The [Phase 0.5 plan](phase-0.5-plan.md) is proposed on `codex/phase05-what-if-plan`, based on the open Phase 0 tip at PR #34. The tasks below are planned; no implementation PR has opened. Add each real PR link and update its status as the stack progresses. Keep Search, its results, and feedback working at each step.
+
+| Task | Deliverable | PR(s) | Status |
+| --- | --- | --- | --- |
+| P05 01 | Comparison UX prototype | — | Planned |
+| P05 02 | Shared exact-window accounting | — | Planned |
+| P05 03 | Local-date context | — | Planned |
+| P05 04 | Comparison policy and contracts | — | Planned |
+| P05 05 | Exact baseline service and API | — | Planned |
+| P05 06 | Comparison snapshots | — | Planned |
+| P05 07 | Nearby improvement discovery | — | Planned |
+| P05 08 | Shared frontend context and both entry points | — | Planned |
+| P05 09 | Comparison workspace | — | Planned |
+| P05 10 | End-to-end experience and hardening | — | Planned |
 
 ## Phase 1
 
