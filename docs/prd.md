@@ -2,17 +2,19 @@
 
 Phase 0 validates date window recommendations before travel enrichment
 
-This document defines the first product release, the decisions already made, and the acceptance criteria for a reliable vacation window recommendation experience. Phase 0 recommends when to take vacation. Phase 1 adds destinations, live flights, and proactive vacation opportunities without changing the core recommendation model.
+This document defines the first product release, the decisions already made, and the acceptance criteria for a reliable vacation window recommendation experience. Phase 0 recommends when to take vacation. The delivered Phase 0.5 adds exact-date comparison and nearby improvements. Phase 1 will add destinations, live flights, and proactive vacation opportunities without changing the core recommendation model.
 
 | Field | Value |
 | --- | --- |
-| **Status** | Approved planning baseline |
+| **Status** | Phase 0 and Phase 0.5 delivered; Phase 1 planned |
 | **Prepared for** | POC product and engineering implementation |
-| **Version date** | 2026-09-25 |
+| **Version date** | 2026-09-26 |
+
+Delivery and original PR links are recorded in the [progress tracker](progress.md). Phase 0.5 requirements and task details are maintained in the [comparison plan](phase-0.5-plan.md), with completed validation in the [acceptance record](phase-0.5-acceptance.md).
 
 ## Product decision
 
-Build a standalone proof of concept for salaried employees who want to use limited vacation days well. The first release will generate and rank vacation date windows from a vacation balance, a holiday calendar, weekends, and explicit month choices. It will not recommend destinations or search flights. The product must remain simple enough to validate the core value before external travel data is introduced.
+Build a standalone proof of concept for salaried employees who want to use limited vacation days well. The current app generates and ranks vacation date windows from a vacation balance, a holiday calendar, weekends, and explicit month choices. It also compares exact dates with nearby alternatives that save leave or extend a break. Destinations and flights remain Phase 1 scope. The product must remain simple enough to validate the core value before external travel data is introduced.
 
 ## Problem and user
 
@@ -31,13 +33,14 @@ Employees can see balances and calendars in HR tools, but they still have to dis
 | **Phase** | **Included** | **Explicitly excluded** |
 | --- | --- | --- |
 | Phase 0 | Vacation window generation, ranking, explanations, anonymous session state, persisted search snapshots, simple feedback | Destinations, flight search, booking, user accounts, accrual forecasting |
+| Phase 0.5 | Exact-date comparison from manual dates or Search, nearby savings and longer breaks, local-date context, immutable comparison snapshots | Broad proactive scans, destinations, flights, mobile certification |
 | Phase 1 | Destination matching and live flight enrichment (multi passenger, one origin, economy default); separate proactive future vacation opportunities | Flight booking and payment; LLM based opportunity decisions |
 
 ## Phase 0 user experience
 
 1. The user starts an anonymous browser session and enters a current vacation balance, country or calendar, explicit months, preferred trip length, and any relevant schedule override. Optional conversational text may produce an editable proposal for these fields.
 1. The interface confirms the effective holiday calendar and weekend pattern. A locale based calendar is the default; the user may override an unusual calendar or working week.
-1. The user reviews or edits the structured fields and starts the search manually. Interpreting text or editing an input does not itself run or rerun a search; structured search remains available without Gemini.
+1. The user reviews or edits the structured fields and starts the search manually. Interpreting text or editing an input does not itself run or rerun a search; structured search remains available without an interpretation provider.
 1. The product returns up to five ranked windows by default. The result count is configurable.
 1. Each result shows dates, total consecutive days away, vacation days used, remaining balance, score, warnings, and a short reason.
 1. The user may give a thumbs up or thumbs down without supplying text.
@@ -50,8 +53,9 @@ Employees can see balances and calendars in HR tools, but they still have to dis
 | Allowed negative balance | Optional whole-day allowance, default 0, maximum 5 | A window may leave a negative balance only when the user explicitly sets enough allowance; every negative result shows a warning |
 | Months | Explicit selection required | A window must start in a selected month but may end in a later month; clip partly elapsed months to future local start dates and state that adjustment |
 | Preferred trip length | Inclusive consecutive local calendar days, with a strong preference and soft tolerance | Count weekends and observed holidays at either edge; return slightly shorter or longer options only when exact matches are weak, and explain the relaxation |
-| Country calendar | One calendar per search | Use a locale default and permit an explicit override |
-| Weekend pattern | Locale default with override | Use the user local calendar and time; no cross time zone logic |
+| Country calendar | One supported calendar per Search or comparison | Israel, U.S. federal, or England & Wales bank holidays; see [calendar scope](runbook.md#supported-holiday-calendars) |
+| Weekend pattern | Calendar default with editable override | Friday/Saturday for Israel, Saturday/Sunday for U.S. and England & Wales; preserve custom selections |
+| Local date | Session IANA time zone | Browser supplies its local zone; legacy clients default to `Asia/Jerusalem`. Calendar selection does not change the zone; leave accounting remains date-only |
 | Leave type | Vacation only | No personal, sick, or half day leave |
 | Travel reason | Optional | May be collected, but does not drive destination logic in phase 0 |
 
@@ -88,7 +92,7 @@ Employees can see balances and calendars in HR tools, but they still have to dis
 | **ID** | **Requirement** |
 | --- | --- |
 | PR 01 | The product shall create an anonymous session without asking for an account. |
-| PR 02 | The user shall choose one country calendar and one or more explicit months. |
+| PR 02 | For Search, the user shall choose one country calendar and one or more explicit months; exact-date comparison uses start and end dates instead of months. |
 | PR 03 | The product shall support whole vacation days only and use local dates. |
 | PR 04 | The engine shall generate windows deterministically and rank them without an LLM. |
 | PR 05 | The default response shall contain at most five recommendations, subject to configuration. |
@@ -108,7 +112,7 @@ Employees can see balances and calendars in HR tools, but they still have to dis
 | PR 19 | Phase 0 shall count inclusive consecutive local dates as trip length (including nonworking days at either edge), charge PTO only for effective working days, require the start in a selected month, and permit the end in a later month. |
 | PR 20 | Phase 0 shall consider zero-PTO windows that satisfy the length preference or tolerance, score them with finite efficiency handling, and prevent trivial short breaks from dominating the returned set. |
 | PR 21 | Phase 0 shall return no ranked recommendations when its candidate-generation cap prevents a complete search, and shall give a clear narrow-the-search message rather than claiming partial candidates are the best. |
-| PR 22 | Optional Gemini interpretation shall return editable proposed structured fields for user confirmation; only an explicit Search action shall start or rerun recommendations, and structured input shall work without Gemini. |
+| PR 22 | Optional Google/Gemini or xAI/Grok interpretation shall return editable proposed structured fields for user confirmation; only an explicit Search action shall start or rerun recommendations, and structured input shall work without an interpretation provider. |
 
 ## Non goals
 
@@ -160,5 +164,5 @@ This is an additive phase 1 experience, not a change to the phase 0 optimizer. A
 | Window measurement and selected months | Count inclusive local calendar days, including nonworking days at the edges, and charge PTO only for effective working days. Require the start date to be in a selected month; the end date may cross the month boundary. |
 | Free breaks | Keep zero-PTO windows eligible under the same length filter or tolerance, with finite efficiency scoring and diversity selection that does not flood results with trivial weekends. |
 | Search completeness | A capped enumeration is incomplete, so no candidates from it may be described as ranked best options; return a coded narrow-the-search outcome instead. |
-| Interpretation flow | Gemini may propose editable fields, but the user must explicitly confirm and start a search; direct structured entry never depends on Gemini. |
+| Interpretation flow | The configured Google/Gemini or xAI/Grok provider may propose editable fields, but the user must explicitly confirm and start a search; direct structured entry never depends on a provider. |
 | Persistence | Persist anonymous sessions and search snapshots for debugging and reproducibility, but do not show search history in phase 0. |

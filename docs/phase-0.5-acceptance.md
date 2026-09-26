@@ -1,8 +1,10 @@
 # Phase 0.5 acceptance record
 
-Reviewed on September 26, 2026 against the final Phase 0.5 stack. Delivery remains in open PRs; use the [progress table](progress.md) for review and merge order.
+Reviewed on September 26, 2026 against the final Phase 0.5 stack, now delivered on `main` through [#47](https://github.com/rakreshet/vacation-window-planner/pull/47). Backend and frontend [post-merge CI passed](https://github.com/rakreshet/vacation-window-planner/actions/runs/36233396844). The [progress table](progress.md) records the original PRs and their closure after integration.
 
-## Automated gates
+The original P05 10 measurements below are historical evidence from #45. The later calendar follow-up records the final expanded suite: **157 backend and 36 frontend tests**, with formatting, lint, typing, and build checks passing. The live UI observations below remain tied to those implementation revisions.
+
+## Original P05 10 automated gates
 
 - Backend: **151 tests pass**, including the existing Phase 0 acceptance suite, shared accounting, local-date boundaries, comparison contracts, bounded discovery, PostgreSQL snapshots, and migration upgrade/downgrade. Ruff format/lint and strict source typing pass.
 - Frontend: **28 tests pass**, plus ESLint, Prettier, TypeScript, and the Vite production build. Existing interpretation, explicit Search, score explanations, grouped results, and feedback tests remain green.
@@ -60,6 +62,10 @@ Desktop is the supported experience. Keep mobile work focused on future presenta
 - Baseline and alternative regions, semantic metrics, and day labels use flexible CSS layouts. Existing breakpoint groundwork remains, but there is no separate mobile state machine, API, or forked component tree.
 
 A future mobile project can adapt navigation, density, date controls, and layout and then add device-specific acceptance checks without replacing the core behavior.
+
+## End-date guard follow-up (P05 F01)
+
+Delivered through #46 and incorporated into `main` via #47. The comparison end-date input uses the selected start as its minimum, and an existing end date before the start produces immediate validation.
 
 ## Calendar follow-up (P05 F02)
 

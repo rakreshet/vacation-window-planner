@@ -1,12 +1,12 @@
 # Phase 0.5: compare vacation dates
 
-**Status:** Approved for gradual implementation by the user; delivery tracked in progress.md
+**Status:** Delivered on `main` through [#47](https://github.com/rakreshet/vacation-window-planner/pull/47) on September 26, 2026. See the [progress tracker](progress.md) and [acceptance record](phase-0.5-acceptance.md). The task scopes below retain the approved implementation sequence.
 
 **Supported surface:** Desktop. The user clarified on September 26, 2026 that mobile is future scope. Keep shared state, API contracts, and presentation components reusable so a later mobile layout does not require a major refactor. Existing responsive groundwork may remain, but mobile refinement and certification are not Phase 0.5 gates.
 
-**Starting point:** PR #34 (`codex/phase0-accurate-no-account-copy`)
+**Historical starting point:** PR #34 (`codex/phase0-accurate-no-account-copy`)
 
-**Delivery:** A new stack of small PRs based on #34 and then on each preceding Phase 0.5 PR. Nothing in this plan requires merging the Phase 0 stack into `main` first.
+**Delivery record:** Built as small stacked PRs after #34, then incorporated together through #47 with original commit history preserved. Start new work from current `main`; the former stack no longer needs review or rebasing to land.
 
 ## Product outcome
 
@@ -67,7 +67,7 @@ An exact baseline is evaluated even if it uses more leave than permitted, so the
 
 ### Bounded alternative discovery
 
-Use a separately versioned comparison policy. Proposed POC defaults, to be verified with representative calendars:
+Use a separately versioned comparison policy. Delivered POC defaults, checked against representative calendars in the [acceptance record](phase-0.5-acceptance.md):
 
 | Bound | Initial value | Reason |
 | --- | --- | --- |
@@ -86,7 +86,7 @@ Add authenticated `POST /comparisons`. The request includes exact baseline start
 
 The service reuses the existing calendar provider and anonymous session authorization. It saves an immutable comparison input/output snapshot tied to the anonymous session, separately from Search snapshots and feedback. Persist the effective calendar and comparison policy needed to reproduce an output. Do not store new personal data beyond dates and current planning inputs. An expired session yields a recoverable error; the frontend can retain the unsent draft and create a new session when the person explicitly retries.
 
-Use the person's local calendar date consistently for future-date checks in both paths. Phase 0 currently derives `today` from an injected UTC clock. Add an optional validated IANA time-zone name to anonymous session creation, supplied by the browser, and derive `today` from the injected clock in that zone. Existing clients without this field use the supported calendar's documented default zone (Israel: `Asia/Jerusalem`). This changes the future-date boundary only when UTC and the effective local date differ; test that case explicitly. It does not introduce time-of-day or trip time-zone calculations.
+Use the person's local calendar date consistently for future-date checks in both paths. Both Search and comparison derive `today` from an injected clock in the anonymous session's validated IANA time zone, supplied by the browser. Existing clients without this field and migrated sessions use the legacy `Asia/Jerusalem` fallback for every supported calendar. Changing the calendar does not change the session time zone. This changes the future-date boundary only when UTC and the effective local date differ; test that case explicitly. It does not introduce time-of-day or trip time-zone calculations.
 
 ## Edge cases to resolve in code and copy
 
@@ -105,7 +105,7 @@ Use the person's local calendar date consistently for future-date checks in both
 
 ## Ordered PR breakdown
 
-Each task gets one stacked PR by default. Do not assign PR numbers until they exist. Keep each tip runnable and run the normal backend and frontend quality gates. The first Phase 0.5 task PR follows this planning branch, which itself is based on PR #34. Record each real PR and its status in the [delivery progress tracker](progress.md).
+The following breakdown records the delivered dependency order. All ten tasks and the two later follow-ups are complete; original PR links and delivery status are in the [progress tracker](progress.md). The behavior and verification requirements remain useful for maintenance.
 
 ### Test-first delivery rule
 
@@ -117,7 +117,7 @@ For each behavior PR, pick one observable behavior, write a failing test at a co
 | --- | --- | --- |
 | 1 | P05 01 — Comparison UX prototype | Produce reviewable desktop wireframes (the earlier mobile sketch is future reference), screen copy, calendar/day-type language, keyboard path, and states for no improvement, over budget, and failures. Walk both entry journeys with realistic date fixtures before backend contract and frontend implementation. |
 | 2 | P05 02 — Shared exact-window accounting | Extract one pure evaluator for Search and comparison. Golden and property tests prove unchanged Phase 0 results, observed holidays, weekend overrides, inclusive edges, cross-year dates, and zero-PTO windows. |
-| 3 | P05 03 — Local-date context | Add optional validated IANA time zone to anonymous sessions, a documented calendar-zone fallback for old clients, and shared local-date clipping. Migration and fixed-clock tests cover midnight boundaries and unchanged date-only accounting. |
+| 3 | P05 03 — Local-date context | Add optional validated IANA time zone to anonymous sessions, the documented legacy time-zone fallback for old clients, and shared local-date clipping. Migration and fixed-clock tests cover midnight boundaries and unchanged date-only accounting. |
 | 4 | P05 04 — Comparison policy and contracts | Versioned bounds, typed baseline/alternative/delta models, validation, and deterministic goal-specific ordering rules. Contract tests cover invalid ranges and stable serialization. No endpoint or UI yet. |
 | 5 | P05 05 — Exact baseline service and API | Authenticated `POST /comparisons` evaluates arbitrary valid future dates, including an over-budget baseline, without Search month/length inputs. API tests cover authorization, Search-origin ownership, errors, empty groups, and unchanged `/recommendations`. |
 | 6 | P05 06 — Comparison snapshots | Add a migration and repository for immutable comparison inputs, effective calendar/policy, and outputs. Migration up/down and PostgreSQL tests prove reproducibility and session isolation. |
@@ -125,8 +125,6 @@ For each behavior PR, pick one observable behavior, write a failing test at a co
 | 8 | P05 08 — Shared frontend context and both entry points | Keep Search as the default task. Add Compare my dates without requiring month/length and Compare nearby dates on every visible Search date, including grouped alternatives. Component tests prove draft retention, session-context changes, no implicit Search, and intact feedback. |
 | 9 | P05 09 — Comparison workspace | Build a flexible desktop baseline/alternative layout, date and day-type view, explicit shift/edit/update actions, two goal groups, deltas, no-improvement and error states. Accessibility and interaction tests cover keyboard, focus, screen reader labels, and stale-result handling. |
 | 10 | P05 10 — End-to-end experience and hardening | Exercise manual and Search-origin journeys against the real backend and PostgreSQL, verify both paths use the same accounting, review 1,440-pixel desktop states across Search and comparison, measure response time, and fix UX or regression gaps. Phase 0 acceptance tests remain green. |
-
-P05 07 may be split into separate backend PRs for the two improvement goals if review size warrants it; each would keep a typed complete response and tests. P05 08–09 can be split along user-visible vertical slices if the frontend diff becomes too large. The stack order remains the dependency order above.
 
 ## Exit gate and product review
 
@@ -147,4 +145,4 @@ P05 07 may be split into separate backend PRs for the two improvement goals if r
 - **Could a visually rich calendar hide the answer?** The outcome sentence, numeric deltas, explicit charged-day list, and accessible comparison table all work without color or gesture interpretation.
 - **Could this expand into Phase 1 opportunity detection?** The bounded neighborhood is anchored to the person's chosen dates. Broad out-of-criteria discovery remains a separately planned feature.
 
-Implementation is authorized. Policy bounds may be refined with test evidence while preserving the agreed two-goal behavior. The inspectable [UX prototype](phase-0.5-ux.md) records the initial walkthrough and screen states.
+Implementation is complete. Future changes to policy bounds need test evidence and must preserve the agreed two-goal behavior. The inspectable [UX prototype](phase-0.5-ux.md) records the initial walkthrough and screen states.

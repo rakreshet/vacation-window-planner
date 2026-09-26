@@ -2,7 +2,7 @@
 
 ## Start and verify
 
-1. Copy `.env.example` to `.env` and replace the local PostgreSQL password before exposing any port.
+1. Preserve an existing `.env`; if it is absent, run `cp -n .env.example .env`. Replace the example PostgreSQL password before sharing access. Follow the [README](../README.md#run-locally) for host-port overrides.
 2. Run `docker compose up --build --detach`.
 3. Run `docker compose ps`; `db` and `backend` must become healthy and `migrate` must exit successfully.
 4. Open `http://localhost:15173` and confirm a structured search can create a session and return recommendations. AI interpretation is optional; without the selected provider's key, only Interpret is unavailable.

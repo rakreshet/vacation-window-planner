@@ -1,6 +1,6 @@
 # Vacation Window Planner
 
-A Docker-based proof of concept for finding useful vacation dates. Phase 0 recommends ranked date windows from an anonymous session, effective holiday calendar, editable structured constraints, and optional AI text interpretation. Phase 0.5 adds exact-date comparison with nearby ways to save vacation days or extend a break; phase 1 will add destinations, live flights, and separate proactive vacation opportunities. The core Phase 0 product rules are in the PRD; remaining operational choices are in [docs/open-decisions.md](docs/open-decisions.md).
+A Docker-based proof of concept for finding useful vacation dates. Phase 0 recommends ranked date windows from an anonymous session, effective holiday calendar, editable structured constraints, and optional AI text interpretation. Phase 0.5 adds exact-date comparison with nearby ways to save vacation days or extend a break; phase 1 will add destinations, live flights, and separate proactive vacation opportunities. Phase 0 and Phase 0.5 are merged into `main`; see the [delivery record](docs/progress.md) for task status and the stack merge history. Product rules are in the PRD, and [operational decisions](docs/open-decisions.md) distinguish settled defaults from future choices.
 
 Search and Compare support Israel, U.S. federal holidays, and England & Wales bank holidays. Weekend days remain editable; see [calendar scope and examples](docs/runbook.md#supported-holiday-calendars).
 
@@ -9,16 +9,17 @@ Search and Compare support Israel, U.S. federal holidays, and England & Wales ba
 - [Product requirements (PRD)](docs/prd.md)
 - [High-level design (HLD)](docs/hld.md)
 - [Phase 0.5 comparison plan](docs/phase-0.5-plan.md)
+- [Phase 0.5 comparison UX](docs/phase-0.5-ux.md)
 - [Phase 0.5 acceptance record](docs/phase-0.5-acceptance.md)
 - [Implementation task plan](docs/implementation-plan.md)
 - [Delivery progress and PR map](docs/progress.md)
-- [Open product decisions](docs/open-decisions.md)
+- [Operational decisions and future choices](docs/open-decisions.md)
 - [Local runbook](docs/runbook.md)
 - [Phase 0 frontend design contract](docs/frontend-design.md)
 - [Security guidance](SECURITY.md)
 - [Domain language](CONTEXT.md)
 
-The Markdown documents are the version-controlled source of truth. Review changes to them in pull requests; any Word copies are point-in-time exports and should be regenerated from the approved Markdown rather than edited independently. The phase 1 proactive-opportunity capability is planned here, not implemented in the current foundation.
+The Markdown documents are the version-controlled source of truth. Review changes to them in pull requests; any Word copies are point-in-time exports and should be regenerated from the approved Markdown rather than edited independently. The phase 1 proactive-opportunity capability is planned here, not implemented in the current app.
 
 ## Run locally
 
@@ -63,6 +64,7 @@ docker compose --profile test run --no-deps --rm backend-test mypy src
 docker compose --profile test run --no-deps --rm backend-test ruff format --check .
 docker compose --profile test run --no-deps --rm frontend-test npm run lint
 docker compose --profile test run --no-deps --rm frontend-test npm run format:check
+docker compose --profile test run --no-deps --rm frontend-test npm run typecheck
 docker compose --profile test run --no-deps --rm frontend-test npm run build
 ```
 
