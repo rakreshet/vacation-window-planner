@@ -24,3 +24,22 @@ test('the selected exact dates save once and stale results cannot be saved', asy
   view.rerender(<WindowActions {...props} stale />)
   expect(screen.getByRole('button', { name: 'Save option' })).toBeDisabled()
 })
+
+test('denied clipboard shows selectable text and editing closes an open live preview', async () => {
+  vi.stubGlobal('navigator', {
+    clipboard: { writeText: vi.fn().mockRejectedValue(new Error('denied')) },
+  })
+  const props = { source: 'search' as const, window: vacationWindow, assessment, context }
+  const view = render(<WindowActions {...props} />)
+  fireEvent.click(screen.getByRole('button', { name: 'Copy leave request' }))
+  expect(await screen.findByLabelText('Leave request text')).toHaveTextContent('2027-01-07')
+  fireEvent.click(screen.getByRole('button', { name: 'Copy text' }))
+  expect(
+    await screen.findByText('Clipboard unavailable. Select the text and copy it manually.'),
+  ).toBeInTheDocument()
+  expect(screen.queryByText('Copied to clipboard')).not.toBeInTheDocument()
+  view.rerender(<WindowActions {...props} stale />)
+  expect(screen.queryByLabelText('Leave request text')).not.toBeInTheDocument()
+  view.rerender(<WindowActions {...props} />)
+  expect(screen.queryByLabelText('Leave request text')).not.toBeInTheDocument()
+})
