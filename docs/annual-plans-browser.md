@@ -13,3 +13,21 @@ The layout was inspected at 1,440×1,000 and 1,024×900. At 1,024 px, the sectio
 Automated rendered journeys cover independent task draft, explicit generation, slot order/month/gap edits, manual range conversion, explicit saved-date selection without copying its calendar, incomplete lock-editor protection, conflict/cap/reduction states, and rejection of inconsistent accounting. The final AP 05 frontend run passed all 87 tests, including 12 annual rendered tests. ESLint, Prettier, TypeScript and the production build passed. Review regressions cover removing an open slot editor and inconsistent slot/fulfillment metadata; clocks and time zones are fixed in the annual tests.
 
 Year visualization, richer comparison/recalculation, interpretation, saving whole plans and export belong to AP 06–09. This is milestone evidence, not AP 10 release acceptance or calendar-client import verification.
+
+## AP 06: comparison and recalculation
+
+September 26, 2026: the real Docker app returned three alternatives for 2027, Israel,
+Friday/Saturday weekends, 18 available days and 3 reserved. The first used 12 leave
+for 24 days away; the fewer-leave alternative used 4 for 13 days away. Locking
+May 11–15 and explicitly recalculating preserved the interval and reported unchanged
+dates/cost. Enter on its year-view detail control opened and focused the charged-date
+details (May 11 and May 13). The remaining alternative objectives respected the lock.
+
+The twelve months form four columns at 1,440 px. Document width matched viewport at
+1,440 and 1,024 px. [Year-view capture](annual-evidence/ap06-year-1440.png).
+The graphic accompanies a chronological accessible list with one detail control per
+break. Automated rendered tests cover late responses, selected-plan locking, exact
+short-slot unlocking, failed recalculation preservation, explicit reduced-mix adoption,
+cost deltas and independent draft navigation. Frontend: 94 tests, lint, formatting,
+type checking and production build pass. Further accessibility and operational acceptance
+remain AP 10; this milestone is not a claim that all final acceptance scenarios passed.

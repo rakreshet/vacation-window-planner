@@ -1,12 +1,36 @@
-import type { AnnualConflict, AnnualRun } from './annualContracts'
+import { useId } from 'react'
+import AnnualPlanComparison from './AnnualPlanComparison'
+import AnnualYearView, { annualDetailsId } from './AnnualYearView'
+import AnnualPlanChanges from './AnnualPlanChanges'
+import type { AnnualBreak, AnnualConflict, AnnualPlan, AnnualRun } from './annualContracts'
 
-export default function AnnualPlanResults({ result }: { result: AnnualRun }) {
-  const plan = result.plans[0]
+export default function AnnualPlanResults({
+  result,
+  stale = false,
+  busy = false,
+  previousPlan,
+  onLock,
+  selectedId,
+  onSelect,
+  onUseReduced,
+}: {
+  result: AnnualRun
+  stale?: boolean
+  busy?: boolean
+  previousPlan?: AnnualPlan | null
+  onLock?: (item: AnnualBreak) => void
+  selectedId?: string
+  onSelect?: (id: string) => void
+  onUseReduced?: (plan: AnnualPlan) => void
+}) {
+  const headingId = useId()
+  const plan = result.plans.find((item) => item.plan_id === selectedId) ?? result.plans[0]
   return (
-    <section aria-labelledby="annual-results-heading" className="annual-results">
-      <h2 id="annual-results-heading" tabIndex={-1}>
+    <section aria-labelledby={headingId} className="annual-results">
+      <h2 id={headingId} tabIndex={-1}>
         Your annual plans
       </h2>
+      {stale && <p role="status">Last calculation — inputs have changed</p>}
       {result.status === 'too_broad' && (
         <p role="status">
           We could not finish checking this request. Try fewer breaks, narrower lengths or fewer
@@ -42,6 +66,14 @@ export default function AnnualPlanResults({ result }: { result: AnnualRun }) {
       )}
       {plan && (
         <>
+          {onSelect && (
+            <AnnualPlanComparison
+              plans={result.plans}
+              selected={plan.plan_id}
+              onSelect={onSelect}
+              disabled={busy}
+            />
+          )}
           {plan.fulfillment === 'reduced' && (
             <div role="status">
               <strong>
@@ -56,8 +88,14 @@ export default function AnnualPlanResults({ result }: { result: AnnualRun }) {
                   )
                   .join(', ')}
               </p>
+              {onUseReduced && (
+                <button type="button" disabled={stale || busy} onClick={() => onUseReduced(plan)}>
+                  Use this reduced mix
+                </button>
+              )}
             </div>
           )}
+          {previousPlan && <AnnualPlanChanges previous={previousPlan} current={plan} />}
           <div className="annual-totals">
             <strong>{plan.accounting.total_leave_used} vacation days used</strong>
             <p>
@@ -67,6 +105,7 @@ export default function AnnualPlanResults({ result }: { result: AnnualRun }) {
             <p>{plan.accounting.unallocated_days} days unallocated</p>
             <p>{plan.accounting.total_days_away} days away</p>
           </div>
+          <AnnualYearView result={result} plan={plan} />
           <ol>
             {plan.breaks.map((item) => (
               <li key={item.slot_id}>
@@ -83,7 +122,21 @@ export default function AnnualPlanResults({ result }: { result: AnnualRun }) {
                   {item.window.total_days} days away · {item.window.vacation_days_used} vacation
                   days · {item.balance_after_break} remain
                 </p>
-                <details>
+                {!item.locked && onLock && (
+                  <button
+                    type="button"
+                    disabled={stale || busy}
+                    onClick={() => onLock(item)}
+                    aria-label={`Lock Break ${result.input.slots.findIndex((slot) => slot.slot_id === item.slot_id) + 1} dates`}
+                  >
+                    Lock dates
+                  </button>
+                )}
+                <details
+                  id={annualDetailsId(plan, item.slot_id)}
+                  tabIndex={-1}
+                  aria-label={`Break ${result.input.slots.findIndex((slot) => slot.slot_id === item.slot_id) + 1} charged dates and day details`}
+                >
                   <summary>Charged dates and day details</summary>
                   <p>Charged dates: {item.charged_dates.join(', ') || 'None'}</p>
                   <ul>
