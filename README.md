@@ -14,6 +14,9 @@ Search and Compare support Israel, U.S. federal holidays, and England & Wales ba
 - [Phase 0.75 product, backend, frontend, and PR plan](docs/phase-0.75-plan.md)
 - [Phase 0.75 UX walkthrough](docs/phase-0.75-ux.md)
 - [Phase 0.75 acceptance and manual testing](docs/phase-0.75-acceptance.md)
+- [Annual multi-vacation BE/FE plan and dependent PR sequence](docs/annual-plans-plan.md)
+- [Annual planning UX walkthrough](docs/annual-plans-ux.md)
+- [Annual planning TDD seams and test strategy](docs/annual-plans-testing.md)
 - [Research on opportunities before flights](docs/non-flight-opportunities-research.md)
 - [Implementation task plan](docs/implementation-plan.md)
 - [Delivery progress and PR map](docs/progress.md)
@@ -24,6 +27,8 @@ Search and Compare support Israel, U.S. federal holidays, and England & Wales ba
 - [Domain language](CONTEXT.md)
 
 The Markdown documents are the version-controlled source of truth. Review changes to them in pull requests; any Word copies are point-in-time exports and should be regenerated from the approved Markdown rather than edited independently. On the implementation stack, Find dates, Compare my dates, and Saved options support manual personal calendars, explicit-Search opportunities, browser-only saves, calendar downloads, and reviewed leave-request copying. See the acceptance record for verified behavior and remaining client checks.
+
+Annual planning is a documentation-only proposal for several vacations sharing one budget, with a protected reserve and locked dates. Its planning PR does not implement the feature or authorize implementation. Phase 1 continues to mean destinations and flights.
 
 ## Run locally
 
