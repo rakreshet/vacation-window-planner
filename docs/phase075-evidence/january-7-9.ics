@@ -1,0 +1,18 @@
+BEGIN:VCALENDAR
+VERSION:2.0
+PRODID:-//Vacation Window Planner//EN
+BEGIN:VEVENT
+UID:6dee938d3b822e1b86dfdf6292854938e7855375cb6674c706b17843aa8add21@vacati
+ on-window-planner
+DTSTAMP:20260926T120000Z
+DTSTART;VALUE=DATE:20270107
+DTEND;VALUE=DATE:20270110
+SUMMARY:Phase 0.75 acceptance: January 7–9
+DESCRIPTION:Proposed break: 2027-01-07 through 2027-01-09 (inclusive)\nVaca
+ tion days required: 0\nNo vacation days are required under the recorded ca
+ lendar.\nCalculated: 2026-09-26T12:00:00Z\nPlanning option\; not an approv
+ al. Please confirm with your employer.
+STATUS:TENTATIVE
+TRANSP:TRANSPARENT
+END:VEVENT
+END:VCALENDAR

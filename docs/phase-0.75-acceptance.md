@@ -1,6 +1,6 @@
 # Phase 0.75 acceptance record
 
-Recorded 2026-09-26. The implementation is in an unmerged stack, #51–#59 plus the final acceptance PR linked in [progress](progress.md). The local app is available at http://localhost:15173/. Features are implemented; release acceptance remains conditional on real Google Calendar and a second calendar-client import. Those checks are not replaced by parser tests.
+Recorded 2026-09-26. The implementation is in an unmerged stack, #51–#59 plus [#60](https://github.com/rakreshet/vacation-window-planner/pull/60), the final acceptance PR. The local app is available at http://localhost:15173/. Features are implemented; release acceptance remains conditional on real Google Calendar and a second calendar-client import. Those checks are not replaced by parser tests.
 
 ## Automated evidence
 
@@ -60,4 +60,4 @@ Use the local app on the top stack branch. For dates after January 2027, choose 
 
 Google Calendar at `https://calendar.google.com/` redirected to the signed-out product page in the available browser session on 2026-09-26. No login or upload was performed. **Actual Google Calendar and second-client imports are pending**, so full release acceptance is not claimed.
 
-Using a disposable calendar, download the January 7–9 fixture and import it into Google Calendar desktop and Apple Calendar or Outlook. Verify a single all-day event spanning January 7, 8, and 9 only, readable title/description, tentative status where supported, and no attendees. Repeat with a charged-day and cross-year fixture. Record client/version and observed duplicate-import behavior; synchronization is not promised. No events should be sent to anyone.
+Using a disposable calendar, use the generated [January 7–9 fixture](phase075-evidence/january-7-9.ics) or download that option from the app and import it into Google Calendar desktop and Apple Calendar or Outlook. Verify a single all-day event spanning January 7, 8, and 9 only, readable title/description, tentative status where supported, and no attendees. Repeat with a charged-day and cross-year fixture. Record client/version and observed duplicate-import behavior; synchronization is not promised. No events should be sent to anyone.
