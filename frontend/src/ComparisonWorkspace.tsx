@@ -1,3 +1,4 @@
+import { localCalendarDate } from './calendarDays'
 import DateRangeFields from './DateRangeFields'
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { compareDates, ComparisonError, createSession } from './api'
@@ -51,6 +52,9 @@ export default function ComparisonWorkspace({
           value.dates.end_date < value.dates.start_date
         ) {
           throw new Error('Choose a start date and an end date on or after it')
+        }
+        if (value.dates.start_date < localCalendarDate(value.planning.timeZone)) {
+          throw new Error('Start date is in the past. Choose today or a future date.')
         }
         const context = planningSession(value.planning)
         const reuse =
@@ -139,6 +143,7 @@ export default function ComparisonWorkspace({
         <fieldset disabled={busy} className="comparison-fields">
           <DateRangeFields
             value={draft.dates}
+            minimum={localCalendarDate(draft.planning.timeZone)}
             onChange={(dates) => edit({ ...draft, dates })}
             required
           />
@@ -147,7 +152,12 @@ export default function ComparisonWorkspace({
             <button
               className="button button--secondary"
               type="button"
-              disabled={!draft.dates.start_date || !draft.dates.end_date || endBeforeStart}
+              disabled={
+                !draft.dates.start_date ||
+                !draft.dates.end_date ||
+                endBeforeStart ||
+                draft.dates.start_date <= localCalendarDate(draft.planning.timeZone)
+              }
               onClick={() => shift(-1)}
             >
               Move 1 day earlier

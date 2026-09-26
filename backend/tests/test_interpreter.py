@@ -95,3 +95,66 @@ def test_out_of_policy_model_output_is_rejected() -> None:
 
     with pytest.raises(InterpretationError):
         interpreter.interpret("Let me borrow ten days")
+
+
+def test_past_months_from_model_are_never_returned() -> None:
+    from datetime import UTC, datetime
+
+    interpreter = ConstraintInterpreter(
+        TestModel(custom_output_args={"months": [{"year": 2025, "month": 4}]}),
+        clock=lambda: datetime(2026, 9, 26, tzinfo=UTC),
+    )
+    with pytest.raises(InterpretationError):
+        interpreter.interpret("next April")
+
+
+def test_current_date_context_and_retry_correct_a_stale_relative_month() -> None:
+    from datetime import UTC, datetime
+
+    from pydantic_ai.messages import ModelResponse, RetryPromptPart, ToolCallPart
+    from pydantic_ai.models.function import FunctionModel
+
+    calls = 0
+
+    def model(messages, info):
+        nonlocal calls
+        calls += 1
+        assert "Current local date: 2026-09-26" in info.instructions
+        assert "Next year: 2027" in info.instructions
+        assert "next April" in info.instructions
+        if calls == 2:
+            assert any(
+                isinstance(part, RetryPromptPart) for message in messages for part in message.parts
+            )
+        return ModelResponse(
+            parts=[
+                ToolCallPart(
+                    info.output_tools[0].name,
+                    {"months": [{"year": 2025 if calls == 1 else 2027, "month": 4}]},
+                )
+            ]
+        )
+
+    interpreter = ConstraintInterpreter(
+        FunctionModel(model), clock=lambda: datetime(2026, 9, 26, tzinfo=UTC)
+    )
+    proposal = interpreter.interpret("I want a 12 day vacation next year in April")
+    assert proposal.months[0].year == 2027
+    assert proposal.months[0].month == 4
+    assert calls == 2
+
+
+def test_request_time_zone_controls_the_reference_month_at_midnight() -> None:
+    from datetime import UTC, datetime
+
+    now = datetime(2026, 9, 30, 22, 30, tzinfo=UTC)
+    interpreter = ConstraintInterpreter(
+        TestModel(custom_output_args={"months": [{"year": 2026, "month": 9}]}),
+        clock=lambda: now,
+    )
+    # September is still current in Los Angeles, but already past in Jerusalem.
+    assert interpreter.interpret(
+        InterpretationInput(text="this month", time_zone="America/Los_Angeles")
+    ).months
+    with pytest.raises(InterpretationError):
+        interpreter.interpret(InterpretationInput(text="this month", time_zone="Asia/Jerusalem"))

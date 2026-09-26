@@ -1,3 +1,4 @@
+import { localCalendarDate } from './calendarDays'
 import { useState } from 'react'
 import { cleanup, fireEvent, render, screen, within } from '@testing-library/react'
 import { afterEach, expect, test, vi } from 'vitest'
@@ -261,7 +262,7 @@ test('end-date selection starts at the chosen start date and allows a one-day br
   fireEvent.change(start, { target: { value: '2027-01-10' } })
   expect(end).toHaveAttribute('min', '2027-01-10')
   fireEvent.change(start, { target: { value: '' } })
-  expect(end).not.toHaveAttribute('min')
+  expect(end).toHaveAttribute('min', localCalendarDate())
 })
 
 test('moving the start past an existing end explains the problem before comparison', () => {

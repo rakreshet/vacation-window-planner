@@ -8,6 +8,7 @@ Phase 0 and Phase 0.5 are delivered on `main`. The [progress tracker](progress.m
 - The offline `python-holidays` adapter supports Israel (`IL`), U.S. federal holidays (`US`), and England & Wales bank holidays (`GB`, provider subdivision `ENG`). The dependency is locked; recorded date cases protect provider-data changes. See [calendar scope](runbook.md#supported-holiday-calendars).
 - Anonymous sessions expire after 30 days by default. Source text older than the configured 30-day default is purged during subsequent searches; this is not a scheduled deletion job. Structured snapshots remain for reproducibility. Settings and bounds are in the [runbook](runbook.md#configuration-safeguards).
 - Google/Gemini or xAI/Grok can supply optional interpretation through Pydantic AI. Search and Compare require neither provider credentials nor model calls.
+- Search interpretation resolves relative months from the server clock in the request's validated IANA time zone. “Next year” means local year + 1; “next April” means the first April strictly after the current month. Explicit past years are not silently rolled forward. Model output is checked and retried once if it contains a past month; the UI also rejects past proposals and past manual searches. Current-month searches remain valid and the calculation engine excludes elapsed dates.
 - Ruff, mypy, ESLint, Prettier, TypeScript, and the production build are part of CI. Desktop is the supported UI surface; mobile certification is deferred.
 
 ## Future choices

@@ -138,11 +138,17 @@ export async function getHealth(signal: AbortSignal): Promise<HealthResponse> {
   return body
 }
 
-export async function interpretText(text: string): Promise<InterpretationProposal> {
+export async function interpretText(
+  text: string,
+  timeZone?: string,
+): Promise<InterpretationProposal> {
   const response = await fetch(`${baseUrl()}/interpret`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ text }),
+    body: JSON.stringify({
+      text,
+      time_zone: timeZone ?? Intl.DateTimeFormat().resolvedOptions().timeZone,
+    }),
   })
   const body: unknown = await response.json()
   if (!response.ok || !isObject(body) || !Array.isArray(body.months)) {

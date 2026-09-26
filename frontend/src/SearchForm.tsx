@@ -1,3 +1,4 @@
+import { localCalendarDate } from './calendarDays'
 import { useEffect, useRef, useState } from 'react'
 import type { FormEvent } from 'react'
 
@@ -53,8 +54,19 @@ export default function SearchForm({
     setInterpretError(null)
     const requestRevision = revision.current
     try {
-      const proposal = await interpretText(sourceText)
+      const proposal = await interpretText(sourceText, planning.timeZone)
       if (!alive.current || requestRevision !== revision.current) return
+      const minimumMonth = localCalendarDate(planning.timeZone).slice(0, 7)
+      if (
+        proposal.months.some(
+          ({ year, month }) => `${year}-${String(month).padStart(2, '0')}` < minimumMonth,
+        )
+      ) {
+        setInterpretError(
+          'The assistant suggested a month in the past. Choose this month or a future month, or try your description again.',
+        )
+        return
+      }
       const next = changePlanningCountry(planning, proposal.country_code ?? planning.country)
       onPlanningChange({
         ...next,
@@ -100,6 +112,10 @@ export default function SearchForm({
     }
     if (!Number.isInteger(balanceDays) || balanceDays < 0 || !Number.isInteger(lengthDays)) {
       setError('Balance and preferred length must be positive whole days')
+      return
+    }
+    if (month < localCalendarDate(planning.timeZone).slice(0, 7)) {
+      setError('That month is in the past. Choose this month or a future month.')
       return
     }
     const [year, selectedMonth] = month.split('-').map(Number)
@@ -207,6 +223,11 @@ export default function SearchForm({
                   id="month"
                   aria-label="Selected month"
                   type="month"
+                  min={localCalendarDate(planning.timeZone).slice(0, 7)}
+                  aria-invalid={
+                    Boolean(month && month < localCalendarDate(planning.timeZone).slice(0, 7)) ||
+                    undefined
+                  }
                   value={month}
                   onChange={(event) => {
                     setMonth(event.target.value)
