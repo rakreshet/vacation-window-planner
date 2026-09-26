@@ -75,7 +75,7 @@ The [Phase 0.5 plan](phase-0.5-plan.md) was approved in [#35](https://github.com
 
 | Task | Deliverable | PR(s) | Status |
 | --- | --- | --- | --- |
-| P05 F01 | Prevent end-date selection before the comparison start; immediate validation for existing invalid dates | — | Planned |
+| P05 F01 | Prevent end-date selection before the comparison start; immediate validation for existing invalid dates | [#46](https://github.com/rakreshet/vacation-window-planner/pull/46) | PR open |
 
 Additional country calendars are deferred until the user verifies the date-selection fix.
 
