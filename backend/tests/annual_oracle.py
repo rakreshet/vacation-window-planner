@@ -1,0 +1,55 @@
+from datetime import date, timedelta
+from itertools import product
+
+from vacation_window_planner.domain.annual import AnnualRequest
+
+
+def exhaustive_plan(
+    request: AnnualRequest,
+    working: set[date],
+    unavailable: set[date],
+    spendable: int,
+    earliest: date,
+    horizon_end: date,
+) -> tuple[tuple[date, date], ...] | None:
+    choices: list[list[tuple[date, date, set[date]]]] = []
+    for slot in request.slots:
+        options: list[tuple[date, date, set[date]]] = []
+        if slot.locked_dates:
+            starts = [slot.locked_dates.start_date]
+            lengths = [(slot.locked_dates.end_date - slot.locked_dates.start_date).days + 1]
+        else:
+            starts = [
+                earliest + timedelta(days=offset)
+                for offset in range((horizon_end - earliest).days + 1)
+            ]
+            lengths = list(range(slot.min_days, slot.max_days + 1))
+        for start in starts:
+            if slot.locked_dates is None and start.month not in request.allowed_start_months:
+                continue
+            for length in lengths:
+                end = start + timedelta(days=length - 1)
+                covered = {start + timedelta(days=offset) for offset in range(length)}
+                if end <= horizon_end and not covered & unavailable:
+                    options.append((start, end, covered))
+        choices.append(options)
+    ranked: list[tuple[int, int, tuple[tuple[date, date, int], ...]]] = []
+    for combination in product(*choices):
+        ordered = sorted(enumerate(combination), key=lambda entry: entry[1][0])
+        valid = True
+        for (_, left), (_, right) in zip(ordered, ordered[1:], strict=False):
+            if (right[0] - left[1]).days - 1 < request.minimum_gap_days:
+                valid = False
+            if not any(left[1] < day < right[0] for day in working):
+                valid = False
+        if not valid:
+            continue
+        covered = set().union(*(item[2] for item in combination))
+        spent = len(covered & working)
+        if spent <= spendable:
+            ranked.append(
+                (-len(covered), spent, tuple((item[0], item[1], index) for index, item in ordered))
+            )
+    if not ranked:
+        return None
+    return tuple((start, end) for start, end, _ in min(ranked)[2])
