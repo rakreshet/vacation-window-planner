@@ -40,7 +40,7 @@ and opened Saved → Annual plans. The historical result retained 12 used, 6 rem
 with the original generated slots still unlocked. Back restored focus to Recalculate
 this plan. [Saved calculation capture](annual-evidence/ap08-saved-1440.png).
 
-The full frontend suite passes 107 tests plus lint, formatting, type checking and
+The full frontend suite passed 107 tests, followed by a passing historical-year regression (108 total) plus lint, formatting, type checking and
 production build. Storage and rendered seams cover stable identity, immutable selected
 plan captures, no server run IDs, duplicate names, changed constraints, strict accounting
 and year-fact validation, corrupt/unsupported/oversized items, capacity, quota, rename,
