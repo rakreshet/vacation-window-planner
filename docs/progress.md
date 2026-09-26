@@ -90,7 +90,7 @@ The [Phase 0.75 plan](phase-0.75-plan.md) defines ten behavior PRs plus this des
 | P075 07 | Complete action snapshots for every visible date | [#57](https://github.com/rakreshet/vacation-window-planner/pull/57) | In review |
 | P075 08 | Same-browser Saved options journey | [#58](https://github.com/rakreshet/vacation-window-planner/pull/58) | In review |
 | P075 09 | Calendar export and leave-request copy | [#59](https://github.com/rakreshet/vacation-window-planner/pull/59) | In review |
-| P075 10 | Full acceptance, accessibility, performance, and operational documentation | — | In review; client imports pending |
+| P075 10 | Full acceptance, accessibility, performance, and operational documentation | [#60](https://github.com/rakreshet/vacation-window-planner/pull/60) | In review; client imports pending |
 
 ## Phase 1
 
