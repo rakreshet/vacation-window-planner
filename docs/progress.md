@@ -69,7 +69,7 @@ The [Phase 0.5 plan](phase-0.5-plan.md) was approved in [#35](https://github.com
 | P05 07 | Nearby improvement discovery | [#42](https://github.com/rakreshet/vacation-window-planner/pull/42) | PR open |
 | P05 08 | Shared frontend context and both entry points | [#43](https://github.com/rakreshet/vacation-window-planner/pull/43) | PR open |
 | P05 09 | Comparison workspace | [#44](https://github.com/rakreshet/vacation-window-planner/pull/44) | PR open |
-| P05 10 | End-to-end experience and hardening | — | Planned |
+| P05 10 | End-to-end experience and hardening | [#45](https://github.com/rakreshet/vacation-window-planner/pull/45) | PR open |
 
 ## Phase 1
 
