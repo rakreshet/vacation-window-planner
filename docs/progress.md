@@ -6,7 +6,7 @@ This is the versioned record of what has been merged and which pull request deli
 
 - Use one task ID per pull request by default, with its tests in the same PR. Start new work from current `main`. If work needs a stack, base each PR on its predecessor and agree how to land it; a merge commit from the verified stack tip into `main` can preserve all commits without rebasing each PR.
 - For Phase 0.5 behavior work, write one failing test at an agreed public seam, implement only that behavior, and repeat within the same PR. Keep the Phase 0 regression suite green at every PR tip.
-- Phase 0.75 carries forward this test-first process at the seams listed in its plan. P075 00 is design-only; implementation remains pending the user's explicit readiness instruction. Keep prior phase regression checks green at each implementation PR.
+- Phase 0.75 carries forward this test-first process at the seams listed in its plan. P075 00 is design-only; the user approved implementation on 2026-09-26 after merging the plan. Keep prior phase regression checks green at each implementation PR.
 - Add the PR link when it opens. Use **Done** only when the task's scope, tests, and definition of done are on `main` with passing checks, including work incorporated through another PR. Task status records delivery; it need not match the original PR's GitHub state. Use **Partial** when a merged PR delivered only part of the task; list the remaining work below.
 - If a PR combines tasks, record the same PR against each task and explain the exception. PR #1 bundled the initial foundation (P0 01–05).
 - Keep documentation-only PRs without an explicit task in the history below. A planned design task such as P05 01 is tracked in its phase table.
@@ -80,8 +80,8 @@ The [Phase 0.75 plan](phase-0.75-plan.md) defines ten behavior PRs plus this des
 
 | Task | Deliverable | PR(s) | Status |
 | --- | --- | --- | --- |
-| P075 00 | Product/backend/frontend plan, UX walkthrough, and PR sequence | [#50](https://github.com/rakreshet/vacation-window-planner/pull/50) | In review |
-| P075 01 | Shared calendar normalization and window assessment | — | Planned |
+| P075 00 | Product/backend/frontend plan, UX walkthrough, and PR sequence | [#50](https://github.com/rakreshet/vacation-window-planner/pull/50) | Done |
+| P075 01 | Shared calendar normalization and window assessment | [#51](https://github.com/rakreshet/vacation-window-planner/pull/51) | In review |
 | P075 02 | Personal context persistence and typed calculation results | — | Planned |
 | P075 03 | Personal calendar controls in Find and Compare | — | Planned |
 | P075 04 | Opportunity policy, scoring, and bounded detection | — | Planned |
