@@ -206,6 +206,11 @@ export default function AnnualInterpretation({
           {review.proposal.assumptions.map((assumption, index) => (
             <p key={index}>{assumption}</p>
           ))}
+          {draft.editingSlotId && (
+            <p role="status">
+              Keep or cancel your unfinished exact dates before applying a proposal.
+            </p>
+          )}
           {review.original !== draft && (
             <p role="status">
               This proposal is outdated. Interpret again to review your current draft.
