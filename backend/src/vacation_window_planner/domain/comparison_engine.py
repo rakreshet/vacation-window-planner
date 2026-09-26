@@ -2,6 +2,11 @@
 
 from datetime import date, timedelta
 
+from vacation_window_planner.domain.assessment import (
+    PreparedCalendar,
+    assess_window,
+    prepare_calendar,
+)
 from vacation_window_planner.domain.comparison import (
     ComparedWindow,
     ComparisonAlternative,
@@ -10,17 +15,23 @@ from vacation_window_planner.domain.comparison import (
     ComparisonWarning,
 )
 from vacation_window_planner.domain.contracts import HolidayCalendar, UserVacationContext
-from vacation_window_planner.domain.evaluation import evaluate_window
 
 
 def describe_window(
-    start: date, end: date, calendar: HolidayCalendar, context: UserVacationContext
+    start: date,
+    end: date,
+    calendar: HolidayCalendar,
+    context: UserVacationContext,
+    *,
+    prepared: PreparedCalendar | None = None,
 ) -> ComparedWindow:
-    evaluation = evaluate_window(start, end, calendar, balance_days=context.balance_days)
+    evaluation = assess_window(
+        start, end, prepared or prepare_calendar(calendar, context, (start, end), start)
+    )
     remaining = evaluation.remaining_balance
-    feasible = remaining >= -context.allowed_negative_days
+    feasible = evaluation.eligible
     warnings: tuple[ComparisonWarning, ...] = ()
-    if not feasible:
+    if remaining < -context.allowed_negative_days:
         warnings = (ComparisonWarning.OVER_BUDGET,)
     elif remaining < 0:
         warnings = (ComparisonWarning.NEGATIVE_BALANCE,)
@@ -32,7 +43,13 @@ def describe_window(
         if (start + timedelta(days=offset)).weekday() in calendar.weekend_days
     )
     return ComparedWindow(
-        **evaluation.model_dump(), weekend_dates=weekends, feasible=feasible, warnings=warnings
+        window=evaluation.window,
+        charged_dates=evaluation.charged_dates,
+        remaining_balance=remaining,
+        assessment=evaluation,
+        weekend_dates=weekends,
+        feasible=feasible,
+        warnings=warnings,
     )
 
 
@@ -47,6 +64,7 @@ def discover_alternatives(
     context: UserVacationContext,
     policy: ComparisonPolicy,
     today: date,
+    prepared: PreparedCalendar | None = None,
 ) -> tuple[tuple[ComparisonAlternative, ...], tuple[ComparisonAlternative, ...]]:
     """Rank literal gains relative to one baseline, grouping identical outcomes."""
     window = baseline.window
@@ -58,13 +76,19 @@ def discover_alternatives(
     candidate_count = ((latest - earliest).days + 1) * (maximum_length - window.total_days + 1)
     if candidate_count > policy.generation_cap:
         raise ComparisonTooBroadError("We could not finish checking nearby dates. Try again later.")
+    prepared = prepared or prepare_calendar(
+        calendar,
+        context,
+        (earliest, latest + timedelta(days=maximum_length - 1)),
+        today,
+    )
     saved: list[ComparisonAlternative] = []
     longer: list[ComparisonAlternative] = []
     for offset in range((latest - earliest).days + 1):
         start = earliest + timedelta(days=offset)
         for length in range(window.total_days, maximum_length + 1):
             end = start + timedelta(days=length - 1)
-            evaluated = describe_window(start, end, calendar, context)
+            evaluated = describe_window(start, end, calendar, context, prepared=prepared)
             savings = window.vacation_days_used - evaluated.window.vacation_days_used
             extra = length - window.total_days
             if not evaluated.feasible or savings < 0 or (extra == 0 and savings == 0):

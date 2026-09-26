@@ -20,6 +20,8 @@ from vacation_window_planner.comparison_workflow import (
     ComparisonRequest,
     InvalidComparisonError,
 )
+from vacation_window_planner.domain.assessment import CalendarCoverageError
+from vacation_window_planner.domain.calculation_context import CalculationContext
 from vacation_window_planner.domain.calendar import UnsupportedCalendarError
 from vacation_window_planner.domain.comparison import ComparisonInput, ComparisonResult
 from vacation_window_planner.domain.comparison_engine import ComparisonTooBroadError
@@ -33,6 +35,7 @@ from vacation_window_planner.domain.contracts import (
 from vacation_window_planner.domain.date_ranges import PastSearchRangeError
 from vacation_window_planner.domain.generator import SearchTooBroadError
 from vacation_window_planner.domain.local_dates import DEFAULT_TIME_ZONE, validate_time_zone
+from vacation_window_planner.domain.personal_calendar import PersonalCalendar
 from vacation_window_planner.interpreter import (
     ConstraintProposal,
     InterpretationError,
@@ -61,6 +64,7 @@ class RecommendationHttpRequest(BaseModel):
 
 
 class RecommendationHttpResponse(BaseModel):
+    calculation_context: CalculationContext | None = None
     search_id: UUID
     recommendations: tuple[Recommendation, ...]
     notice: str | None = None
@@ -77,6 +81,7 @@ class FeedbackHttpResponse(BaseModel):
 
 
 class SessionHttpRequest(BaseModel):
+    personal_calendar: PersonalCalendar = Field(default_factory=PersonalCalendar)
     model_config = ConfigDict(extra="forbid")
 
     time_zone: str = DEFAULT_TIME_ZONE
@@ -173,7 +178,12 @@ def create_app(
     @app.exception_handler(RequestValidationError)
     async def validation_error(_request: Request, error: RequestValidationError) -> JSONResponse:
         fields = [".".join(str(part) for part in item["loc"]) for item in error.errors()]
-        return _error(422, "VALIDATION_ERROR", "Request validation failed", fields)
+        code = (
+            "INVALID_PERSONAL_CALENDAR"
+            if any(field.startswith("body.personal_calendar") for field in fields)
+            else "VALIDATION_ERROR"
+        )
+        return _error(422, code, "Request validation failed", fields)
 
     @app.get("/health")
     def health(response: Response) -> dict[str, str]:
@@ -208,6 +218,7 @@ def create_app(
             context=UserVacationContext(
                 session_id=session.id,
                 time_zone=session.time_zone,
+                personal_calendar=session.personal_calendar,
                 balance_days=session.balance_days,
                 allowed_negative_days=session.allowed_negative_days,
                 country_code=session.country_code,
@@ -224,7 +235,7 @@ def create_app(
             return recommendation_service(request)
         except SearchTooBroadError as error:
             return _error(422, error.code, str(error))
-        except (PastSearchRangeError, UnsupportedCalendarError) as error:
+        except (PastSearchRangeError, UnsupportedCalendarError, CalendarCoverageError) as error:
             return _error(422, "INVALID_SEARCH", str(error))
         except SearchSnapshotPersistenceError:
             return _error(503, "PERSISTENCE_ERROR", "Search could not be saved")
@@ -249,6 +260,7 @@ def create_app(
             country_code=session.country_code,
             weekend_days=session.weekend_days,
             time_zone=session.time_zone,
+            personal_calendar=session.personal_calendar,
         )
         try:
             return comparison_service(ComparisonRequest(context=context, dates=body))
@@ -258,7 +270,7 @@ def create_app(
             return _error(503, "PERSISTENCE_ERROR", "Comparison could not be saved")
         except ComparisonOriginError as error:
             return _error(404, "NOT_FOUND", str(error))
-        except (InvalidComparisonError, UnsupportedCalendarError) as error:
+        except (InvalidComparisonError, UnsupportedCalendarError, CalendarCoverageError) as error:
             return _error(422, "INVALID_COMPARISON", str(error))
 
     @app.post("/interpret", response_model=ConstraintProposal)

@@ -236,3 +236,42 @@ def test_future_date_clipping_uses_the_effective_local_date() -> None:
     ).recommend(request())
     assert result.notice == "Past start dates were excluded; search begins on 2026-09-26."
     assert all(item.window.start_date >= date(2026, 9, 26) for item in result.recommendations)
+
+
+def test_search_respects_unavailable_dates_in_saved_personal_context() -> None:
+    from dataclasses import replace
+
+    from vacation_window_planner.domain.personal_calendar import PersonalCalendar
+
+    original = request()
+    rules = PersonalCalendar.model_validate(
+        {
+            "unavailable_ranges": [
+                {"start_date": "2026-09-25", "end_date": "2026-10-31"},
+            ]
+        }
+    )
+    personalized = replace(
+        original, context=original.context.model_copy(update={"personal_calendar": rules})
+    )
+    result = workflow(FakeSnapshotWriter()).recommend(personalized)
+    assert result.recommendations == ()
+
+
+def test_search_returns_reproducible_sanitized_calculation_context() -> None:
+    writer = FakeSnapshotWriter()
+    result = workflow(writer).recommend(request())
+    captured = result.calculation_context.model_dump(mode="json")
+    assert captured["accounting_version"] == "phase075-v1"
+    assert captured["local_today"] == "2026-09-25"
+    assert captured["calculated_at"] == "2026-09-25T12:00:00Z"
+    assert "session_id" not in captured["planning"]
+    assert captured["planning"]["personal_calendar"]["minimum_notice_days"] == 0
+    assert writer.calls[0]["structured_input"]["calculation_context"] == captured
+
+
+def test_calendar_limit_is_a_typed_input_error() -> None:
+    from vacation_window_planner.domain.assessment import CalendarCoverageError
+
+    with pytest.raises(CalendarCoverageError):
+        workflow(FakeSnapshotWriter()).recommend(request(month=YearMonth(year=9999, month=12)))

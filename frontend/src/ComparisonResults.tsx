@@ -80,11 +80,20 @@ export function WindowSummary({
           </p>
         </div>
       )}
-      {!value.feasible ? (
+      {value.assessment?.eligibility_reasons.map((reason) => (
+        <p key={reason.code} className="form-notice form-notice--error">
+          {reason.code === 'unavailable_dates'
+            ? `Includes unavailable dates: ${reason.dates.map(displayDate).join(', ')}.`
+            : reason.code === 'insufficient_notice'
+              ? `Minimum notice requires starting on or after ${displayDate(reason.earliest_start_date)}.`
+              : 'These dates exceed your vacation-day allowance.'}
+        </p>
+      ))}
+      {!value.assessment && !value.feasible ? (
         <p className="form-notice form-notice--error">
           These dates exceed your vacation-day allowance.
         </p>
-      ) : value.remaining_balance < 0 ? (
+      ) : value.remaining_balance < 0 && !value.warnings.includes('over_budget') ? (
         <p className="comparison-warning">
           Uses {Math.abs(value.remaining_balance)} vacation days beyond your balance, within your
           allowed negative balance.
@@ -102,14 +111,24 @@ export function WindowSummary({
             const date = day.toISOString().slice(0, 10)
             const holiday = value.window.holiday_dates.includes(date)
             const weekend = value.weekend_dates.includes(date)
-            const charged = value.charged_dates.includes(date)
-            const label = holiday
-              ? `Public holiday${weekend ? ' · Weekend' : ''}`
-              : weekend
-                ? 'Weekend'
-                : charged
-                  ? 'Vacation day'
-                  : 'Day off'
+            const detail = value.assessment?.day_details.find((item) => item.date === date)
+            const charged = detail?.charged ?? value.charged_dates.includes(date)
+            const effectiveLabels = {
+              extra_working_day: 'Extra working day · Vacation day',
+              personal_day_off: 'Personal day off',
+              public_holiday: 'Public holiday',
+              weekend: 'Weekend',
+              ordinary_working: 'Vacation day',
+            }
+            const label = detail
+              ? `${effectiveLabels[detail.kind]}${detail.unavailable ? ' · Unavailable' : ''}`
+              : holiday
+                ? `Public holiday${weekend ? ' · Weekend' : ''}`
+                : weekend
+                  ? 'Weekend'
+                  : charged
+                    ? 'Vacation day'
+                    : 'Day off'
             return (
               <li
                 key={date}

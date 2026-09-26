@@ -8,6 +8,8 @@ from uuid import UUID
 from pydantic import Field, StrictInt, model_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
+from vacation_window_planner.domain.assessment import WindowAssessment
+from vacation_window_planner.domain.calculation_context import CalculationContext
 from vacation_window_planner.domain.contracts import DomainValue
 from vacation_window_planner.domain.evaluation import WindowEvaluation
 
@@ -42,6 +44,7 @@ class ComparisonWarning(StrEnum):
 
 
 class ComparedWindow(WindowEvaluation):
+    assessment: WindowAssessment | None = None
     weekend_dates: tuple[date, ...]
     feasible: bool
     warnings: tuple[ComparisonWarning, ...] = ()
@@ -61,6 +64,7 @@ class ComparisonAlternative(DomainValue):
 
 
 class ComparisonResult(DomainValue):
+    calculation_context: CalculationContext | None = None
     comparison_id: UUID
     baseline: ComparedWindow
     save_leave: tuple[ComparisonAlternative, ...] = ()
