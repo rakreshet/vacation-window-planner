@@ -1955,3 +1955,39 @@ summary:focus-visible {
 .calendar-rule-editor p {
   grid-column: 1 / -1;
 }
+
+.opportunities-section {
+  margin: 42px 0;
+  padding: 32px;
+  background: #edf3e9;
+  border: 1px solid #c9d8c7;
+  border-radius: 18px;
+}
+.opportunities-section > p {
+  max-width: 75ch;
+}
+.opportunity-list {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 20px;
+  list-style: none;
+  padding: 0;
+}
+.opportunity-list > li {
+  display: grid;
+  align-content: start;
+  gap: 12px;
+  padding: 24px;
+  background: #fffefa;
+  border: 1px solid #d3dfd0;
+  border-radius: 12px;
+}
+.opportunity-list h3,
+.opportunity-list p {
+  margin: 0;
+}
+.opportunity-list dl > div {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+}

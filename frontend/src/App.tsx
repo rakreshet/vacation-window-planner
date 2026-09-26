@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from 'react'
 
 import { getHealth, submitFeedback } from './api'
 import type { RecommendationResponse, SessionInput, DateRange } from './api'
+import OpportunitySection from './OpportunitySection'
 import RecommendationResults from './RecommendationResults'
 import SearchForm from './SearchForm'
 import ComparisonWorkspace from './ComparisonWorkspace'
@@ -199,6 +200,15 @@ export default function App() {
                 if (sessionToken === null) throw new Error('Session is unavailable')
                 await submitFeedback(sessionToken, results.search_id, rank, value)
               }}
+            />
+          )}
+          {results?.opportunities && (
+            <OpportunitySection
+              result={results.opportunities}
+              stale={searchStale}
+              onCompare={(window) =>
+                openComparison({ start_date: window.start_date, end_date: window.end_date })
+              }
             />
           )}
         </div>
