@@ -70,3 +70,11 @@ file appeared in the local Downloads directory. This is not counted as a success
 download. Google Calendar and a second-client import remain pending, as in Phase 0.75.
 Release acceptance stays conditional until those client checks are recorded; parser
 and download-adapter tests do not replace them.
+
+## Annual form consistency follow-up — September 26, 2026
+
+The balance label's wrapped Required marker put the input 16.5px below the calendar selector. Sharing label/control/help grid rows now gives a measured 0px top-edge difference at 1440px and 1024px; both controls remain 48px high, and the 1024px page has no horizontal overflow.
+
+Compare, annual lock entry and annual reference selection now share `DateRangeFields`. Annual bounds use today in the planning time zone, the selected/proposed year, and the selected start as the end's lower bound. Exact one-day trips remain supported. Compare retains its historical-baseline semantics while sharing ordered-range behavior. Typed/saved past annual dates are rejected before keeping a lock or applying a resolved reference; invalid inputs remain editable.
+
+Live current-year verification: start minimum September 26, 2026 and maximum December 31; choosing October 10 advances the end minimum to October 10. A manually entered October 9 end is invalid with browser `rangeUnderflow` and an inline repair message. Automated red/green cases cover local midnight (Jerusalem already September 27 while UTC is September 26), typed past locks and proposed-year references. Full frontend checks: 125 tests, ESLint, Prettier, TypeScript/Vite pass. Backend behavior is unchanged.

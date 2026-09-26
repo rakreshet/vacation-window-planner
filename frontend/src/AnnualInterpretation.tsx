@@ -1,3 +1,4 @@
+import { annualDateBounds } from './calendarDays'
 import AnnualReferenceFields, { type AnnualReferenceResolution } from './AnnualReferenceFields'
 import { useState } from 'react'
 import { annualSlotSchema } from './annualContracts'
@@ -63,8 +64,13 @@ export default function AnnualInterpretation({
           dates: locked?.dates ?? proposed.locked_dates,
         }
       }) ?? draft.slots.map((slot) => ({ ...slot }))
+    const bounds = annualDateBounds(String(proposal.year ?? draft.year), draft.planning.timeZone)
     const assigned = new Set<string>()
     for (const resolution of Object.values(resolutions)) {
+      if (resolution.start_date < bounds.minimum || resolution.end_date > bounds.maximum) {
+        setError('Choose referenced trip dates today or later within the proposed plan year.')
+        return
+      }
       const slot = slots[Number(resolution.slot)]
       if (
         !slot ||
@@ -195,6 +201,8 @@ export default function AnnualInterpretation({
             <AnnualReferenceFields
               key={index}
               description={reference.description}
+              year={String(review.proposal.year ?? draft.year)}
+              timeZone={draft.planning.timeZone}
               slots={
                 review.proposal.slots?.map((slot) => slot.label) ??
                 draft.slots.map((slot) => `${slot.minimum}–${slot.maximum} days`)

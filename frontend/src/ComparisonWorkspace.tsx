@@ -1,3 +1,4 @@
+import DateRangeFields from './DateRangeFields'
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { compareDates, ComparisonError, createSession } from './api'
 import type { ComparisonResponse, DateRange, SessionInput } from './api'
@@ -136,40 +137,11 @@ export default function ComparisonWorkspace({
         }}
       >
         <fieldset disabled={busy} className="comparison-fields">
-          <div className="field-grid">
-            <div className="field">
-              <label htmlFor={`${idPrefix}start`}>Start date</label>
-              <input
-                id={`${idPrefix}start`}
-                type="date"
-                required
-                value={draft.dates.start_date}
-                onChange={(e) =>
-                  edit({ ...draft, dates: { ...draft.dates, start_date: e.target.value } })
-                }
-              />
-            </div>
-            <div className="field">
-              <label htmlFor={`${idPrefix}end`}>End date</label>
-              <input
-                id={`${idPrefix}end`}
-                type="date"
-                min={draft.dates.start_date || undefined}
-                aria-invalid={endBeforeStart || undefined}
-                aria-describedby={endBeforeStart ? `${idPrefix}end-error` : undefined}
-                required
-                value={draft.dates.end_date}
-                onChange={(e) =>
-                  edit({ ...draft, dates: { ...draft.dates, end_date: e.target.value } })
-                }
-              />
-            </div>
-          </div>
-          {endBeforeStart && (
-            <p id={`${idPrefix}end-error`} role="alert" className="form-notice form-notice--error">
-              Choose an end date on or after the start date.
-            </p>
-          )}
+          <DateRangeFields
+            value={draft.dates}
+            onChange={(dates) => edit({ ...draft, dates })}
+            required
+          />
           <div className="date-shifts">
             <span>Move the whole break · same length</span>
             <button
