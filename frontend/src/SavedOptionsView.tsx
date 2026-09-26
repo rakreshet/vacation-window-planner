@@ -1,3 +1,4 @@
+import ExportActions from './ExportActions'
 import { useEffect, useState } from 'react'
 import type { ActionSnapshot } from './actionSnapshots'
 import {
@@ -134,6 +135,7 @@ function SavedOptionCard({
   return (
     <article className="recommendation-card">
       <h2>{item.name}</h2>
+      <ExportActions snapshot={item.snapshot} title={item.name} />
       <p>
         Historical calculation · {item.snapshot.context.calculated_at} ·{' '}
         {item.snapshot.context.planning.time_zone}
