@@ -113,6 +113,7 @@ export default function SearchForm({
         preferred_length_days: lengthDays,
         result_limit: 5,
         include_opportunities: true,
+        include_action_details: true,
         source_text: sourceText.trim() || null,
       })
       if (!alive.current || requestRevision !== revision.current) return
