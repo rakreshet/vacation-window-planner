@@ -41,6 +41,9 @@ export default function AnnualMixFields({
             value={draft.year}
             onChange={(event) => onChange({ ...draft, year: event.target.value })}
           >
+            {![localYear, localYear + 1, localYear + 2].includes(Number(draft.year)) && (
+              <option value={draft.year}>{draft.year} — choose a supported year</option>
+            )}
             {[localYear, localYear + 1, localYear + 2].map((year) => (
               <option key={year}>{year}</option>
             ))}
