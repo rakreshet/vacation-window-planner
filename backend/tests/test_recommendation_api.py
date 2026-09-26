@@ -280,3 +280,30 @@ def test_feedback_for_another_sessions_recommendation_is_hidden() -> None:
 
     assert response.status_code == 404
     assert response.json()["error"]["code"] == "RECOMMENDATION_NOT_FOUND"
+
+
+def test_opportunity_request_flag_is_explicit_and_unrequested_output_is_absent() -> None:
+    from vacation_window_planner.workflow import RecommendationRequest
+
+    requested: list[bool] = []
+
+    def recommend(request: RecommendationRequest) -> RecommendationResult:
+        requested.append(request.include_opportunities)
+        return RecommendationResult(search_id=SEARCH_ID, recommendations=())
+
+    client = TestClient(
+        create_app(
+            database_probe=lambda: True,
+            session_lookup=lambda *_: active_session(),
+            recommendation_service=recommend,
+        )
+    )
+    for include in [False, True]:
+        response = client.post(
+            "/recommendations",
+            headers={"Authorization": "Bearer token"},
+            json={**body(), "include_opportunities": include},
+        )
+        assert response.status_code == 200
+        assert "opportunities" not in response.json()
+    assert requested == [False, True]

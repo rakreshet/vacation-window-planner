@@ -35,6 +35,7 @@ from vacation_window_planner.domain.contracts import (
 from vacation_window_planner.domain.date_ranges import PastSearchRangeError
 from vacation_window_planner.domain.generator import SearchTooBroadError
 from vacation_window_planner.domain.local_dates import DEFAULT_TIME_ZONE, validate_time_zone
+from vacation_window_planner.domain.opportunities import OpportunityResult
 from vacation_window_planner.domain.personal_calendar import PersonalCalendar
 from vacation_window_planner.interpreter import (
     ConstraintProposal,
@@ -55,6 +56,7 @@ from vacation_window_planner.workflow import (
 
 
 class RecommendationHttpRequest(BaseModel):
+    include_opportunities: bool = False
     model_config = ConfigDict(extra="forbid")
 
     months: tuple[YearMonth, ...] = Field(min_length=1)
@@ -64,6 +66,9 @@ class RecommendationHttpRequest(BaseModel):
 
 
 class RecommendationHttpResponse(BaseModel):
+    opportunities: OpportunityResult | None = Field(
+        default=None, exclude_if=lambda value: value is None
+    )
     calculation_context: CalculationContext | None = None
     search_id: UUID
     recommendations: tuple[Recommendation, ...]
@@ -230,6 +235,7 @@ def create_app(
                 result_limit=body.result_limit,
             ),
             source_text=body.source_text,
+            include_opportunities=body.include_opportunities,
         )
         try:
             return recommendation_service(request)

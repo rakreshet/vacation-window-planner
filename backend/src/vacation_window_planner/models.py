@@ -29,6 +29,7 @@ class AnonymousSession(Base):
 
 
 class SearchRecord(Base):
+    opportunities: Mapped[dict[str, object] | None] = mapped_column(JSON(), nullable=True)
     __tablename__ = "searches"
 
     id: Mapped[UUID] = mapped_column(Uuid(), primary_key=True)

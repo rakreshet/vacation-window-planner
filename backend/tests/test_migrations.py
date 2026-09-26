@@ -34,6 +34,9 @@ def test_upgrade_and_downgrade_session_schema() -> None:
             "personal_calendar",
         } <= {column["name"] for column in inspect(engine).get_columns("anonymous_sessions")}
         assert inspect(engine).has_table("searches")
+        assert "opportunities" in {
+            column["name"] for column in inspect(engine).get_columns("searches")
+        }
         assert inspect(engine).has_table("recommendations")
         assert inspect(engine).has_table("feedback")
         assert inspect(engine).has_table("comparisons")

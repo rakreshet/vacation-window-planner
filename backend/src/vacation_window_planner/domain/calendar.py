@@ -14,6 +14,10 @@ class UnsupportedCalendarError(ValueError):
     """The requested country does not have a configured calendar."""
 
 
+class CalendarResolutionUnavailable(RuntimeError):
+    pass
+
+
 class CalendarProvider(Protocol):
     """Resolve observed dates and an effective workweek for an inclusive range."""
 

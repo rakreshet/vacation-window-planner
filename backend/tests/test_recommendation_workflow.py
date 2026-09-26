@@ -275,3 +275,71 @@ def test_calendar_limit_is_a_typed_input_error() -> None:
 
     with pytest.raises(CalendarCoverageError):
         workflow(FakeSnapshotWriter()).recommend(request(month=YearMonth(year=9999, month=12)))
+
+
+def test_requested_opportunities_preserve_explicit_results_and_are_snapshotted() -> None:
+    from dataclasses import replace
+
+    original = request()
+    baseline = workflow(FakeSnapshotWriter()).recommend(original)
+    writer = FakeSnapshotWriter()
+    result = workflow(writer).recommend(replace(original, include_opportunities=True))
+    assert result.recommendations == baseline.recommendations
+    assert result.opportunities.status == "complete"
+    assert result.opportunities.evaluated_pair_count == 9125
+    assert writer.calls[0]["structured_input"]["opportunities"] == result.opportunities.model_dump(
+        mode="json"
+    )
+    assert writer.calls[0]["structured_input"]["opportunity_calendar"] is not None
+
+
+def test_supported_opportunity_calendar_failure_preserves_search_and_records_null_facts() -> None:
+    from dataclasses import replace
+
+    from vacation_window_planner.domain.calendar import CalendarResolutionUnavailable
+    from vacation_window_planner.domain.contracts import HolidayCalendar
+
+    class UnavailableOpportunityCalendar(FakeCalendarProvider):
+        def resolve(
+            self,
+            country_code: str,
+            start_date: date,
+            end_date: date,
+            weekend_override: frozenset[int] | None = None,
+        ) -> HolidayCalendar:
+            if end_date > date(2027, 1, 1):
+                raise CalendarResolutionUnavailable("calendar unavailable")
+            return super().resolve(country_code, start_date, end_date, weekend_override)
+
+    writer = FakeSnapshotWriter()
+    service = RecommendationWorkflow(
+        calendar_provider=UnavailableOpportunityCalendar(),
+        snapshot_writer=writer,
+        policy=RecommendationPolicy(),
+        clock=lambda: NOW,
+    )
+    result = service.recommend(replace(request(), include_opportunities=True))
+    assert result.recommendations
+    assert result.opportunities.status == "unavailable"
+    assert result.opportunities.items == ()
+    assert writer.calls[0]["structured_input"]["opportunity_calendar"] is None
+
+
+def test_opportunity_cap_preserves_explicit_results_and_resolved_facts() -> None:
+    from dataclasses import replace
+
+    from vacation_window_planner.domain.opportunities import OpportunityPolicy
+
+    writer = FakeSnapshotWriter()
+    service = RecommendationWorkflow(
+        calendar_provider=FakeCalendarProvider(),
+        snapshot_writer=writer,
+        policy=RecommendationPolicy(),
+        clock=lambda: NOW,
+        opportunity_policy=OpportunityPolicy(generation_cap=1),
+    )
+    result = service.recommend(replace(request(), include_opportunities=True))
+    assert result.recommendations
+    assert result.opportunities.status == "too_broad"
+    assert not result.opportunities.items
+    assert writer.calls[0]["structured_input"]["opportunity_calendar"] is not None
