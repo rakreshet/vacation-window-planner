@@ -8,7 +8,7 @@ export default function AnnualYearView({ result, plan }: { result: AnnualRun; pl
     const element = document.getElementById(annualDetailsId(plan, slotId))
     if (element instanceof HTMLDetailsElement) element.open = true
     element?.focus()
-    element?.scrollIntoView?.({ block: 'center', behavior: 'smooth' })
+    element?.scrollIntoView?.({ block: 'center', behavior: 'auto' })
   }
   return (
     <section aria-label={`${result.input.year} year view`} className="annual-year">
@@ -26,6 +26,31 @@ export default function AnnualYearView({ result, plan }: { result: AnnualRun; pl
           return (
             <div className="annual-month" key={month}>
               <h4>{name}</h4>
+              <p className="sr-only">
+                {name}:{' '}
+                {plan.breaks
+                  .filter(
+                    (item) =>
+                      item.window.start_date <= `${result.input.year}-${month}-31` &&
+                      item.window.end_date >= `${result.input.year}-${month}-01`,
+                  )
+                  .map(
+                    (item) =>
+                      `${item.window.start_date} – ${item.window.end_date}${item.locked ? ' (locked)' : ''}`,
+                  )
+                  .join(', ') || 'no planned breaks'}
+                ; unavailable dates:{' '}
+                {days
+                  .filter((day) => day.unavailable)
+                  .map((day) => day.date)
+                  .join(', ') || 'none'}
+                ; past dates:{' '}
+                {days
+                  .filter((day) => day.date < result.calculation_context.local_today)
+                  .map((day) => day.date)
+                  .join(', ') || 'none'}
+                .
+              </p>
               <div className="annual-days" aria-hidden="true">
                 {['M', 'T', 'W', 'T', 'F', 'S', 'S'].map((weekday, index) => (
                   <b key={index}>{weekday}</b>

@@ -74,6 +74,9 @@ test('the year view has twelve months and keyboard-friendly links to break detai
   fireEvent.click(screen.getByRole('button', { name: 'Generate plans' }))
   const year = within(await screen.findByRole('region', { name: '2027 year view' }))
   expect(year.getAllByRole('heading', { level: 4 })).toHaveLength(12)
+  expect(
+    year.getByText('March: 2027-03-05 – 2027-03-08; unavailable dates: none; past dates: none.'),
+  ).toBeInTheDocument()
   fireEvent.click(year.getByRole('button', { name: 'Show Break 2 details' }))
   expect(screen.getByRole('group', { name: 'Break 2 charged dates and day details' })).toHaveFocus()
 })
@@ -192,6 +195,8 @@ test('an unfinished recalculation preserves the previous plan with disabled lock
   expect(screen.getByText('8 vacation days used')).toBeInTheDocument()
   expect(screen.getByRole('button', { name: 'Lock Break 2 dates' })).toBeDisabled()
   expect(screen.getByLabelText('Protected reserve')).toHaveValue(4)
+  fireEvent.change(screen.getByLabelText('Protected reserve'), { target: { value: '5' } })
+  expect(screen.queryByText(/We could not finish checking this request/)).not.toBeInTheDocument()
 })
 
 test('calendar edits announce a changed leave cost even when all dates stay the same', async () => {
