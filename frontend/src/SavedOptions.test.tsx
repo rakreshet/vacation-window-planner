@@ -41,3 +41,46 @@ test('another tab can add an option without resetting existing saved options', a
   fireEvent(window, new Event('storage'))
   expect(screen.getByRole('button', { name: 'Check these dates' })).toBeInTheDocument()
 })
+
+test('saved over-budget dates never claim to be within the negative allowance', async () => {
+  const store = new SavedOptionsStore(new MemoryOptionStorage())
+  const costlyWindow = { ...vacationWindow, vacation_days_used: 3 }
+  const costly = {
+    ...assessment,
+    window: costlyWindow,
+    remaining_balance: -3,
+    eligible: false,
+    charged_dates: ['2027-01-07', '2027-01-08', '2027-01-09'],
+    day_details: assessment.day_details.map((day) => ({
+      ...day,
+      charged: true,
+      kind: 'extra_working_day' as const,
+    })),
+    warnings: ['negative_balance' as const],
+    eligibility_reasons: [{ code: 'over_budget' as const, required_days: 3, permitted_days: 0 }],
+  }
+  store.save(
+    await createActionSnapshot('comparison_baseline', costlyWindow, costly, {
+      ...context,
+      planning: { ...context.planning, balance_days: 0 },
+    }),
+  )
+  render(<SavedOptions store={store} onCheck={() => {}} />)
+  expect(screen.queryByText(/within your allowed negative balance/)).not.toBeInTheDocument()
+})
+
+test('a failed rename retains editable text and Escape cancels it', async () => {
+  const storage = new MemoryOptionStorage()
+  const store = new SavedOptionsStore(storage)
+  store.save(await createActionSnapshot('search', vacationWindow, assessment, context))
+  render(<SavedOptions store={store} onCheck={() => {}} />)
+  vi.spyOn(storage, 'setItem').mockImplementation(() => {
+    throw new Error('Quota exceeded')
+  })
+  fireEvent.click(screen.getByRole('button', { name: 'Rename' }))
+  fireEvent.change(screen.getByLabelText('Option name'), { target: { value: 'Keep my draft' } })
+  fireEvent.click(screen.getByRole('button', { name: 'Save name' }))
+  expect(screen.getByLabelText('Option name')).toHaveValue('Keep my draft')
+  fireEvent.keyDown(screen.getByLabelText('Option name'), { key: 'Escape' })
+  expect(screen.queryByLabelText('Option name')).not.toBeInTheDocument()
+})

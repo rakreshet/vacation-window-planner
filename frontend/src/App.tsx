@@ -27,6 +27,7 @@ export default function App() {
   const [comparisonKey, setComparisonKey] = useState(0)
   const opener = useRef<HTMLElement | null>(null)
 
+  const [savedVisited, setSavedVisited] = useState(false)
   const [savedCheck, setSavedCheck] = useState<ComparisonDraft | null>(null)
   const savedOpener = useRef<HTMLElement | null>(null)
   function checkSaved(snapshot: ActionSnapshot) {
@@ -48,6 +49,9 @@ export default function App() {
   function openComparison(dates?: DateRange) {
     if (savedCheck) {
       setSavedCheck(null)
+      setComparisonDraft(
+        (current) => current ?? { dates: { start_date: '', end_date: '' }, planning },
+      )
       setMode('compare')
       return
     }
@@ -201,6 +205,7 @@ export default function App() {
             aria-pressed={mode === 'saved'}
             onClick={() => {
               setSavedCheck(null)
+              setSavedVisited(true)
               setMode('saved')
             }}
           >
@@ -266,7 +271,11 @@ export default function App() {
             onClose={leaveSavedCheck}
           />
         )}
-        {mode === 'saved' && <SavedOptionsView onCheck={checkSaved} />}
+        {savedVisited && (
+          <div hidden={mode !== 'saved'}>
+            <SavedOptionsView onCheck={checkSaved} />
+          </div>
+        )}
       </main>
 
       <footer className="site-footer">

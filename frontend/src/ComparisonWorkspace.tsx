@@ -218,7 +218,15 @@ export default function ComparisonWorkspace({
             </div>
           </details>
         </fieldset>
-        <button className="button button--primary" type="submit" disabled={busy || endBeforeStart}>
+        <button
+          className="button button--primary"
+          type="submit"
+          disabled={
+            busy ||
+            endBeforeStart ||
+            Boolean(draft.planning.calendarEditor || draft.planning.pendingCountry)
+          }
+        >
           {busy ? 'Comparing dates…' : result ? 'Update comparison' : 'Compare dates'}
         </button>
       </form>

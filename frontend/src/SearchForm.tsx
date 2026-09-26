@@ -51,8 +51,8 @@ export default function SearchForm({
     }
     setBusy('interpret')
     setInterpretError(null)
+    const requestRevision = revision.current
     try {
-      const requestRevision = revision.current
       const proposal = await interpretText(sourceText)
       if (!alive.current || requestRevision !== revision.current) return
       const next = changePlanningCountry(planning, proposal.country_code ?? planning.country)
@@ -73,11 +73,12 @@ export default function SearchForm({
       }
       setMessage('Proposal ready to edit')
     } catch {
+      if (!alive.current || requestRevision !== revision.current) return
       setInterpretError(
         'We could not interpret your description right now. Enter the details below and click Search, or try Interpret again later.',
       )
     } finally {
-      setBusy(null)
+      if (alive.current) setBusy(null)
     }
   }
 
@@ -104,8 +105,8 @@ export default function SearchForm({
     const [year, selectedMonth] = month.split('-').map(Number)
     onDraftChange?.()
     setBusy('search')
+    const requestRevision = revision.current
     try {
-      const requestRevision = revision.current
       const context = planningSession(planning)
       const token = await createSession(context)
       const result = await searchRecommendations(token, {
@@ -120,9 +121,10 @@ export default function SearchForm({
       onResults(result, token, context)
       setMessage('Search complete')
     } catch (caught) {
+      if (!alive.current || requestRevision !== revision.current) return
       setError(caught instanceof Error ? caught.message : 'Search failed')
     } finally {
-      setBusy(null)
+      if (alive.current) setBusy(null)
     }
   }
 
@@ -256,7 +258,9 @@ export default function SearchForm({
                 className="button button--primary"
                 type="submit"
                 aria-label="Search"
-                disabled={busy !== null}
+                disabled={
+                  busy !== null || Boolean(planning.calendarEditor || planning.pendingCountry)
+                }
               >
                 {busy === 'search' ? 'Finding windows…' : 'Find my best windows'}
                 <ArrowIcon />
