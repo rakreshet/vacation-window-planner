@@ -99,8 +99,7 @@ class ConstraintInterpreter:
         )
 
 
-def build_interpreter(settings: Settings) -> ConstraintInterpreter | None:
-    """Select a Pydantic AI provider; no key leaves structured search intact."""
+def configured_model(settings: Settings) -> Model | None:
     model: Model | None
     if settings.interpret_provider == "gemini":
         key = settings.gemini_api_key.get_secret_value() if settings.gemini_api_key else ""
@@ -114,4 +113,9 @@ def build_interpreter(settings: Settings) -> ConstraintInterpreter | None:
             model = XaiModel(settings.xai_model, provider=XaiProvider(api_key=key, timeout=20))
         else:
             model = None
+    return model
+
+
+def build_interpreter(settings: Settings) -> ConstraintInterpreter | None:
+    model = configured_model(settings)
     return ConstraintInterpreter(model) if model is not None else None

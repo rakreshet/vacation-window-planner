@@ -2237,3 +2237,18 @@ summary:focus-visible {
   background: var(--forest);
   color: white;
 }
+
+.annual-interpretation {
+  grid-column: 1 / -1;
+  min-width: 0;
+  padding: 20px;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+}
+
+.annual-interpretation textarea {
+  min-height: 80px;
+  width: 100%;
+  resize: vertical;
+  font: inherit;
+}

@@ -1,3 +1,4 @@
+import AnnualInterpretation from './AnnualInterpretation'
 import { useEffect, useRef, useState } from 'react'
 import type { PlanningDraft } from './planning'
 import { annualInput, newAnnualDraft, type AnnualDraft } from './annualDraft'
@@ -101,6 +102,7 @@ export default function AnnualPlanWorkspace({
       {initialPlanning.allowedNegative !== '0' && (
         <p>Annual planning uses zero allowed negative days.</p>
       )}
+      <AnnualInterpretation draft={draft} onChange={edit} />
       <form
         onSubmit={(event) => {
           event.preventDefault()
