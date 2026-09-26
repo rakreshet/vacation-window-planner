@@ -2039,3 +2039,110 @@ summary:focus-visible {
   line-height: 1.5;
   resize: vertical;
 }
+
+.annual-workspace {
+  display: grid;
+  grid-template-columns: minmax(360px, 1fr) minmax(0, 1.2fr);
+  gap: 24px;
+  align-items: start;
+}
+
+.annual-workspace > .planner-heading,
+.annual-workspace > [role='alert'] {
+  grid-column: 1 / -1;
+}
+
+.annual-workspace > form {
+  min-width: 0;
+}
+
+.annual-workspace > form > fieldset {
+  border: 0;
+  padding: 0;
+  margin: 0;
+  min-width: 0;
+}
+
+.annual-workspace .field-grid {
+  gap: 16px;
+}
+
+.annual-workspace .weekend-field,
+.annual-months {
+  min-width: 0;
+}
+
+.annual-slot,
+.annual-months {
+  padding: 16px;
+  margin: 18px 0;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+}
+
+.annual-slot legend,
+.annual-months legend {
+  font-weight: 700;
+  padding: 0 6px;
+}
+
+.annual-workspace button:not(.button) {
+  padding: 8px 12px;
+  margin: 4px 6px 4px 0;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: var(--paper);
+  color: var(--forest);
+}
+
+.annual-workspace button:disabled {
+  cursor: not-allowed;
+  opacity: 0.55;
+}
+
+.annual-lock-editor {
+  margin-top: 12px;
+}
+
+.annual-workspace .day-picker {
+  flex-wrap: wrap;
+}
+
+.annual-results {
+  min-width: 0;
+  padding: 24px;
+  border-radius: 16px;
+  background: var(--mint-light);
+  border: 1px solid var(--line);
+}
+
+.annual-results > ol {
+  list-style: none;
+  padding: 0;
+}
+
+.annual-results > ol > li {
+  padding: 16px 0;
+  border-top: 1px solid var(--line);
+}
+
+.annual-results h3 {
+  font-size: 1rem;
+}
+
+.annual-totals strong {
+  font-size: 1.5rem;
+  color: var(--forest);
+}
+
+.annual-workspace > form > fieldset > .button {
+  margin-top: 20px;
+  display: block;
+  width: 100%;
+}
+
+@media (max-width: 1100px) {
+  .annual-workspace {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
