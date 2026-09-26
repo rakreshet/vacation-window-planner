@@ -3,6 +3,8 @@
 from datetime import UTC, datetime, timedelta
 from uuid import UUID
 
+from sqlalchemy.exc import SQLAlchemyError
+
 from vacation_window_planner.api import SessionHttpRequest, create_app
 from vacation_window_planner.comparison_workflow import ComparisonRequest, ComparisonWorkflow
 from vacation_window_planner.database import (
@@ -16,6 +18,10 @@ from vacation_window_planner.domain.contracts import FeedbackValue
 from vacation_window_planner.domain.policy import RecommendationPolicy
 from vacation_window_planner.interpreter import build_interpreter
 from vacation_window_planner.logging_config import configure_json_logging
+from vacation_window_planner.repositories.comparisons import (
+    ComparisonPersistenceError,
+    ComparisonSnapshotRepository,
+)
 from vacation_window_planner.repositories.feedback import FeedbackRepository
 from vacation_window_planner.repositories.searches import SearchSnapshotRepository
 from vacation_window_planner.repositories.sessions import (
@@ -92,8 +98,15 @@ def compare(request: ComparisonRequest) -> ComparisonResult:
             policy=comparison_policy,
             clock=utc_now,
             source_search_owned=SearchSnapshotRepository(session).belongs_to_session,
+            snapshot_writer=ComparisonSnapshotRepository(session),
         )
-        return workflow.compare(request)
+        result = workflow.compare(request)
+        try:
+            session.commit()
+        except SQLAlchemyError as error:
+            session.rollback()
+            raise ComparisonPersistenceError("Comparison could not be saved") from error
+        return result
 
 
 def save_feedback(search_id: UUID, rank: int, session_id: UUID, value: FeedbackValue) -> None:

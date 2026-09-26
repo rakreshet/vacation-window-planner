@@ -21,11 +21,17 @@ SESSION = AnonymousSessionState(
 )
 
 
+class MemorySnapshots:
+    def save_completed(self, **values: object) -> None:
+        self.last = values
+
+
 def client() -> TestClient:
     workflow = ComparisonWorkflow(
         calendar_provider=FakeCalendarProvider(),
         policy=ComparisonPolicy(_env_file=None),
         clock=lambda: NOW,
+        snapshot_writer=MemorySnapshots(),
         source_search_owned=lambda search, session: search == UUID(int=2),
     )
     return TestClient(

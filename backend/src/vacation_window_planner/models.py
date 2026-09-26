@@ -65,3 +65,15 @@ class FeedbackRecord(Base):
     value: Mapped[str] = mapped_column(String(20), nullable=False)
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False)
     updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False)
+
+
+class ComparisonRecord(Base):
+    __tablename__ = "comparisons"
+
+    id: Mapped[UUID] = mapped_column(Uuid(), primary_key=True)
+    session_id: Mapped[UUID] = mapped_column(
+        ForeignKey("anonymous_sessions.id", ondelete="CASCADE"), nullable=False, index=True
+    )
+    structured_input: Mapped[dict[str, object]] = mapped_column(JSON(), nullable=False)
+    result: Mapped[dict[str, object]] = mapped_column(JSON(), nullable=False)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False)

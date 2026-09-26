@@ -48,7 +48,9 @@ def test_representative_phase0_journey_and_cap_safety() -> None:
     engine = make_engine(database_url)
     sessions = make_session_factory(engine)
     with engine.begin() as connection:
-        connection.execute(text("TRUNCATE feedback, recommendations, searches, anonymous_sessions"))
+        connection.execute(
+            text("TRUNCATE comparisons, feedback, recommendations, searches, anonymous_sessions")
+        )
 
     def create_session(body: SessionHttpRequest, now: datetime) -> CreatedAnonymousSession:
         with sessions() as session:

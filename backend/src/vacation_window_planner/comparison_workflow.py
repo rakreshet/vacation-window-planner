@@ -3,6 +3,7 @@
 from collections.abc import Callable
 from dataclasses import dataclass
 from datetime import date, datetime, timedelta
+from typing import Protocol
 from uuid import UUID, uuid4
 
 from vacation_window_planner.domain.calendar import CalendarProvider
@@ -14,6 +15,18 @@ from vacation_window_planner.domain.comparison import (
 from vacation_window_planner.domain.comparison_engine import describe_window
 from vacation_window_planner.domain.contracts import UserVacationContext
 from vacation_window_planner.domain.local_dates import local_today
+
+
+class ComparisonSnapshotWriter(Protocol):
+    def save_completed(
+        self,
+        *,
+        comparison_id: UUID,
+        session_id: UUID,
+        structured_input: dict[str, object],
+        result: dict[str, object],
+        created_at: datetime,
+    ) -> None: ...
 
 
 class InvalidComparisonError(ValueError):
@@ -38,15 +51,18 @@ class ComparisonWorkflow:
         policy: ComparisonPolicy,
         clock: Callable[[], datetime],
         source_search_owned: Callable[[UUID, UUID], bool],
+        snapshot_writer: ComparisonSnapshotWriter,
     ) -> None:
         self._calendar_provider = calendar_provider
         self._policy = policy
         self._clock = clock
         self._source_search_owned = source_search_owned
+        self._snapshot_writer = snapshot_writer
 
     def compare(self, request: ComparisonRequest) -> ComparisonResult:
         dates, context = request.dates, request.context
-        today = local_today(self._clock(), context.time_zone)
+        now = self._clock()
+        today = local_today(now, context.time_zone)
         if dates.source_search_id is not None and not self._source_search_owned(
             dates.source_search_id, context.session_id
         ):
@@ -67,8 +83,22 @@ class ComparisonWorkflow:
             dates.end_date,
             weekend_override=context.weekend_days,
         )
-        return ComparisonResult(
+        result = ComparisonResult(
             comparison_id=uuid4(),
             baseline=describe_window(dates.start_date, dates.end_date, calendar, context),
             policy=self._policy,
         )
+        self._snapshot_writer.save_completed(
+            comparison_id=result.comparison_id,
+            session_id=context.session_id,
+            structured_input={
+                "context": context.model_dump(mode="json"),
+                "dates": dates.model_dump(mode="json"),
+                "calendar": calendar.model_dump(mode="json"),
+                "policy": self._policy.model_dump(mode="json"),
+                "local_today": today.isoformat(),
+            },
+            result=result.model_dump(mode="json"),
+            created_at=now,
+        )
+        return result

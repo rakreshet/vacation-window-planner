@@ -37,6 +37,7 @@ from vacation_window_planner.interpreter import (
     InterpretationError,
     InterpretationInput,
 )
+from vacation_window_planner.repositories.comparisons import ComparisonPersistenceError
 from vacation_window_planner.repositories.feedback import FeedbackAuthorizationError
 from vacation_window_planner.repositories.searches import SearchSnapshotPersistenceError
 from vacation_window_planner.repositories.sessions import (
@@ -250,6 +251,8 @@ def create_app(
         )
         try:
             return comparison_service(ComparisonRequest(context=context, dates=body))
+        except ComparisonPersistenceError:
+            return _error(503, "PERSISTENCE_ERROR", "Comparison could not be saved")
         except ComparisonOriginError as error:
             return _error(404, "NOT_FOUND", str(error))
         except (InvalidComparisonError, UnsupportedCalendarError) as error:
