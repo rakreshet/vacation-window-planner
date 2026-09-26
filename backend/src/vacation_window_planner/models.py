@@ -81,3 +81,15 @@ class ComparisonRecord(Base):
     structured_input: Mapped[dict[str, object]] = mapped_column(JSON(), nullable=False)
     result: Mapped[dict[str, object]] = mapped_column(JSON(), nullable=False)
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False)
+
+
+class AnnualPlanRun(Base):
+    __tablename__ = "annual_plan_runs"
+
+    id: Mapped[UUID] = mapped_column(Uuid(), primary_key=True)
+    session_id: Mapped[UUID] = mapped_column(
+        ForeignKey("anonymous_sessions.id", ondelete="CASCADE"), nullable=False, index=True
+    )
+    structured_input: Mapped[dict[str, object]] = mapped_column(JSON(), nullable=False)
+    result: Mapped[dict[str, object]] = mapped_column(JSON(), nullable=False)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False)
