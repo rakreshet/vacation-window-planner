@@ -66,7 +66,7 @@ The [Phase 0.5 plan](phase-0.5-plan.md) is proposed in [#35](https://github.com/
 | P05 04 | Comparison policy and contracts | [#39](https://github.com/rakreshet/vacation-window-planner/pull/39) | PR open |
 | P05 05 | Exact baseline service and API | [#40](https://github.com/rakreshet/vacation-window-planner/pull/40) | PR open |
 | P05 06 | Comparison snapshots | [#41](https://github.com/rakreshet/vacation-window-planner/pull/41) | PR open |
-| P05 07 | Nearby improvement discovery | — | Planned |
+| P05 07 | Nearby improvement discovery | [#42](https://github.com/rakreshet/vacation-window-planner/pull/42) | PR open |
 | P05 08 | Shared frontend context and both entry points | — | Planned |
 | P05 09 | Comparison workspace | — | Planned |
 | P05 10 | End-to-end experience and hardening | — | Planned |
