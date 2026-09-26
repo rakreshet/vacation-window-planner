@@ -162,3 +162,51 @@ test.each(['IL', 'US', 'GB'])(
     expect(requests.filter((item) => item.url.endsWith('/recommendations'))).toHaveLength(1)
   },
 )
+
+test('an opportunity opens Compare with the confirmed Search context and origin', async () => {
+  const comparisons: unknown[] = []
+  vi.stubGlobal(
+    'fetch',
+    vi.fn(async (input: RequestInfo | URL, init?: RequestInit) => {
+      const url = String(input)
+      if (url.endsWith('/comparisons')) comparisons.push(JSON.parse(String(init?.body)))
+      const data = url.endsWith('/health')
+        ? { status: 'ok', database: 'connected' }
+        : url.endsWith('/sessions')
+          ? { token: 'token' }
+          : url.endsWith('/recommendations')
+            ? {
+                search_id: 'search-id',
+                recommendations: [],
+                opportunities: {
+                  status: 'complete',
+                  items: [
+                    {
+                      opportunity_id: 'opportunity',
+                      window: comparison.baseline.window,
+                      score: 64,
+                      score_breakdown: {},
+                      explanation: 'Outside your selected months.',
+                      criteria_differences: [],
+                    },
+                  ],
+                },
+              }
+            : comparison
+      return { ok: true, json: async () => data }
+    }),
+  )
+  render(<App />)
+  await screen.findByText('Service ready')
+  fireEvent.change(screen.getByLabelText('Vacation balance'), { target: { value: '8' } })
+  fireEvent.change(screen.getByLabelText('Selected month'), { target: { value: '2027-02' } })
+  fireEvent.change(screen.getByLabelText('Preferred length in days'), { target: { value: '5' } })
+  fireEvent.click(screen.getByRole('button', { name: 'Search' }))
+  fireEvent.click(await screen.findByRole('button', { name: 'Compare opportunity Jan 3, 2027' }))
+  await screen.findByRole('region', { name: 'Your dates' })
+  expect(comparisons[0]).toEqual({
+    start_date: '2027-01-03',
+    end_date: '2027-01-07',
+    source_search_id: 'search-id',
+  })
+})
