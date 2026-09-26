@@ -1,11 +1,12 @@
 # Delivery progress and pull request map
 
-This is the versioned record of what has been merged and which pull request delivered each task. The [Phase 0 and Phase 1 implementation task plan](implementation-plan.md) and [Phase 0.5 comparison plan](phase-0.5-plan.md) define each task's scope, tests, and definition of done; this file tracks delivery, not a second copy of the plans.
+This is the versioned record of what has been merged and which pull request delivered each task. The [Phase 0 and Phase 1 implementation task plan](implementation-plan.md), [Phase 0.5 comparison plan](phase-0.5-plan.md), and [Phase 0.75 plan](phase-0.75-plan.md) define each task's scope, tests, and definition of done; this file tracks delivery, not a second copy of the plans.
 
 ## How to use this tracker
 
 - Use one task ID per pull request by default, with its tests in the same PR. Start new work from current `main`. If work needs a stack, base each PR on its predecessor and agree how to land it; a merge commit from the verified stack tip into `main` can preserve all commits without rebasing each PR.
 - For Phase 0.5 behavior work, write one failing test at an agreed public seam, implement only that behavior, and repeat within the same PR. Keep the Phase 0 regression suite green at every PR tip.
+- Phase 0.75 carries forward this test-first process at the seams listed in its plan. P075 00 is design-only; implementation remains pending the user's explicit readiness instruction. Keep prior phase regression checks green at each implementation PR.
 - Add the PR link when it opens. Use **Done** only when the task's scope, tests, and definition of done are on `main` with passing checks, including work incorporated through another PR. Task status records delivery; it need not match the original PR's GitHub state. Use **Partial** when a merged PR delivered only part of the task; list the remaining work below.
 - If a PR combines tasks, record the same PR against each task and explain the exception. PR #1 bundled the initial foundation (P0 01–05).
 - Keep documentation-only PRs without an explicit task in the history below. A planned design task such as P05 01 is tracked in its phase table.
@@ -17,7 +18,7 @@ Phase 0, Phase 0.5, and both Phase 0.5 follow-ups are complete on `main`. [#47](
 
 GitHub marked #4 as merged indirectly. PRs #5–#46 were closed after verifying that every head commit was already an ancestor of `main`; their **Closed** state does not mean their work was discarded. The tables retain the original implementation PRs for traceability. [#48](https://github.com/rakreshet/vacation-window-planner/pull/48) was then rebased onto `main`, passed [CI](https://github.com/rakreshet/vacation-window-planner/actions/runs/36233553175), and merged separately as `7e9d4cd` to ignore IntelliJ project files. No PR from #1–#48 remains open.
 
-Phase 1 remains planned. Desktop Search and Compare run without an interpretation provider key; the optional Interpret action requires its selected provider's key.
+Phase 0.75 is the next proposed release and Phase 1 remains planned after it. Desktop Search and Compare run without an interpretation provider key; the optional Interpret action requires its selected provider's key. The documentation refresh [#49](https://github.com/rakreshet/vacation-window-planner/pull/49) is merged as `b203ea6`.
 
 ## Phase 0
 
@@ -73,22 +74,40 @@ The [Phase 0.5 plan](phase-0.5-plan.md), its ten implementation tasks, and follo
 | P05 F01 | Prevent end-date selection before the comparison start; immediate validation for existing invalid dates | [#46](https://github.com/rakreshet/vacation-window-planner/pull/46) | Done |
 | P05 F02 | Add U.S. federal and England & Wales bank holiday calendars to Search and comparison; preserve custom weekends | [#47](https://github.com/rakreshet/vacation-window-planner/pull/47) | Done |
 
-## Phase 1
+## Phase 0.75 — personal calendars, opportunities, and saved options
 
-The rows follow the [recommended execution order](implementation-plan.md#recommended-execution-order): proactive opportunities first, then travel integration.
+The [Phase 0.75 plan](phase-0.75-plan.md) defines ten behavior PRs plus this design PR. The [UX walkthrough](phase-0.75-ux.md) records the inspectable flows and fixed fixtures. No implementation task has started; In review does not mean delivered.
 
 | Task | Deliverable | PR(s) | Status |
 | --- | --- | --- | --- |
-| P1 09 | Opportunity policy and contracts | — | Planned |
-| P1 10 | Pure opportunity scoring | — | Planned |
-| P1 11 | Proactive detection and thresholding | — | Planned |
-| P1 12 | Grounded opportunity reasons | — | Planned |
-| P1 13 | Separate opportunities section | — | Planned |
+| P075 00 | Product/backend/frontend plan, UX walkthrough, and PR sequence | [#50](https://github.com/rakreshet/vacation-window-planner/pull/50) | In review |
+| P075 01 | Shared calendar normalization and window assessment | — | Planned |
+| P075 02 | Personal context persistence and typed calculation results | — | Planned |
+| P075 03 | Personal calendar controls in Find and Compare | — | Planned |
+| P075 04 | Opportunity policy, scoring, and bounded detection | — | Planned |
+| P075 05 | Opportunity workflow and atomic snapshots | — | Planned |
+| P075 06 | Separate opportunities section and comparison entry | — | Planned |
+| P075 07 | Complete action snapshots for every visible date | — | Planned |
+| P075 08 | Same-browser Saved options journey | — | Planned |
+| P075 09 | Calendar export and leave-request copy | — | Planned |
+| P075 10 | Full acceptance, accessibility, performance, and operational documentation | — | Planned |
+
+## Phase 1
+
+Opportunity tasks have moved to Phase 0.75; Moved is a scope change, not completion. The remaining travel rows follow the [recommended execution order](implementation-plan.md#recommended-execution-order). P1 14 retains the future travel-adapter regression gate.
+
+| Task | Deliverable | PR(s) | Status |
+| --- | --- | --- | --- |
+| P1 09 | Opportunity policy and contracts → P075 04 | — | Moved |
+| P1 10 | Pure opportunity scoring → P075 04 | — | Moved |
+| P1 11 | Proactive detection and thresholding → P075 04 | — | Moved |
+| P1 12 | Grounded opportunity reasons → P075 04 | — | Moved |
+| P1 13 | Separate opportunities section → P075 06 | — | Moved |
 | P1 01 | Phase 1 travel contracts | — | Planned |
 | P1 02 | Bounded travel candidate selection | — | Planned |
 | P1 03 | Flight search interface and fake adapter | — | Planned |
 | P1 04 | Destination matching | — | Planned |
-| P1 14 | Opportunity workflow independence | — | Planned |
+| P1 14 | Travel-adapter independence regression; base workflow moves to P075 05/10 | — | Planned |
 | P1 05 | Live flight adapter | — | Planned |
 | P1 06 | Travel enrichment and final scoring | — | Planned |
 | P1 07 | Phase 1 travel results | — | Planned |
@@ -103,4 +122,4 @@ The rows follow the [recommended execution order](implementation-plan.md#recomme
 | [#4](https://github.com/rakreshet/vacation-window-planner/pull/4) | Merged indirectly via #47 | Recorded search-completeness and interpretation-confirmation rules. |
 | [#35](https://github.com/rakreshet/vacation-window-planner/pull/35) | Closed; delivered via #47 | Defined the approved Phase 0.5 comparison plan, ten tasks, test-first delivery rules, and progress table. |
 | [#48](https://github.com/rakreshet/vacation-window-planner/pull/48) | Merged | Ignore IntelliJ IDEA project directories and module files. |
-| [#49](https://github.com/rakreshet/vacation-window-planner/pull/49) | Open | Refresh delivery tables and product, architecture, operational, and local-run documentation after the stack merge. |
+| [#49](https://github.com/rakreshet/vacation-window-planner/pull/49) | Merged | Refresh delivery tables and product, architecture, operational, and local-run documentation after the stack merge. |

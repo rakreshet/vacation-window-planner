@@ -2,15 +2,17 @@
 
 Phase 0 validates date window recommendations before travel enrichment
 
-This document defines the first product release, the decisions already made, and the acceptance criteria for a reliable vacation window recommendation experience. Phase 0 recommends when to take vacation. The delivered Phase 0.5 adds exact-date comparison and nearby improvements. Phase 1 will add destinations, live flights, and proactive vacation opportunities without changing the core recommendation model.
+This document defines the first product release, the decisions already made, and the acceptance criteria for a reliable vacation window recommendation experience. Phase 0 recommends when to take vacation. The delivered Phase 0.5 adds exact-date comparison and nearby improvements. The proposed Phase 0.75 adds personal calendars, proactive opportunities, and same-browser saved options with export/copy. Phase 1 retains destinations and live flights.
 
 | Field | Value |
 | --- | --- |
-| **Status** | Phase 0 and Phase 0.5 delivered; Phase 1 planned |
+| **Status** | Phase 0 and Phase 0.5 delivered; Phase 0.75 design in review; Phase 1 planned |
 | **Prepared for** | POC product and engineering implementation |
 | **Version date** | 2026-09-26 |
 
 Delivery and original PR links are recorded in the [progress tracker](progress.md). Phase 0.5 requirements and task details are maintained in the [comparison plan](phase-0.5-plan.md), with completed validation in the [acceptance record](phase-0.5-acceptance.md).
+
+The [Phase 0.75 plan](phase-0.75-plan.md) and [UX walkthrough](phase-0.75-ux.md) define the next proposed scope and exact rules, contracts, scoring, PR sequence, and acceptance gates. They supersede the placement of proactive opportunities in Phase 1. Implementation awaits the user's explicit readiness instruction.
 
 ## Product decision
 
@@ -26,7 +28,7 @@ Employees can see balances and calendars in HR tools, but they still have to dis
 - Make the ranking understandable through a 0 to 100 score and a short explanation for every result.
 - Preserve meaningful trade offs while avoiding a list crowded with near duplicate windows.
 - Use anonymous sessions so the user can refine inputs during one session without creating an account.
-- Create a stable foundation for independent phase 1 travel enrichment and proactive opportunity detection.
+- Create a stable foundation for independent Phase 0.75 opportunities and Phase 1 travel enrichment.
 
 ## Phase plan
 
@@ -34,7 +36,8 @@ Employees can see balances and calendars in HR tools, but they still have to dis
 | --- | --- | --- |
 | Phase 0 | Vacation window generation, ranking, explanations, anonymous session state, persisted search snapshots, simple feedback | Destinations, flight search, booking, user accounts, accrual forecasting |
 | Phase 0.5 | Exact-date comparison from manual dates or Search, nearby savings and longer breaks, local-date context, immutable comparison snapshots | Broad proactive scans, destinations, flights, mobile certification |
-| Phase 1 | Destination matching and live flight enrichment (multi passenger, one origin, economy default); separate proactive future vacation opportunities | Flight booking and payment; LLM based opportunity decisions |
+| Phase 0.75 (design) | Manual personal calendars, separate opportunities after explicit Search, same-browser saved options, ICS export, copyable leave-request details | Accounts, cross-device recovery, connected calendars, notifications, annual allocation, accrual, travel enrichment |
+| Phase 1 | Destination matching and live flight enrichment (multi passenger, one origin, economy default); preserve opportunity independence | Flight booking and payment; LLM based opportunity decisions |
 
 ## Phase 0 user experience
 
@@ -103,8 +106,8 @@ Employees can see balances and calendars in HR tools, but they still have to dis
 | PR 10 | The user shall be able to submit thumbs up or thumbs down feedback on a recommendation. |
 | PR 11 | The product shall return a clear zero result state for infeasible searches. |
 | PR 12 | Phase 0 contracts shall permit optional destination and flight enrichment in phase 1 without replacing the core window model. |
-| PR 13 | In phase 1, the product may show exceptional future vacation windows outside the explicit search criteria in a separate Opportunities worth considering section; explicit search results remain unchanged. |
-| PR 14 | A phase 1 opportunity score shall deterministically rank candidates using PTO efficiency (total consecutive days off divided by vacation days consumed), total vacation length, and a smaller low-PTO-consumption factor. |
+| PR 13 | In Phase 0.75, the product may show exceptional future vacation windows outside the explicit search criteria in a separate Opportunities worth considering section; explicit search results remain unchanged for the same submitted context. |
+| PR 14 | A Phase 0.75 opportunity score shall deterministically rank candidates using PTO efficiency (total consecutive days off divided by vacation days consumed), total vacation length, and a smaller low-PTO-consumption factor. |
 | PR 15 | Opportunity-score weights shall be configurable; initial tunable defaults are 50% efficiency, 35% total length, and 15% low PTO consumption, not scientifically proven constants. |
 | PR 16 | A separately configurable opportunity threshold shall decide whether a scored candidate is exceptional enough to surface; scoring and threshold decisions shall not use an LLM or depend on a flight provider. |
 | PR 17 | Every surfaced opportunity shall differ meaningfully from the current search, briefly explain its computed appeal and criteria difference, and remain eligible without destination or flight details. |
@@ -140,9 +143,9 @@ The primary validation question is whether a user would seriously consider reque
 | Search completeness | A cap-hit fixture returns no ranked results and a clear narrowing instruction; it never presents a partial top five |
 | Interpretation confirmation | Text interpretation populates editable proposed fields without running a search; only Search submits confirmed fields, and structured-only search works when Gemini is unavailable |
 
-### Phase 1 proactive opportunity acceptance
+### Phase 0.75 proactive opportunity acceptance
 
-This is an additive phase 1 experience, not a change to the phase 0 optimizer. A bounded future search may look beyond the user's selected months or preferred length, while still honoring the effective calendar, balance and allowed-negative policy, and future-date limits. Opportunity detection is independent of destination matching and flight availability.
+This planned additive experience now belongs to Phase 0.75. A bounded future search may look beyond the user's selected months or preferred length, while honoring the effective personal calendar, unavailable dates, notice, balance, allowed-negative policy, and future-date limits. Opportunity detection is independent of destination matching and flight availability. The [Phase 0.75 plan](phase-0.75-plan.md#proactive-opportunities) supplies the authoritative bounds, exact formula, complete-scan rules, and response contract.
 
 | **Area** | **Acceptance evidence** |
 | --- | --- |
@@ -152,6 +155,8 @@ This is an additive phase 1 experience, not a change to the phase 0 optimizer. A
 | Configurable gate | Tests prove weight changes can change ranking, while changing only the threshold changes inclusion but not candidate scores |
 | Grounded explanation | Each item names a true reason such as high PTO leverage or a long break for few PTO days and states any relevant departure from the explicit search |
 | Provider independence | The same opportunities qualify with fake, unavailable, or absent flight adapters; optional travel enrichment cannot gate detection |
+
+Phase 0.75 proves operation with no travel provider or interpretation calls; P1 14 later checks fake/failing flight adapters when that seam exists. Personal-calendar correctness, save/export, state integrity, and UX acceptance are defined in the [Phase 0.75 completion gate](phase-0.75-plan.md#acceptance-and-completion-gate).
 
 ## Decision record and superseded assumptions
 

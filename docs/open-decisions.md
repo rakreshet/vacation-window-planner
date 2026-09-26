@@ -12,6 +12,7 @@ Phase 0 and Phase 0.5 are delivered on `main`. The [progress tracker](progress.m
 
 ## Future choices
 
-- Choose a live flight provider and its cost/cache policy for Phase 1; travel integration and broad proactive opportunities remain planned.
+- Review the [Phase 0.75 plan](phase-0.75-plan.md) and [UX](phase-0.75-ux.md) before implementation. The user confirmed manual personal calendar controls, opportunities after explicit Search, and same-browser saved options with export/copy and no accounts. Notice semantics, scan/scoring defaults, and storage bounds are concrete proposed defaults in that plan, not delivered behavior.
+- Phase 0.75 takes over proactive discovery and its base workflow from P1 09–14; Phase 1 retains the later travel-adapter independence check. Choose a live flight provider and its cost/cache policy for Phase 1. No travel provider is needed for Phase 0.75.
 - Before an external pilot, review retention settings, access controls, and request-rate limits for that deployment.
 - Additional holiday regions and mobile support need explicit scope and acceptance checks. Current `GB` sessions must continue to mean England & Wales.
