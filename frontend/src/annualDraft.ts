@@ -19,14 +19,16 @@ export type AnnualDraft = {
 }
 
 export function newAnnualDraft(planning: PlanningDraft): AnnualDraft {
+  const timeZone =
+    planning.timeZone || Intl.DateTimeFormat().resolvedOptions().timeZone || 'Asia/Jerusalem'
   const localYear = Number(
     new Intl.DateTimeFormat('en', {
       year: 'numeric',
-      timeZone: planning.timeZone,
+      timeZone,
     }).format(new Date()),
   )
   return {
-    planning: structuredClone({ ...planning, allowedNegative: '0' }),
+    planning: structuredClone({ ...planning, timeZone, allowedNegative: '0' }),
     year: String(localYear + 1),
     reserve: '0',
     gap: '7',

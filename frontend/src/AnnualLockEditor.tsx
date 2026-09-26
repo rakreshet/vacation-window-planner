@@ -1,3 +1,4 @@
+import { inclusiveCalendarDays } from './calendarDays'
 import { useState } from 'react'
 import { browserSavedOptions } from './browserSavedOptions'
 import type { SavedOption } from './savedOptions'
@@ -29,7 +30,7 @@ export default function AnnualLockEditor({
     setMismatch(false)
   }
   function keep(convert = false) {
-    const length = (Date.parse(dates.end_date) - Date.parse(dates.start_date)) / 86400000 + 1
+    const length = inclusiveCalendarDays(dates.start_date, dates.end_date)
     if (
       !Number.isInteger(length) ||
       length < 1 ||

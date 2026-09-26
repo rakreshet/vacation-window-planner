@@ -10,6 +10,6 @@ The layout was inspected at 1,440×1,000 and 1,024×900. At 1,024 px, the sectio
 
 ![AP 05 worked fixture at 1440 px](annual-evidence/ap05-worked-1440.png)
 
-Automated rendered journeys cover independent task draft, explicit generation, slot order/month/gap edits, manual range conversion, explicit saved-date selection without copying its calendar, incomplete lock-editor protection, conflict/cap/reduction states, and rejection of inconsistent accounting. The first full frontend run passed 84 tests; a subsequent lock-editor regression passed with the focused annual suite (10 tests). ESLint, Prettier, TypeScript and production build passed before that additional covered fix; final PR checks are recorded in its description.
+Automated rendered journeys cover independent task draft, explicit generation, slot order/month/gap edits, manual range conversion, explicit saved-date selection without copying its calendar, incomplete lock-editor protection, conflict/cap/reduction states, and rejection of inconsistent accounting. The final AP 05 frontend run passed all 87 tests, including 12 annual rendered tests. ESLint, Prettier, TypeScript and the production build passed. Review regressions cover removing an open slot editor and inconsistent slot/fulfillment metadata; clocks and time zones are fixed in the annual tests.
 
 Year visualization, richer comparison/recalculation, interpretation, saving whole plans and export belong to AP 06–09. This is milestone evidence, not AP 10 release acceptance or calendar-client import verification.
