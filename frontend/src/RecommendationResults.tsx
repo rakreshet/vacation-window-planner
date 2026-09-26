@@ -1,3 +1,4 @@
+import WindowActions from './WindowActions'
 import { useState } from 'react'
 
 import type { FeedbackValue, Recommendation, RecommendationResponse } from './api'
@@ -193,9 +194,20 @@ export default function RecommendationResults({
                         {matchingCount} matching date options · same score and vacation-day cost
                       </summary>
                       <ul>
-                        {alternatives.map((window) => (
+                        {alternatives.map((window, index) => (
                           <li key={`${window.start_date}-${window.end_date}`}>
                             {dateWindow(window)}
+                            {result.calculation_context &&
+                              recommendation.alternative_assessments?.[index] && (
+                                <WindowActions
+                                  source="search"
+                                  window={window}
+                                  assessment={recommendation.alternative_assessments[index]}
+                                  context={result.calculation_context}
+                                  stale={stale}
+                                  metadata={{ explanation: recommendation.explanation }}
+                                />
+                              )}
                             {onCompare && (
                               <button
                                 className="button button--secondary"
@@ -250,6 +262,16 @@ export default function RecommendationResults({
                     >
                       Compare nearby dates →
                     </button>
+                  )}
+                  {result.calculation_context && recommendation.assessment && (
+                    <WindowActions
+                      source="search"
+                      window={recommendation.window}
+                      assessment={recommendation.assessment}
+                      context={result.calculation_context}
+                      stale={stale}
+                      metadata={{ explanation: recommendation.explanation }}
+                    />
                   )}
                   {onFeedback && (
                     <div

@@ -14,10 +14,12 @@ export default function ComparisonWorkspace({
   onDraftChange,
   origin,
   onClose,
+  idPrefix = 'compare-',
 }: {
   draft: ComparisonDraft
   onDraftChange: (value: ComparisonDraft) => void
   origin?: ComparisonOrigin
+  idPrefix?: string
   onClose: () => void
 }) {
   const [result, setResult] = useState<ComparisonResponse | null>(null)
@@ -81,7 +83,7 @@ export default function ComparisonWorkspace({
 
   useEffect(() => {
     alive.current = true
-    const heading = document.getElementById('comparison-heading')
+    const heading = document.getElementById(`${idPrefix}heading`)
     heading?.focus({ preventScroll: true })
     heading?.scrollIntoView?.({ block: 'start' })
     if (origin && !started.current) {
@@ -91,7 +93,7 @@ export default function ComparisonWorkspace({
     return () => {
       alive.current = false
     }
-  }, [origin, run])
+  }, [origin, run, idPrefix])
 
   function edit(next: ComparisonDraft) {
     onDraftChange(next)
@@ -111,14 +113,14 @@ export default function ComparisonWorkspace({
   }
 
   return (
-    <section className="comparison-workspace planner-card" aria-labelledby="comparison-heading">
+    <section className="comparison-workspace planner-card" aria-labelledby={`${idPrefix}heading`}>
       <button className="button button--secondary" type="button" onClick={onClose}>
         ← Back to my results
       </button>
       <header className="planner-heading">
         <div>
           <p className="section-kicker">A little flexibility, more possibility</p>
-          <h1 id="comparison-heading" tabIndex={-1}>
+          <h1 id={`${idPrefix}heading`} tabIndex={-1}>
             Could nearby dates work better?
           </h1>
         </div>
@@ -136,9 +138,9 @@ export default function ComparisonWorkspace({
         <fieldset disabled={busy} className="comparison-fields">
           <div className="field-grid">
             <div className="field">
-              <label htmlFor="compare-start">Start date</label>
+              <label htmlFor={`${idPrefix}start`}>Start date</label>
               <input
-                id="compare-start"
+                id={`${idPrefix}start`}
                 type="date"
                 required
                 value={draft.dates.start_date}
@@ -148,13 +150,13 @@ export default function ComparisonWorkspace({
               />
             </div>
             <div className="field">
-              <label htmlFor="compare-end">End date</label>
+              <label htmlFor={`${idPrefix}end`}>End date</label>
               <input
-                id="compare-end"
+                id={`${idPrefix}end`}
                 type="date"
                 min={draft.dates.start_date || undefined}
                 aria-invalid={endBeforeStart || undefined}
-                aria-describedby={endBeforeStart ? 'compare-end-error' : undefined}
+                aria-describedby={endBeforeStart ? `${idPrefix}end-error` : undefined}
                 required
                 value={draft.dates.end_date}
                 onChange={(e) =>
@@ -164,7 +166,7 @@ export default function ComparisonWorkspace({
             </div>
           </div>
           {endBeforeStart && (
-            <p id="compare-end-error" role="alert" className="form-notice form-notice--error">
+            <p id={`${idPrefix}end-error`} role="alert" className="form-notice form-notice--error">
               Choose an end date on or after the start date.
             </p>
           )}
@@ -209,7 +211,7 @@ export default function ComparisonWorkspace({
             </summary>
             <div className="field-grid">
               <PlanningFields
-                prefix="compare-"
+                prefix={idPrefix}
                 value={draft.planning}
                 onChange={(planning) => edit({ ...draft, planning })}
               />
