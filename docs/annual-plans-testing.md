@@ -1,6 +1,6 @@
 # Annual planning test strategy
 
-**Status:** Proposed public seams and acceptance criteria for review with [AP 00](annual-plans-plan.md). No tests or implementation are added by this planning PR. The [UX walkthrough](annual-plans-ux.md) supplies inspectable states; the [progress table](progress.md#annual-planning--several-vacations-one-budget) records delivery.
+**Status:** Public seams and acceptance criteria approved through the merged [AP 00](annual-plans-plan.md) and the user’s subsequent instruction to implement strictly to the plan using TDD. The [UX walkthrough](annual-plans-ux.md) supplies inspectable states; the [progress table](progress.md#annual-planning--several-vacations-one-budget) records delivery.
 
 ## TDD agreement and cycle
 

@@ -95,14 +95,14 @@ The [Phase 0.75 plan](phase-0.75-plan.md) defines ten behavior PRs plus its desi
 
 ## Annual planning — several vacations, one budget
 
-The [annual plan](annual-plans-plan.md), [UX walkthrough](annual-plans-ux.md), and [test strategy](annual-plans-testing.md) define AP 00–10. The user confirmed that locked trips count toward the requested mix and the balance covers included future trips without past-trip, accrual, or carryover calculations. Remaining product defaults and test seams are proposed for review.
+The [annual plan](annual-plans-plan.md), [UX walkthrough](annual-plans-ux.md), and [test strategy](annual-plans-testing.md) define AP 00–10. The user confirmed that locked trips count toward the requested mix and the balance covers included future trips without past-trip, accrual, or carryover calculations. The user approved the plan and its test seams by merging #61 and explicitly authorizing implementation on September 26, 2026.
 
-Base verified September 26, 2026: `origin/main` = `20df229`; #50 merged; #51–#60 open; local and remote #60 tip = `aaabf4e`. AP 00 targets #60's branch so its diff is documentation only. Recheck and retarget when that stack lands. No prior PR is merged by this work. Implementation is explicitly out of scope for the current request.
+Base verified September 26, 2026: `origin/main` = `20df229`; #50 merged; #51–#60 open; local and remote #60 tip = `aaabf4e`. AP 00 targets #60's branch so its diff is documentation only. Recheck and retarget when that stack lands. No prior PR is merged by this work. Subsequent verification found #61 merged into the #60 branch as `69c6d16`, while main remains `20df229`. AP 01 starts from that merged prerequisite tip; the user has now explicitly authorized AP 01–10.
 
 | Task | Deliverable | Depends on | PR(s) | Status |
 | --- | --- | --- | --- | --- |
-| AP 00 | Versioned BE/FE/UX plan, test strategy, domain terms and PR sequence | P075 10 branch tip | [#61](https://github.com/rakreshet/vacation-window-planner/pull/61) | In review |
-| AP 01 | Locked-only annual assessment, shared budget/reserve and conflict facts | AP 00 + explicit implementation authorization | — | Planned |
+| AP 00 | Versioned BE/FE/UX plan, test strategy, domain terms and PR sequence | P075 10 branch tip | [#61](https://github.com/rakreshet/vacation-window-planner/pull/61) | Merged into prerequisite stack |
+| AP 01 | Locked-only annual assessment, shared budget/reserve and conflict facts | AP 00 + explicit implementation authorization | — | Implemented; preparing PR |
 | AP 02 | Complete annual candidates and exact full-mix optimizer | AP 01 | — | Planned |
 | AP 03 | Diverse full plans, labeled reductions and truthful diagnostics | AP 02 | — | Planned |
 | AP 04 | Authenticated workflow/HTTP, annual snapshots and resource controls | AP 03 | — | Planned |
