@@ -71,6 +71,14 @@ The [Phase 0.5 plan](phase-0.5-plan.md) was approved in [#35](https://github.com
 | P05 09 | Comparison workspace | [#44](https://github.com/rakreshet/vacation-window-planner/pull/44) | PR open |
 | P05 10 | End-to-end experience and hardening | [#45](https://github.com/rakreshet/vacation-window-planner/pull/45) | PR open |
 
+### Phase 0.5 follow-ups
+
+| Task | Deliverable | PR(s) | Status |
+| --- | --- | --- | --- |
+| P05 F01 | Prevent end-date selection before the comparison start; immediate validation for existing invalid dates | — | Planned |
+
+Additional country calendars are deferred until the user verifies the date-selection fix.
+
 ## Phase 1
 
 The rows follow the [recommended execution order](implementation-plan.md#recommended-execution-order): proactive opportunities first, then travel integration.

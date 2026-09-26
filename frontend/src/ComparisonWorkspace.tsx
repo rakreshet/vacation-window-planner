@@ -28,6 +28,9 @@ export default function ComparisonWorkspace({
   const originalDates = useRef<DateRange | null>(
     draft.dates.start_date && draft.dates.end_date ? draft.dates : null,
   )
+  const endBeforeStart = Boolean(
+    draft.dates.start_date && draft.dates.end_date && draft.dates.end_date < draft.dates.start_date,
+  )
   const stale = calculated !== null && JSON.stringify(calculated) !== JSON.stringify(draft)
   const initial = useRef(draft)
   const originUsable = useRef(true)
@@ -148,6 +151,9 @@ export default function ComparisonWorkspace({
               <input
                 id="compare-end"
                 type="date"
+                min={draft.dates.start_date || undefined}
+                aria-invalid={endBeforeStart || undefined}
+                aria-describedby={endBeforeStart ? 'compare-end-error' : undefined}
                 required
                 value={draft.dates.end_date}
                 onChange={(e) =>
@@ -156,12 +162,17 @@ export default function ComparisonWorkspace({
               />
             </div>
           </div>
+          {endBeforeStart && (
+            <p id="compare-end-error" role="alert" className="form-notice form-notice--error">
+              Choose an end date on or after the start date.
+            </p>
+          )}
           <div className="date-shifts">
             <span>Move the whole break · same length</span>
             <button
               className="button button--secondary"
               type="button"
-              disabled={!draft.dates.start_date || !draft.dates.end_date}
+              disabled={!draft.dates.start_date || !draft.dates.end_date || endBeforeStart}
               onClick={() => shift(-1)}
             >
               Move 1 day earlier
@@ -169,7 +180,7 @@ export default function ComparisonWorkspace({
             <button
               className="button button--secondary"
               type="button"
-              disabled={!draft.dates.start_date || !draft.dates.end_date}
+              disabled={!draft.dates.start_date || !draft.dates.end_date || endBeforeStart}
               onClick={() => shift(1)}
             >
               Move 1 day later
@@ -204,7 +215,7 @@ export default function ComparisonWorkspace({
             </div>
           </details>
         </fieldset>
-        <button className="button button--primary" type="submit" disabled={busy}>
+        <button className="button button--primary" type="submit" disabled={busy || endBeforeStart}>
           {busy ? 'Comparing dates…' : result ? 'Update comparison' : 'Compare dates'}
         </button>
       </form>
