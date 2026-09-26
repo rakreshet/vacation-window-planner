@@ -83,7 +83,7 @@ The [Phase 0.75 plan](phase-0.75-plan.md) defines ten behavior PRs plus this des
 | P075 00 | Product/backend/frontend plan, UX walkthrough, and PR sequence | [#50](https://github.com/rakreshet/vacation-window-planner/pull/50) | Done |
 | P075 01 | Shared calendar normalization and window assessment | [#51](https://github.com/rakreshet/vacation-window-planner/pull/51) | In review |
 | P075 02 | Personal context persistence and typed calculation results | [#52](https://github.com/rakreshet/vacation-window-planner/pull/52) | In review |
-| P075 03 | Personal calendar controls in Find and Compare | — | In review |
+| P075 03 | Personal calendar controls in Find and Compare | [#53](https://github.com/rakreshet/vacation-window-planner/pull/53) | In review |
 | P075 04 | Opportunity policy, scoring, and bounded detection | — | Planned |
 | P075 05 | Opportunity workflow and atomic snapshots | — | Planned |
 | P075 06 | Separate opportunities section and comparison entry | — | Planned |
@@ -125,3 +125,5 @@ Opportunity tasks have moved to Phase 0.75; Moved is a scope change, not complet
 | [#49](https://github.com/rakreshet/vacation-window-planner/pull/49) | Merged | Refresh delivery tables and product, architecture, operational, and local-run documentation after the stack merge. |
 
 Implementation decision (2026-09-26): the user confirmed there are no deployed clients or databases to preserve. Use non-null columns where appropriate; historical-data backfill is not required. Keep fresh-schema and application regression checks.
+
+Code style decision (2026-09-26): use meaningful names and focused functions; avoid comments that repeat clear code. Refactor existing behavior only with test coverage.

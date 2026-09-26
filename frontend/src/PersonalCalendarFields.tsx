@@ -1,72 +1,30 @@
 import { useState } from 'react'
+import CalendarRuleEditor from './CalendarRuleEditor'
+import CalendarRuleList from './CalendarRuleList'
+import { applyCalendarRule, removeCalendarRule } from './calendarRules'
 import { emptyPersonalCalendar, type PlanningDraft } from './planning'
 
-const labels = {
-  personal_day_off: 'Personal day off',
-  extra_working_day: 'Extra working day',
-  unavailable: 'Unavailable',
-}
-
-export default function PersonalCalendarFields({
-  value,
-  onChange,
-}: {
+type PersonalCalendarFieldsProps = {
   value: PlanningDraft
   onChange: (value: PlanningDraft) => void
-}) {
-  const rules = value.personalCalendar ?? emptyPersonalCalendar()
-  const editor = value.calendarEditor
+}
+
+export default function PersonalCalendarFields({ value, onChange }: PersonalCalendarFieldsProps) {
+  const calendar = value.personalCalendar ?? emptyPersonalCalendar()
+  const ruleDraft = value.calendarEditor
   const [error, setError] = useState<string | null>(null)
-  function apply() {
-    if (!editor) return
-    const updated = {
-      ...rules,
-      date_overrides: rules.date_overrides.filter(
-        (_, index) =>
-          !(editor.original && !editor.original.unavailable && editor.original.index === index),
-      ),
-      unavailable_ranges: rules.unavailable_ranges.filter(
-        (_, index) => !(editor.original?.unavailable && editor.original.index === index),
-      ),
+
+  function applyRule() {
+    if (!ruleDraft) return
+    try {
+      const personalCalendar = applyCalendarRule(calendar, ruleDraft)
+      onChange({ ...value, calendarEditor: undefined, personalCalendar })
+      setError(null)
+    } catch (error) {
+      setError(error instanceof Error ? error.message : 'The calendar rule could not be applied')
     }
-    if (!editor.start_date || !editor.end_date || editor.end_date < editor.start_date) {
-      setError('Choose ordered start and end dates.')
-      return
-    }
-    if (
-      (Date.parse(`${editor.end_date}T00:00:00Z`) - Date.parse(`${editor.start_date}T00:00:00Z`)) /
-        86400000 >=
-      366
-    ) {
-      setError('A rule may contain at most 366 dates')
-      return
-    }
-    if (
-      editor.kind !== 'unavailable' &&
-      updated.date_overrides.some(
-        (rule) =>
-          rule.kind !== editor.kind &&
-          rule.start_date <= editor.end_date &&
-          editor.start_date <= rule.end_date,
-      )
-    ) {
-      setError('An opposing date override overlaps this rule')
-      return
-    }
-    const range = { start_date: editor.start_date, end_date: editor.end_date }
-    onChange({
-      ...value,
-      calendarEditor: undefined,
-      personalCalendar:
-        editor.kind === 'unavailable'
-          ? { ...updated, unavailable_ranges: [...updated.unavailable_ranges, range] }
-          : {
-              ...updated,
-              date_overrides: [...updated.date_overrides, { ...range, kind: editor.kind }],
-            },
-    })
-    setError(null)
   }
+
   return (
     <fieldset className="field field--wide personal-calendar">
       <legend>My calendar</legend>
@@ -81,148 +39,35 @@ export default function PersonalCalendarFields({
           min="0"
           max="90"
           step="1"
-          value={rules.minimum_notice_days}
-          onChange={(e) =>
+          value={calendar.minimum_notice_days}
+          onChange={(event) =>
             onChange({
               ...value,
-              personalCalendar: { ...rules, minimum_notice_days: Number(e.target.value) },
+              personalCalendar: { ...calendar, minimum_notice_days: Number(event.target.value) },
             })
           }
         />
       </label>
       <small>Calendar days from today before a break may start.</small>
-      <ul>
-        {rules.date_overrides.map((rule, index) => (
-          <li key={`${rule.start_date}-${index}`}>
-            {rule.start_date} – {rule.end_date} · {labels[rule.kind]}
-            <button
-              type="button"
-              disabled={!!editor}
-              aria-label={`Edit ${labels[rule.kind]} ${rule.start_date}`}
-              onClick={() =>
-                onChange({
-                  ...value,
-                  calendarEditor: { ...rule, original: { index, unavailable: false } },
-                })
-              }
-            >
-              Edit
-            </button>
-            <button
-              type="button"
-              disabled={!!editor}
-              aria-label={`Remove ${labels[rule.kind]} ${rule.start_date}`}
-              onClick={() =>
-                onChange({
-                  ...value,
-                  personalCalendar: {
-                    ...rules,
-                    date_overrides: rules.date_overrides.filter((_, i) => i !== index),
-                  },
-                })
-              }
-            >
-              Remove
-            </button>
-          </li>
-        ))}
-        {rules.unavailable_ranges.map((rule, index) => (
-          <li key={`unavailable-${index}`}>
-            {rule.start_date} – {rule.end_date} · Unavailable
-            <button
-              type="button"
-              disabled={!!editor}
-              aria-label={`Edit unavailable ${rule.start_date}`}
-              onClick={() =>
-                onChange({
-                  ...value,
-                  calendarEditor: {
-                    ...rule,
-                    kind: 'unavailable',
-                    original: { index, unavailable: true },
-                  },
-                })
-              }
-            >
-              Edit
-            </button>
-            <button
-              type="button"
-              disabled={!!editor}
-              aria-label={`Remove unavailable ${rule.start_date}`}
-              onClick={() =>
-                onChange({
-                  ...value,
-                  personalCalendar: {
-                    ...rules,
-                    unavailable_ranges: rules.unavailable_ranges.filter((_, i) => i !== index),
-                  },
-                })
-              }
-            >
-              Remove
-            </button>
-          </li>
-        ))}
-      </ul>
-      {editor ? (
-        <div className="calendar-rule-editor">
-          <label>
-            Rule type
-            <select
-              value={editor.kind}
-              onChange={(e) => {
-                const kind = e.target.value
-                if (
-                  kind === 'personal_day_off' ||
-                  kind === 'extra_working_day' ||
-                  kind === 'unavailable'
-                )
-                  onChange({ ...value, calendarEditor: { ...editor, kind } })
-              }}
-            >
-              {Object.entries(labels).map(([kind, label]) => (
-                <option key={kind} value={kind}>
-                  {label}
-                </option>
-              ))}
-            </select>
-          </label>
-          <label>
-            Rule start date
-            <input
-              type="date"
-              value={editor.start_date}
-              onChange={(e) =>
-                onChange({ ...value, calendarEditor: { ...editor, start_date: e.target.value } })
-              }
-            />
-          </label>
-          <label>
-            Rule end date
-            <input
-              type="date"
-              value={editor.end_date}
-              onChange={(e) =>
-                onChange({ ...value, calendarEditor: { ...editor, end_date: e.target.value } })
-              }
-            />
-          </label>
-          <p>Apply or cancel this rule before calculating.</p>
-          {error && <p role="alert">{error}</p>}
-          <button type="button" onClick={apply}>
-            Apply rule
-          </button>
-          <button
-            type="button"
-            onClick={() => {
-              setError(null)
-              onChange({ ...value, calendarEditor: undefined })
-            }}
-          >
-            Cancel rule
-          </button>
-        </div>
+      <CalendarRuleList
+        calendar={calendar}
+        editing={!!ruleDraft}
+        onEdit={(calendarEditor) => onChange({ ...value, calendarEditor })}
+        onRemove={(original) =>
+          onChange({ ...value, personalCalendar: removeCalendarRule(calendar, original) })
+        }
+      />
+      {ruleDraft ? (
+        <CalendarRuleEditor
+          draft={ruleDraft}
+          error={error}
+          onApply={applyRule}
+          onChange={(calendarEditor) => onChange({ ...value, calendarEditor })}
+          onCancel={() => {
+            setError(null)
+            onChange({ ...value, calendarEditor: undefined })
+          }}
+        />
       ) : (
         <button
           type="button"
