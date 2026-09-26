@@ -1,6 +1,6 @@
 # Vacation Window Planner
 
-A Docker-based proof of concept for finding useful vacation dates. Phase 0 recommends ranked date windows from an anonymous session, effective holiday calendar, editable structured constraints, and optional AI text interpretation. Phase 0.5 adds exact-date comparison with nearby ways to save vacation days or extend a break; phase 1 will add destinations, live flights, and separate proactive vacation opportunities. Phase 0 and Phase 0.5 are merged into `main`; see the [delivery record](docs/progress.md) for task status and the stack merge history. Product rules are in the PRD, and [operational decisions](docs/open-decisions.md) distinguish settled defaults from future choices.
+A Docker-based proof of concept for finding useful vacation dates. Phase 0 recommends ranked date windows from an anonymous session, effective holiday calendar, editable structured constraints, and optional AI text interpretation. Phase 0.5 adds exact-date comparison with nearby ways to save vacation days or extend a break. The proposed Phase 0.75 adds personal calendar controls, separate proactive opportunities, and same-browser saved options with calendar export and copyable leave requests; Phase 1 retains destinations and live flights. Phase 0 and Phase 0.5 are merged into `main`; Phase 0.75 is design-only and awaits readiness to implement. See the [delivery record](docs/progress.md) for task status and the stack merge history. Product rules are in the PRD, and [operational decisions](docs/open-decisions.md) distinguish settled defaults from future choices.
 
 Search and Compare support Israel, U.S. federal holidays, and England & Wales bank holidays. Weekend days remain editable; see [calendar scope and examples](docs/runbook.md#supported-holiday-calendars).
 
@@ -11,6 +11,9 @@ Search and Compare support Israel, U.S. federal holidays, and England & Wales ba
 - [Phase 0.5 comparison plan](docs/phase-0.5-plan.md)
 - [Phase 0.5 comparison UX](docs/phase-0.5-ux.md)
 - [Phase 0.5 acceptance record](docs/phase-0.5-acceptance.md)
+- [Phase 0.75 product, backend, frontend, and PR plan](docs/phase-0.75-plan.md)
+- [Phase 0.75 UX walkthrough](docs/phase-0.75-ux.md)
+- [Research on opportunities before flights](docs/non-flight-opportunities-research.md)
 - [Implementation task plan](docs/implementation-plan.md)
 - [Delivery progress and PR map](docs/progress.md)
 - [Operational decisions and future choices](docs/open-decisions.md)
@@ -19,7 +22,7 @@ Search and Compare support Israel, U.S. federal holidays, and England & Wales ba
 - [Security guidance](SECURITY.md)
 - [Domain language](CONTEXT.md)
 
-The Markdown documents are the version-controlled source of truth. Review changes to them in pull requests; any Word copies are point-in-time exports and should be regenerated from the approved Markdown rather than edited independently. The phase 1 proactive-opportunity capability is planned here, not implemented in the current app.
+The Markdown documents are the version-controlled source of truth. Review changes to them in pull requests; any Word copies are point-in-time exports and should be regenerated from the approved Markdown rather than edited independently. Phase 0.75 capabilities are planned, not implemented in the current app.
 
 ## Run locally
 

@@ -1,16 +1,18 @@
 # Vacation Window Recommendation Implementation Task Plan
 
-Delivered Phase 0 tasks and planned Phase 1 work; Phase 0.5 has a linked companion plan
+Delivered Phase 0 tasks and planned Phase 1 work; Phase 0.5 and Phase 0.75 have linked companion plans
 
-This plan turns the agreed product and architecture into mergeable tasks. Each task has one responsibility, named verification, and a concrete definition of done. Phase 0 ends with a usable vacation window POC. Phase 1 adds destinations, live flights, and independent proactive vacation opportunities through the prepared seams.
+This plan turns the agreed product and architecture into mergeable tasks. Each task has one responsibility, named verification, and a concrete definition of done. Phase 0 ends with a usable vacation window POC. The proposed Phase 0.75 adds personal calendars, independent proactive opportunities, and same-browser saved/exported choices; Phase 1 adds destinations and live flights.
 
 | Field | Value |
 | --- | --- |
-| **Status** | Phase 0 and Phase 0.5 delivered; Phase 1 planned |
+| **Status** | Phase 0 and Phase 0.5 delivered; Phase 0.75 design in review; Phase 1 planned |
 | **Prepared for** | POC product and engineering implementation |
 | **Version date** | 2026-09-26 |
 
 Delivery and original PR links are recorded in the [progress tracker](progress.md). Phase 0.5 requirements and task details are maintained in the [comparison plan](phase-0.5-plan.md), with completed validation in the [acceptance record](phase-0.5-acceptance.md).
+
+The [Phase 0.75 plan](phase-0.75-plan.md#ordered-pr-breakdown) defines P075 00–10, dependencies, public test seams, and acceptance gates; its [UX walkthrough](phase-0.75-ux.md) is the inspectable design artifact. This is planning only. Implementation waits for an explicit readiness instruction from the user.
 
 ## Delivery rules
 
@@ -29,7 +31,8 @@ Delivery and original PR links are recorded in the [progress tracker](progress.m
 | M1 Domain core | Validated contracts, calendar resolution, pure window generation, deterministic ranking | Golden and property tests pass without external providers | Done |
 | M2 Phase 0 product | Anonymous sessions, persistence, optional interpretation, React workflow, feedback | Representative user journey passes and search snapshots reproduce results | Done |
 | Phase 0.5 comparison | Manual and Search-origin exact-date comparison with nearby alternatives | Shared accounting, persistence, desktop journeys, and quality gates pass | Done |
-| M3 Phase 1 | Destination and live-flight enrichment plus separate proactive vacation opportunities | Provider tests pass; deterministic score, threshold, explanation, and separate-section tests pass | Planned |
+| Phase 0.75 | Personal calendars, opportunities, same-browser saved options, export/copy | Shared accounting, bounded scans, saved recovery, calendar imports, desktop UX and regression gates pass | Design in review |
+| M3 Phase 1 | Destination and live-flight enrichment, preserving opportunity independence | Provider tests and travel-adapter independence checks pass | Planned |
 
 ## Phase 0 tasks
 
@@ -301,51 +304,31 @@ Delivery and original PR links are recorded in the [progress tracker](progress.m
 
 ### P1 09 Define opportunity policy and contracts
 
-**Scope**  Add typed opportunity weights, separate threshold, bounded future horizon, policy version, and additive opportunity response type; leave phase 0 ranking untouched.
-
-**Tests**  Test safe defaults, weight validation, threshold bounds, configuration overrides, and phase 0 response compatibility.
-
-**Definition of done**  The effective opportunity policy can be snapshotted independently of the phase 0 scoring policy.
+**Moved, not delivered:** P075 04 now owns this scope under the [Phase 0.75 plan](phase-0.75-plan.md#proactive-opportunities).
 
 ### P1 10 Implement pure opportunity scoring
 
-**Scope**  Score a VacationWindow from normalized PTO efficiency, total length, and low PTO consumption using initial tunable weights 0.50, 0.35, and 0.15. For zero-PTO windows, use a finite policy-bounded efficiency feature rather than a raw ratio; length and threshold still govern surfacing.
-
-**Tests**  Test 9 days / 3 PTO = 3.0 raw efficiency, longer versus short windows at similar efficiency, finite zero-PTO behavior without short free weekends auto-qualifying, deterministic ties, normalization, and weight overrides.
-
-**Definition of done**  A fixed window and policy always produce the same opportunity score without LLM or flight calls.
+**Moved, not delivered:** P075 04 defines exact scoring, normalization, rounding, and threshold tests.
 
 ### P1 11 Add proactive detection and thresholding
 
-**Scope**  Scan a bounded future horizon beyond explicit month and length preferences, honor calendar and balance rules, require a meaningful criteria difference, deduplicate explicit results, and include scores at or above the separate threshold.
-
-**Tests**  Test exact threshold boundary, above and below cases, unchanged scores under threshold-only changes, criteria differences, eligibility limits, deduplication, and stable ordering.
-
-**Definition of done**  The detector returns only qualifying out-of-criteria future windows and does not alter explicit recommendations.
+**Moved, not delivered:** P075 04 owns complete bounded detection, personal-rule eligibility, criteria differences, and deduplication.
 
 ### P1 12 Generate grounded opportunity reasons
 
-**Scope**  Build brief deterministic explanations from score facts and criteria differences; include structured reasons for high PTO leverage or meaningful length with low PTO use.
-
-**Tests**  Snapshot explanations for dominant factors, changed search criteria, close scores, and no invented flight facts.
-
-**Definition of done**  Every surfaced opportunity says why it was shown and how it differs from the explicit search.
+**Moved, not delivered:** P075 04 owns deterministic reason facts; P075 06 owns their presentation.
 
 ### P1 13 Render the separate opportunities section
 
-**Scope**  Add Opportunities worth considering below explicit results using the additive typed response; display score, date window, PTO use, explanation, and criteria difference without implying flight availability.
+**Moved, not delivered:** P075 06 owns this scope and the Search-to-Compare journey.
 
-**Tests**  Test empty, populated, threshold-filtered, and accessible section states with typed fixtures.
+### P1 14 Verify travel-adapter independence
 
-**Definition of done**  The separate section never changes the order or content of explicit search results.
+**Scope**  Base opportunity workflow, persistence, and no-provider operation move to P075 05/10. After the Phase 1 fake/live travel interfaces exist, prove travel enrichment cannot suppress or alter qualifying date-window opportunities.
 
-### P1 14 Verify opportunity workflow independence
+**Tests**  With fixed personal calendars, clocks, policy and input, assert identical opportunity output with absent, fake, and failing flight adapters. Verify travel-only data stays separate and persisted opportunity facts remain reproducible.
 
-**Scope**  Integrate the detector into the phase 1 workflow, persist effective policy and output snapshots, and allow optional downstream travel enrichment without gating detection.
-
-**Tests**  Run deterministic workflow and PostgreSQL tests with fake, absent, and failing flight adapters and fake Gemini; assert identical qualifying opportunities and unchanged phase 0 behavior.
-
-**Definition of done**  CI proves scoring, gating, explanations, and persistence are reproducible without any live provider.
+**Definition of done**  Phase 1 integration preserves the Phase 0.75 opportunity contract without reimplementing its detector or policy.
 
 ## Continuous integration gate
 
@@ -363,7 +346,7 @@ The repository starts public as agreed, with branch protection configured to req
 
 ## Recommended execution order
 
-Sequences 1–5 are delivered. New implementation starts with the planned Phase 1 work in sequence 6.
+Sequences 1–5 are delivered. Review and version P075 00 first. After the user explicitly authorizes implementation, continue with Phase 0.75 in sequence 6; travel work follows it.
 
 | **Sequence** | **Tasks** | **Reason** |
 | --- | --- | --- |
@@ -372,7 +355,7 @@ Sequences 1–5 are delivered. New implementation starts with the planned Phase 
 | 3 | P0 16 through P0 20 | Add state, persistence, orchestration, HTTP, and the interpretation seam |
 | 4 | P0 21 through P0 25 | Complete the user journey and harden the POC |
 | 5 | P05 01 through P05 10, then P05 F01–F02 | Delivered exact-date comparison and follow-ups; see the [Phase 0.5 plan](phase-0.5-plan.md) |
-| 6 | P1 09 through P1 13 | Add proactive detection and a separate UI without a flight provider |
+| 6 | P075 01 through P075 10 | Follow the Phase 0.75 dependency table: personal calendars, opportunities, saved options/export, and acceptance |
 | 7 | P1 01 through P1 04 | Add travel contracts, cost bounds, fake flight search, and destinations |
 | 8 | P1 14 | Prove opportunity independence once the fake flight interface exists |
 | 9 | P1 05 through P1 08 | Add live flights, final ranking, UI, and live operational safeguards |
@@ -399,5 +382,5 @@ Sequences 1–5 are delivered. New implementation starts with the planned Phase 
 - External calls remain within a configured budget and use caching where permitted.
 - No travel recommendation appears without a live available flight.
 - The product clearly states that it does not book flights and that prices may change.
-- Exceptional out-of-criteria windows appear in a separate Opportunities worth considering section without changing explicit results.
-- Tunable 50/35/15 starting weights, a separate threshold, grounded explanations, and provider-independent detection pass deterministic tests.
+- The Phase 0.75 opportunity contract, separate presentation, and explicit Search behavior remain intact with real, fake, absent, or failing travel adapters.
+- Phase 0.75 supplies the opportunity policy and its tests; Phase 1 proves integration independence rather than implementing them again.

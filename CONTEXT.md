@@ -29,8 +29,32 @@ A vacation window that uses no vacation days because none of its dates are effec
 _Avoid_: Free vacation
 
 **Effective calendar**:
-The observed holidays and nonworking weekdays applicable to a vacation search after the user's workweek override, if any, is applied to the selected country.
+The working and nonworking dates applicable to a vacation calculation after observed holidays, the user's weekend pattern, and any personal date overrides are applied.
 _Avoid_: Provider calendar, public-holiday list
+
+**Personal day off**:
+A date the user says is nonworking without consuming vacation balance, regardless of the normal workweek or public-holiday calendar.
+_Avoid_: Vacation day, mandatory leave
+
+**Extra working day**:
+A date the user says is working even when the normal workweek or public-holiday calendar would make it nonworking. Including it in a vacation window consumes one vacation day.
+_Avoid_: Removed holiday, exception day
+
+**Unavailable range**:
+An inclusive range of local dates that a recommended vacation window must not intersect. Unavailability does not change whether a date consumes vacation balance.
+_Avoid_: Company closure, paid day off
+
+**Minimum notice**:
+The number of whole calendar days required between the user's local today and the start of a recommended vacation window.
+_Avoid_: Working-day notice, approval deadline
+
+**Vacation opportunity**:
+A qualifying future vacation window outside the explicit search's selected months or full preferred-length tolerance, shown separately with its own score and explanation.
+_Avoid_: Search result, flight deal
+
+**Saved option**:
+A retained snapshot of one exact vacation window, its calculation context, and its accounting. Saving an option does not reserve, deduct, or approve vacation days.
+_Avoid_: Booked vacation, annual plan, approved leave
 
 **Default workweek**:
 The temporary country-based weekday rule used when proposing weekend days: Israel works Sunday through Thursday (Friday/Saturday weekend); all other countries work Monday through Friday (Saturday/Sunday weekend). This default is separate from observed public holidays and can be overridden by the user's editable weekday selection.
