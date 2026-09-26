@@ -111,7 +111,7 @@ Base verified September 26, 2026: `origin/main` = `20df229`; #50 merged; #51–#
 | AP 07 | Optional interpretation with proposal review and explicit references | AP 06 | [#68](https://github.com/rakreshet/vacation-window-planner/pull/68) | In review |
 | AP 08 | Same-browser saved annual plans and explicit reopening/recalculation | AP 07 | [#69](https://github.com/rakreshet/vacation-window-planner/pull/69) | In review |
 | AP 09 | Whole-plan calendar download and leave-request copy | AP 08 | [#70](https://github.com/rakreshet/vacation-window-planner/pull/70) | In review |
-| AP 10 | Integrated acceptance, performance, accessibility and runbook | AP 09 | Preparing PR | In review; [acceptance evidence](annual-plans-acceptance.md) |
+| AP 10 | Integrated acceptance, performance, accessibility and runbook | AP 09 | [#71](https://github.com/rakreshet/vacation-window-planner/pull/71) | In review |
 
 The [ordered breakdown](annual-plans-plan.md#ordered-dependent-pr-breakdown) supplies each task's scope, acceptance evidence, and stacking policy. Do not create implementation PRs or mark work Done in advance. Planning review/merge alone is not permission to implement.
 
@@ -150,3 +150,5 @@ Opportunity tasks have moved to Phase 0.75; Moved is a scope change, not complet
 Implementation decision (2026-09-26): the user confirmed there are no deployed clients or databases to preserve. Use non-null columns where appropriate; historical-data backfill is not required. Keep fresh-schema and application regression checks.
 
 Code style decision (2026-09-26): use meaningful names and focused functions; avoid comments that repeat clear code. Refactor existing behavior only with test coverage.
+
+Annual AP 10: [acceptance evidence](annual-plans-acceptance.md) records 269 backend / 122 frontend tests, normal-calendar p95 below two seconds, bounded load, and remaining manual calendar delivery/import checks. AP 01–10 are open for review; no implementation PR was merged by the agent.
