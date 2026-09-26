@@ -52,7 +52,7 @@ test('save and offline reopening preserve the original mix while recalculation u
   expect(workspace.getByRole('button', { name: 'Save this plan' })).toBeDisabled()
   fireEvent.click(navigation.getByRole('button', { name: 'Saved options' }))
   fireEvent.click(screen.getByRole('button', { name: 'Annual plans' }))
-  const saved = within(screen.getByRole('region', { name: 'Saved annual plans', exact: true }))
+  const saved = within(screen.getByRole('region', { name: 'Saved annual plans' }))
   expect(saved.getByRole('heading', { name: '2027 annual plan' })).toBeInTheDocument()
   fetch.mockRejectedValue(new Error('offline'))
   const calls = fetch.mock.calls.length
