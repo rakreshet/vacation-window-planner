@@ -1,6 +1,6 @@
 # Phase 0.5: compare vacation dates
 
-**Status:** Proposed product and implementation plan, for review before implementation
+**Status:** Approved for gradual implementation by the user; delivery tracked in progress.md
 
 **Starting point:** PR #34 (`codex/phase0-accurate-no-account-copy`)
 
@@ -109,7 +109,7 @@ Each task gets one stacked PR by default. Do not assign PR numbers until they ex
 
 For each behavior PR, pick one observable behavior, write a failing test at a confirmed public seam, implement only enough to pass it, and repeat for the next behavior. Review and refactor after the red-to-green cycles. Keep the test and implementation together in that PR. Expected date counts and deltas come from independently worked calendar examples, not from duplicating the implementation's calculation in the test. Do not postpone the first end-to-end test until the final PR; add journey coverage as soon as a journey becomes usable. P05 01 is a design artifact, so its review gate is a realistic clickable or inspectable walkthrough rather than a code test.
 
-**Proposed test seams to confirm before implementation:** the public exact-window evaluator and existing Search workflow; `POST /sessions`, `/recommendations`, and `/comparisons`; the comparison snapshot repository's public operations; and the rendered Search and comparison journeys. Tests should assert public outputs and user-visible behavior, using fake calendars or provider boundaries as needed, without mocking private helpers or querying storage as a substitute for the service interface. Migration tests are the exception that directly inspect schema behavior.
+**Test seams confirmed by the instruction to implement this plan:** the public exact-window evaluator and existing Search workflow; `POST /sessions`, `/recommendations`, and `/comparisons`; the comparison snapshot repository's public operations; and the rendered Search and comparison journeys. Tests should assert public outputs and user-visible behavior, using fake calendars or provider boundaries as needed, without mocking private helpers or querying storage as a substitute for the service interface. Migration tests are the exception that directly inspect schema behavior.
 
 | Order | Task | Deliverable and main acceptance evidence |
 | --- | --- | --- |
@@ -145,4 +145,4 @@ P05 07 may be split into separate backend PRs for the two improvement goals if r
 - **Could a visually rich calendar hide the answer?** The outcome sentence, numeric deltas, explicit charged-day list, and accessible comparison table all work without color or gesture interpretation.
 - **Could this expand into Phase 1 opportunity detection?** The bounded neighborhood is anchored to the person's chosen dates. Broad out-of-criteria discovery remains a separately planned feature.
 
-No critical product decision is currently pending. This proposed plan should be reviewed before implementation; implementation can refine policy bounds with test evidence without changing the agreed two-goal product behavior.
+Implementation is authorized. Policy bounds may be refined with test evidence while preserving the agreed two-goal behavior. The inspectable [UX prototype](phase-0.5-ux.md) records the initial walkthrough and screen states.
