@@ -7,21 +7,23 @@ export default function PlanningFields({
   value,
   onChange,
   prefix = '',
+  annual = false,
 }: {
   value: PlanningDraft
   onChange: (value: PlanningDraft) => void
   prefix?: string
+  annual?: boolean
 }) {
   return (
     <>
       <div className="field">
         <label htmlFor={`${prefix}balance`}>
-          Vacation balance <span>Required</span>
+          {annual ? 'Available leave for included trips' : 'Vacation balance'} <span>Required</span>
         </label>
         <div className="input-with-suffix">
           <input
             id={`${prefix}balance`}
-            aria-label="Vacation balance"
+            aria-label={annual ? 'Available leave for included trips' : 'Vacation balance'}
             type="number"
             min="0"
             step="1"
@@ -31,24 +33,30 @@ export default function PlanningFields({
           />
           <span>days</span>
         </div>
-        <small>Available before this break</small>
+        <small>
+          {annual
+            ? 'Includes leave allocated to your locked trips. Excludes past trips and future accrual.'
+            : 'Available before this break'}
+        </small>
       </div>
-      <div className="field">
-        <label htmlFor={`${prefix}allowed-negative`}>Allowed negative days</label>
-        <div className="input-with-suffix">
-          <input
-            id={`${prefix}allowed-negative`}
-            type="number"
-            min="0"
-            max="5"
-            step="1"
-            value={value.allowedNegative}
-            onChange={(e) => onChange({ ...value, allowedNegative: e.target.value })}
-          />
-          <span>days</span>
+      {!annual && (
+        <div className="field">
+          <label htmlFor={`${prefix}allowed-negative`}>Allowed negative days</label>
+          <div className="input-with-suffix">
+            <input
+              id={`${prefix}allowed-negative`}
+              type="number"
+              min="0"
+              max="5"
+              step="1"
+              value={value.allowedNegative}
+              onChange={(e) => onChange({ ...value, allowedNegative: e.target.value })}
+            />
+            <span>days</span>
+          </div>
+          <small>How far below zero you will accept</small>
         </div>
-        <small>How far below zero you will accept</small>
-      </div>
+      )}
       <div className="field">
         <label htmlFor={`${prefix}country`}>Public holiday calendar</label>
         <select

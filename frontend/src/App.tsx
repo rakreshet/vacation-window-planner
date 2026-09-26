@@ -1,3 +1,5 @@
+import AnnualPlanWorkspace from './AnnualPlanWorkspace'
+import type { PlanningDraft } from './planning'
 import SavedOptionsView from './SavedOptionsView'
 import type { ActionSnapshot } from './actionSnapshots'
 import { useEffect, useRef, useState } from 'react'
@@ -21,12 +23,13 @@ export default function App() {
 
   const [planning, setPlanning] = useState(emptyPlanning)
   const [confirmedContext, setConfirmedContext] = useState<SessionInput | null>(null)
-  const [mode, setMode] = useState<'search' | 'compare' | 'saved'>('search')
+  const [mode, setMode] = useState<'search' | 'compare' | 'saved' | 'annual'>('search')
   const [comparisonDraft, setComparisonDraft] = useState<ComparisonDraft | null>(null)
   const [origin, setOrigin] = useState<ComparisonOrigin | undefined>()
   const [comparisonKey, setComparisonKey] = useState(0)
   const opener = useRef<HTMLElement | null>(null)
 
+  const [annualPlanning, setAnnualPlanning] = useState<PlanningDraft | null>(null)
   const [savedVisited, setSavedVisited] = useState(false)
   const [savedCheck, setSavedCheck] = useState<ComparisonDraft | null>(null)
   const savedOpener = useRef<HTMLElement | null>(null)
@@ -202,6 +205,16 @@ export default function App() {
           </button>
           <button
             type="button"
+            aria-pressed={mode === 'annual'}
+            onClick={() => {
+              setAnnualPlanning((current) => current ?? structuredClone(planning))
+              setMode('annual')
+            }}
+          >
+            Plan my year
+          </button>
+          <button
+            type="button"
             aria-pressed={mode === 'saved'}
             onClick={() => {
               setSavedCheck(null)
@@ -252,6 +265,11 @@ export default function App() {
             />
           )}
         </div>
+        {annualPlanning && (
+          <div hidden={mode !== 'annual'}>
+            <AnnualPlanWorkspace initialPlanning={annualPlanning} />
+          </div>
+        )}
         {comparisonDraft && (
           <div hidden={mode !== 'compare' || Boolean(savedCheck)}>
             <ComparisonWorkspace
