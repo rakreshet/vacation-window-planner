@@ -76,7 +76,7 @@ The [Phase 0.5 plan](phase-0.5-plan.md) was approved in [#35](https://github.com
 | Task | Deliverable | PR(s) | Status |
 | --- | --- | --- | --- |
 | P05 F01 | Prevent end-date selection before the comparison start; immediate validation for existing invalid dates | [#46](https://github.com/rakreshet/vacation-window-planner/pull/46) | PR open |
-| P05 F02 | Add U.S. federal and England & Wales bank holiday calendars to Search and comparison; preserve custom weekends | — | Planned |
+| P05 F02 | Add U.S. federal and England & Wales bank holiday calendars to Search and comparison; preserve custom weekends | [#47](https://github.com/rakreshet/vacation-window-planner/pull/47) | PR open |
 
 ## Phase 1
 
