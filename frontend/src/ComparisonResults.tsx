@@ -94,7 +94,9 @@ export function WindowSummary({
         <p className="form-notice form-notice--error">
           These dates exceed your vacation-day allowance.
         </p>
-      ) : value.remaining_balance < 0 && !value.warnings.includes('over_budget') ? (
+      ) : value.remaining_balance < 0 &&
+        !value.warnings.includes('over_budget') &&
+        !value.assessment?.eligibility_reasons.some((reason) => reason.code === 'over_budget') ? (
         <p className="comparison-warning">
           Uses {Math.abs(value.remaining_balance)} vacation days beyond your balance, within your
           allowed negative balance.

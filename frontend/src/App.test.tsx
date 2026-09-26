@@ -346,9 +346,7 @@ test('unfinished calendar rules block Search and applied rules are submitted wit
   fillRequiredSearchFields()
   fireEvent.click(screen.getByRole('button', { name: 'Add calendar rule' }))
   fireEvent.click(screen.getByRole('button', { name: 'Search' }))
-  expect(
-    await screen.findByText(/Apply or cancel the calendar rule before calculating/),
-  ).toBeInTheDocument()
+  expect(screen.getByText(/Apply or cancel this rule before calculating/)).toBeInTheDocument()
   expect(sessions).toHaveLength(0)
   fireEvent.change(screen.getByLabelText('Rule start date'), { target: { value: '2027-01-07' } })
   fireEvent.change(screen.getByLabelText('Rule end date'), { target: { value: '2027-01-07' } })
@@ -478,4 +476,48 @@ test('explicit Search requests opportunities and displays them separately', asyn
   await screen.findByRole('heading', { name: 'Other opportunities' })
   expect(searches[0]).toMatchObject({ include_opportunities: true, include_action_details: true })
   expect(screen.getByText('No feasible vacation windows found.')).toBeInTheDocument()
+})
+
+test('Search is disabled until an unfinished calendar rule is applied or cancelled', async () => {
+  vi.stubGlobal(
+    'fetch',
+    vi
+      .fn()
+      .mockResolvedValue({ ok: true, json: async () => ({ status: 'ok', database: 'connected' }) }),
+  )
+  render(<App />)
+  await screen.findByText('Service ready')
+  fireEvent.click(screen.getByRole('button', { name: 'Add calendar rule' }))
+  expect(screen.getByRole('button', { name: 'Search' })).toBeDisabled()
+  fireEvent.click(screen.getByRole('button', { name: 'Cancel rule' }))
+  expect(screen.getByRole('button', { name: 'Search' })).toBeEnabled()
+})
+
+test('an obsolete Search failure does not attach an error to the edited draft', async () => {
+  let rejectSearch: ((reason: Error) => void) | undefined
+  vi.stubGlobal(
+    'fetch',
+    vi.fn(async (input: RequestInfo | URL) => {
+      if (String(input).endsWith('/recommendations'))
+        return new Promise((_resolve, reject) => {
+          rejectSearch = reject
+        })
+      return {
+        ok: true,
+        json: async () =>
+          String(input).endsWith('/sessions')
+            ? { token: 'token' }
+            : { status: 'ok', database: 'connected' },
+      }
+    }),
+  )
+  render(<App />)
+  await screen.findByText('Service ready')
+  fillRequiredSearchFields()
+  fireEvent.click(screen.getByRole('button', { name: 'Search' }))
+  await waitFor(() => expect(rejectSearch).toBeDefined())
+  fireEvent.change(screen.getByLabelText('Vacation balance'), { target: { value: '2' } })
+  rejectSearch?.(new Error('Obsolete failure'))
+  await waitFor(() => expect(screen.getByRole('button', { name: 'Search' })).toBeEnabled())
+  expect(screen.queryByRole('alert')).not.toBeInTheDocument()
 })

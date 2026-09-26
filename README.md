@@ -1,6 +1,6 @@
 # Vacation Window Planner
 
-A Docker-based proof of concept for finding useful vacation dates. Phase 0 recommends ranked date windows from an anonymous session, effective holiday calendar, editable structured constraints, and optional AI text interpretation. Phase 0.5 adds exact-date comparison with nearby ways to save vacation days or extend a break. The proposed Phase 0.75 adds personal calendar controls, separate proactive opportunities, and same-browser saved options with calendar export and copyable leave requests; Phase 1 retains destinations and live flights. Phase 0 and Phase 0.5 are merged into `main`; Phase 0.75 implementation is underway in stacked PRs. See the [delivery record](docs/progress.md) for task status and the stack merge history. Product rules are in the PRD, and [operational decisions](docs/open-decisions.md) distinguish settled defaults from future choices.
+A Docker-based proof of concept for finding useful vacation dates. Phase 0 recommends ranked date windows from an anonymous session, effective holiday calendar, editable structured constraints, and optional AI text interpretation. Phase 0.5 adds exact-date comparison with nearby ways to save vacation days or extend a break. The Phase 0.75 implementation stack adds personal calendar controls, separate proactive opportunities, and same-browser saved options with calendar export and copyable leave requests; Phase 1 retains destinations and live flights. Phase 0 and Phase 0.5 are merged into `main`; Phase 0.75 features are implemented in stacked PRs; final calendar-client import acceptance remains pending. See the [delivery record](docs/progress.md) for task status and the stack merge history. Product rules are in the PRD, and [operational decisions](docs/open-decisions.md) distinguish settled defaults from future choices.
 
 Search and Compare support Israel, U.S. federal holidays, and England & Wales bank holidays. Weekend days remain editable; see [calendar scope and examples](docs/runbook.md#supported-holiday-calendars).
 
@@ -13,6 +13,10 @@ Search and Compare support Israel, U.S. federal holidays, and England & Wales ba
 - [Phase 0.5 acceptance record](docs/phase-0.5-acceptance.md)
 - [Phase 0.75 product, backend, frontend, and PR plan](docs/phase-0.75-plan.md)
 - [Phase 0.75 UX walkthrough](docs/phase-0.75-ux.md)
+- [Phase 0.75 acceptance and manual testing](docs/phase-0.75-acceptance.md)
+- [Annual multi-vacation BE/FE plan and dependent PR sequence](docs/annual-plans-plan.md)
+- [Annual planning UX walkthrough](docs/annual-plans-ux.md)
+- [Annual planning TDD seams and test strategy](docs/annual-plans-testing.md)
 - [Research on opportunities before flights](docs/non-flight-opportunities-research.md)
 - [Implementation task plan](docs/implementation-plan.md)
 - [Delivery progress and PR map](docs/progress.md)
@@ -22,7 +26,9 @@ Search and Compare support Israel, U.S. federal holidays, and England & Wales ba
 - [Security guidance](SECURITY.md)
 - [Domain language](CONTEXT.md)
 
-The Markdown documents are the version-controlled source of truth. Review changes to them in pull requests; any Word copies are point-in-time exports and should be regenerated from the approved Markdown rather than edited independently. The implementation stack adds manual personal calendars to Search and Compare first; opportunity and saved-option capabilities follow in the progress tracker.
+The Markdown documents are the version-controlled source of truth. Review changes to them in pull requests; any Word copies are point-in-time exports and should be regenerated from the approved Markdown rather than edited independently. On the implementation stack, Find dates, Compare my dates, and Saved options support manual personal calendars, explicit-Search opportunities, browser-only saves, calendar downloads, and reviewed leave-request copying. See the acceptance record for verified behavior and remaining client checks.
+
+Annual planning is a documentation-only proposal for several vacations sharing one budget, with a protected reserve and locked dates. Its planning PR does not implement the feature or authorize implementation. Phase 1 continues to mean destinations and flights.
 
 ## Run locally
 

@@ -1,18 +1,20 @@
 # Vacation Window Recommendation Implementation Task Plan
 
-Delivered Phase 0 tasks and planned Phase 1 work; Phase 0.5 and Phase 0.75 have linked companion plans
+Delivered Phase 0 tasks and planned Phase 1 work; comparison, personal calendars, and annual planning have linked companion plans
 
 This plan turns the agreed product and architecture into mergeable tasks. Each task has one responsibility, named verification, and a concrete definition of done. Phase 0 ends with a usable vacation window POC. The proposed Phase 0.75 adds personal calendars, independent proactive opportunities, and same-browser saved/exported choices; Phase 1 adds destinations and live flights.
 
 | Field | Value |
 | --- | --- |
-| **Status** | Phase 0 and Phase 0.5 delivered; Phase 0.75 design in review; Phase 1 planned |
+| **Status** | Phase 0/0.5 delivered; Phase 0.75 implemented in review with client acceptance pending; annual planning proposed; Phase 1 planned |
 | **Prepared for** | POC product and engineering implementation |
 | **Version date** | 2026-09-26 |
 
 Delivery and original PR links are recorded in the [progress tracker](progress.md). Phase 0.5 requirements and task details are maintained in the [comparison plan](phase-0.5-plan.md), with completed validation in the [acceptance record](phase-0.5-acceptance.md).
 
-The [Phase 0.75 plan](phase-0.75-plan.md#ordered-pr-breakdown) defines P075 00–10, dependencies, public test seams, and acceptance gates; its [UX walkthrough](phase-0.75-ux.md) is the inspectable design artifact. This is planning only. Implementation waits for an explicit readiness instruction from the user.
+The [Phase 0.75 plan](phase-0.75-plan.md#ordered-pr-breakdown) defines P075 00–10, dependencies, public test seams, and acceptance gates; its [UX walkthrough](phase-0.75-ux.md) is the design artifact. Implementation is in the open #51–#60 stack, with remaining client checks in its [acceptance record](phase-0.75-acceptance.md).
+
+The [annual planning PR breakdown](annual-plans-plan.md#ordered-dependent-pr-breakdown) defines AP 00–10 with [UX](annual-plans-ux.md) and a [TDD test strategy](annual-plans-testing.md). AP 00 versions the design only, based on the verified Phase 0.75 stack tip. AP 01–10 are strictly dependent behavior PRs and require explicit later implementation authorization. The [progress table](progress.md#annual-planning--several-vacations-one-budget) owns status. Annual planning does not reuse Phase 1 IDs or imply flight work is delivered.
 
 ## Delivery rules
 
@@ -31,7 +33,8 @@ The [Phase 0.75 plan](phase-0.75-plan.md#ordered-pr-breakdown) defines P075 00�
 | M1 Domain core | Validated contracts, calendar resolution, pure window generation, deterministic ranking | Golden and property tests pass without external providers | Done |
 | M2 Phase 0 product | Anonymous sessions, persistence, optional interpretation, React workflow, feedback | Representative user journey passes and search snapshots reproduce results | Done |
 | Phase 0.5 comparison | Manual and Search-origin exact-date comparison with nearby alternatives | Shared accounting, persistence, desktop journeys, and quality gates pass | Done |
-| Phase 0.75 | Personal calendars, opportunities, same-browser saved options, export/copy | Shared accounting, bounded scans, saved recovery, calendar imports, desktop UX and regression gates pass | Design in review |
+| Phase 0.75 | Personal calendars, opportunities, same-browser saved options, export/copy | Shared accounting, bounded scans, saved recovery, calendar imports, desktop UX and regression gates pass | Implemented in review; client acceptance pending |
+| Annual planning (AP) | Several vacations sharing one budget, reserve and locked dates | Reviewed plan first; later exact optimizer/oracle, integrated annual journeys, persistence, export and resource gates | Planning for review; implementation not authorized |
 | M3 Phase 1 | Destination and live-flight enrichment, preserving opportunity independence | Provider tests and travel-adapter independence checks pass | Planned |
 
 ## Phase 0 tasks

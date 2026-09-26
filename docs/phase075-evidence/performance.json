@@ -1,0 +1,42 @@
+{
+  "host": "macOS-26.6-arm64-arm-64bit-Mach-O",
+  "fixtures": [
+    {
+      "country": "IL",
+      "override_count": 0,
+      "runs": 20,
+      "evaluated_candidates": 9125,
+      "median_seconds": 0.136,
+      "p95_seconds": 0.152,
+      "max_seconds": 0.1549
+    },
+    {
+      "country": "US",
+      "override_count": 0,
+      "runs": 20,
+      "evaluated_candidates": 9125,
+      "median_seconds": 0.1303,
+      "p95_seconds": 0.1602,
+      "max_seconds": 0.1613
+    },
+    {
+      "country": "GB",
+      "override_count": 0,
+      "runs": 20,
+      "evaluated_candidates": 9125,
+      "median_seconds": 0.1312,
+      "p95_seconds": 0.1625,
+      "max_seconds": 0.205
+    },
+    {
+      "country": "IL",
+      "override_count": 100,
+      "runs": 20,
+      "evaluated_candidates": 9125,
+      "median_seconds": 0.971,
+      "p95_seconds": 1.0068,
+      "max_seconds": 1.0297,
+      "unavailable_range_count": 100
+    }
+  ]
+}
