@@ -2146,3 +2146,94 @@ summary:focus-visible {
     grid-template-columns: minmax(0, 1fr);
   }
 }
+
+.annual-month-grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.annual-month h4 {
+  margin: 14px 0 8px;
+  font-size: 0.78rem;
+}
+
+.annual-days {
+  display: grid;
+  grid-template-columns: repeat(7, minmax(0, 1fr));
+  text-align: center;
+  font-size: 0.64rem;
+  gap: 1px;
+}
+
+.annual-days b {
+  padding-bottom: 4px;
+}
+
+.annual-day {
+  padding: 2px 0;
+  border-radius: 2px;
+}
+
+.annual-day small {
+  display: block;
+  font-size: 0.4rem;
+  line-height: 0.5rem;
+}
+
+.annual-day--selected {
+  background: var(--forest);
+  color: white;
+}
+
+.annual-day--locked {
+  outline: 1px solid var(--coral-dark);
+  outline-offset: -1px;
+}
+
+.annual-day--unavailable {
+  background: repeating-linear-gradient(45deg, #ead6c9, #ead6c9 2px, #faf0e8 2px, #faf0e8 4px);
+  color: var(--ink);
+}
+
+.annual-day--past {
+  color: var(--ink-soft);
+  text-decoration: line-through;
+}
+
+.annual-legend {
+  font-size: 0.8rem;
+  line-height: 1.6;
+}
+
+.annual-break-links {
+  margin: 14px 0;
+}
+
+@media (max-width: 1250px) and (min-width: 1101px) {
+  .annual-month-grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}
+
+.annual-comparison-scroll {
+  overflow-x: auto;
+}
+
+.annual-comparison {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.78rem;
+}
+
+.annual-comparison th,
+.annual-comparison td {
+  padding: 9px 6px;
+  text-align: left;
+  border-bottom: 1px solid var(--line);
+}
+
+.annual-comparison button[aria-pressed='true'] {
+  background: var(--forest);
+  color: white;
+}

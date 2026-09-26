@@ -120,3 +120,21 @@ export function annualFixture() {
     ],
   }
 }
+
+export function annualFixtureWithAlternatives() {
+  const result = annualFixture()
+  const alternative = structuredClone(result.plans[0])
+  const august = alternative.breaks[2]
+  const charged = ['2027-08-15', '2027-08-16', '2027-08-17', '2027-08-18', '2027-08-19']
+  alternative.plan_id = 'b'.repeat(64)
+  alternative.objective = 'fewer_leave_days'
+  august.window.start_date = '2027-08-13'
+  august.window.end_date = '2027-08-21'
+  august.charged_dates = charged
+  august.day_details = result.year_calendar.filter(
+    (day) => day.date >= '2027-08-13' && day.date <= '2027-08-21',
+  )
+  alternative.accounting.charged_dates = ['2027-03-07', '2027-03-08', '2027-05-10', ...charged]
+  result.plans.push(alternative)
+  return result
+}

@@ -94,7 +94,12 @@ test('reduced plans disclose omitted breaks without changing the requested mix',
   submitResponse(reduced)
   expect(await screen.findByText('Reduced plan: 2 of 3 requested breaks')).toBeInTheDocument()
   expect(screen.getByText('Omitted: Break 1')).toBeInTheDocument()
-  expect(screen.getAllByRole('group', { name: /Break \d/ })).toHaveLength(3)
+  expect(screen.getAllByRole('group', { name: /^Break \d$/ })).toHaveLength(3)
+  fireEvent.click(screen.getByRole('button', { name: 'Use this reduced mix' }))
+  expect(screen.getAllByRole('group', { name: /^Break \d$/ })).toHaveLength(2)
+  expect(screen.getByText('Last calculation — inputs have changed')).toBeInTheDocument()
+  expect(screen.getByText('Omitted: Break 1')).toBeInTheDocument()
+  expect(screen.getByRole('button', { name: 'Use this reduced mix' })).toBeDisabled()
 })
 
 test('a response with broken aggregate accounting cannot become a usable result', async () => {
