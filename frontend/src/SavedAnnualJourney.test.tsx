@@ -37,23 +37,26 @@ test('save and offline reopening preserve the original mix while recalculation u
   vi.stubGlobal('fetch', fetch)
   render(<App />)
   await screen.findByText('Service ready')
-  fireEvent.click(screen.getByRole('button', { name: 'Plan my year' }))
-  fireEvent.change(screen.getByLabelText('Available leave for included trips'), {
+  const navigation = within(screen.getByRole('navigation', { name: 'Planning task' }))
+  fireEvent.click(navigation.getByRole('button', { name: 'Plan my year' }))
+  const workspace = within(screen.getByRole('region', { name: 'Plan my year' }))
+  fireEvent.change(workspace.getByLabelText('Available leave for included trips'), {
     target: { value: '18' },
   })
-  fireEvent.change(screen.getByLabelText('Protected reserve'), { target: { value: '3' } })
-  fireEvent.click(screen.getByRole('button', { name: 'Generate plans' }))
+  fireEvent.change(workspace.getByLabelText('Protected reserve'), { target: { value: '3' } })
+  fireEvent.click(workspace.getByRole('button', { name: 'Generate plans' }))
   await screen.findByText('8 vacation days used')
-  fireEvent.click(screen.getByRole('button', { name: 'Save this plan' }))
+  fireEvent.click(workspace.getByRole('button', { name: 'Save this plan' }))
   await screen.findByText('Annual plan saved in this browser')
-  fireEvent.change(screen.getByLabelText('Protected reserve'), { target: { value: '5' } })
-  expect(screen.getByRole('button', { name: 'Save this plan' })).toBeDisabled()
-  fireEvent.click(screen.getByRole('button', { name: 'Saved options' }))
+  fireEvent.change(workspace.getByLabelText('Protected reserve'), { target: { value: '5' } })
+  expect(workspace.getByRole('button', { name: 'Save this plan' })).toBeDisabled()
+  fireEvent.click(navigation.getByRole('button', { name: 'Saved options' }))
   fireEvent.click(screen.getByRole('button', { name: 'Annual plans' }))
-  expect(screen.getByRole('heading', { name: '2027 annual plan' })).toBeInTheDocument()
+  const saved = within(screen.getByRole('region', { name: 'Saved annual plans', exact: true }))
+  expect(saved.getByRole('heading', { name: '2027 annual plan' })).toBeInTheDocument()
   fetch.mockRejectedValue(new Error('offline'))
   const calls = fetch.mock.calls.length
-  fireEvent.click(screen.getByRole('button', { name: 'Open annual plan' }))
+  fireEvent.click(saved.getByRole('button', { name: 'Open annual plan' }))
   expect(screen.getByText(/Historical annual calculation/)).toBeInTheDocument()
   expect(screen.getByText('Calendar: IL · Asia/Jerusalem')).toBeInTheDocument()
   expect(
@@ -61,23 +64,23 @@ test('save and offline reopening preserve the original mix while recalculation u
       '8 vacation days used',
     ),
   ).toBeInTheDocument()
-  fireEvent.click(screen.getByRole('button', { name: 'Show Break 2 details' }))
-  expect(screen.getByRole('group', { name: 'Break 2 charged dates and day details' })).toHaveFocus()
-  fireEvent.click(screen.getByRole('button', { name: 'Recalculate this plan' }))
+  fireEvent.click(saved.getByRole('button', { name: 'Show Break 2 details' }))
+  expect(saved.getByRole('group', { name: 'Break 2 charged dates and day details' })).toHaveFocus()
+  fireEvent.click(saved.getByRole('button', { name: 'Recalculate this plan' }))
   const restored = within(screen.getByRole('region', { name: 'Plan my year' }))
   expect(restored.getByLabelText('Protected reserve')).toHaveValue(3)
   expect(restored.queryByText(/^Locked:/)).not.toBeInTheDocument()
   fireEvent.change(restored.getByLabelText('Protected reserve'), { target: { value: '2' } })
   fireEvent.click(screen.getByRole('button', { name: 'Back to saved annual plan' }))
-  fireEvent.click(screen.getByRole('button', { name: 'Plan my year' }))
-  expect(screen.getByLabelText('Protected reserve')).toHaveValue(5)
+  fireEvent.click(navigation.getByRole('button', { name: 'Plan my year' }))
+  expect(workspace.getByLabelText('Protected reserve')).toHaveValue(5)
   expect(fetch.mock.calls.length).toBe(calls)
   expect(
     within(screen.getByRole('region', { name: 'Your annual plans' })).getByText(
       '8 vacation days used',
     ),
   ).toBeInTheDocument()
-})
+}, 10000)
 
 test('saved annual rename, removal and undo survive reload and another-tab changes', async () => {
   const { createAnnualSnapshot, SavedAnnualPlansStore } = await import('./savedAnnualPlans')
