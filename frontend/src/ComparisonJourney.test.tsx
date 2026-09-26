@@ -59,7 +59,9 @@ test('manual dates can be compared without a search month or preferred length', 
   fireEvent.change(workspace.getByLabelText('Start date'), { target: { value: '2027-01-03' } })
   fireEvent.change(workspace.getByLabelText('End date'), { target: { value: '2027-01-07' } })
   fireEvent.click(workspace.getByRole('button', { name: 'Compare dates' }))
-  expect(await workspace.findByText('5 vacation days used')).toBeInTheDocument()
+  expect(await workspace.findByRole('region', { name: 'Your dates' })).toHaveTextContent(
+    '5 vacation days used',
+  )
   expect(requests.some((item) => item.url.endsWith('/recommendations'))).toBe(false)
   expect(requests.find((item) => item.url.endsWith('/comparisons'))?.body).toEqual({
     start_date: '2027-01-03',
@@ -115,7 +117,7 @@ test('a matching result date opens comparison and returning preserves Search and
   fireEvent.click(screen.getByText('2 matching date options · same score and vacation-day cost'))
   fireEvent.click(screen.getByRole('button', { name: 'Compare Jan 10 – Jan 14, 2027' }))
   const workspace = within(screen.getByRole('region', { name: 'Could nearby dates work better?' }))
-  await workspace.findByText('5 vacation days used')
+  await workspace.findByRole('region', { name: 'Your dates' })
   expect(workspace.getByLabelText('Start date')).toHaveValue('2027-01-10')
   expect(requests.filter((item) => item.url.endsWith('/sessions'))).toHaveLength(1)
   expect(requests.find((item) => item.url.endsWith('/comparisons'))?.body).toEqual({

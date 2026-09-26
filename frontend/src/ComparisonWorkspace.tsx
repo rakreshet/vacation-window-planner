@@ -2,6 +2,7 @@ import { useCallback, useEffect, useRef, useState } from 'react'
 import { compareDates, ComparisonError, createSession } from './api'
 import type { ComparisonResponse, DateRange, SessionInput } from './api'
 import PlanningFields from './PlanningFields'
+import ComparisonResults from './ComparisonResults'
 import { planningSession } from './planning'
 import type { PlanningDraft } from './planning'
 
@@ -22,6 +23,12 @@ export default function ComparisonWorkspace({
   const [result, setResult] = useState<ComparisonResponse | null>(null)
   const [error, setError] = useState<string | null>(null)
   const [busy, setBusy] = useState(false)
+  const [calculated, setCalculated] = useState<ComparisonDraft | null>(null)
+  const [contextOpen, setContextOpen] = useState(!origin)
+  const originalDates = useRef<DateRange | null>(
+    draft.dates.start_date && draft.dates.end_date ? draft.dates : null,
+  )
+  const stale = calculated !== null && JSON.stringify(calculated) !== JSON.stringify(draft)
   const initial = useRef(draft)
   const originUsable = useRef(true)
   const alive = useRef(true)
@@ -31,7 +38,6 @@ export default function ComparisonWorkspace({
     async (value: ComparisonDraft) => {
       setBusy(true)
       setError(null)
-      setResult(null)
       try {
         if (
           !value.dates.start_date ||
@@ -47,7 +53,12 @@ export default function ComparisonWorkspace({
           JSON.stringify(context) === JSON.stringify(origin.context)
         const token = reuse ? origin.token : await createSession(context)
         const response = await compareDates(token, value.dates, reuse ? origin.searchId : undefined)
-        if (alive.current) setResult(response)
+        if (alive.current) {
+          setResult(response)
+          setCalculated(value)
+          originalDates.current ??= value.dates
+          setContextOpen(false)
+        }
       } catch (caught) {
         if (!alive.current) return
         if (
@@ -80,8 +91,19 @@ export default function ComparisonWorkspace({
 
   function edit(next: ComparisonDraft) {
     onDraftChange(next)
-    setResult(null)
     setError(null)
+  }
+
+  function shift(days: number) {
+    const move = (value: string) => {
+      const date = new Date(`${value}T00:00:00Z`)
+      date.setUTCDate(date.getUTCDate() + days)
+      return date.toISOString().slice(0, 10)
+    }
+    edit({
+      ...draft,
+      dates: { start_date: move(draft.dates.start_date), end_date: move(draft.dates.end_date) },
+    })
   }
 
   return (
@@ -101,6 +123,7 @@ export default function ComparisonWorkspace({
         </p>
       </header>
       <form
+        className="comparison-editor"
         onSubmit={(event) => {
           event.preventDefault()
           void run(draft)
@@ -132,15 +155,57 @@ export default function ComparisonWorkspace({
                 }
               />
             </div>
-            <PlanningFields
-              prefix="compare-"
-              value={draft.planning}
-              onChange={(planning) => edit({ ...draft, planning })}
-            />
           </div>
+          <div className="date-shifts">
+            <span>Move the whole break · same length</span>
+            <button
+              className="button button--secondary"
+              type="button"
+              disabled={!draft.dates.start_date || !draft.dates.end_date}
+              onClick={() => shift(-1)}
+            >
+              Move 1 day earlier
+            </button>
+            <button
+              className="button button--secondary"
+              type="button"
+              disabled={!draft.dates.start_date || !draft.dates.end_date}
+              onClick={() => shift(1)}
+            >
+              Move 1 day later
+            </button>
+            {originalDates.current && (
+              <button
+                className="button button--plain"
+                type="button"
+                onClick={() => edit({ ...draft, dates: originalDates.current! })}
+              >
+                Reset original dates
+              </button>
+            )}
+          </div>
+          <p className="date-hint">
+            Both dates are included. Edit either endpoint to change the length.
+          </p>
+          <details
+            className="comparison-context"
+            open={contextOpen}
+            onToggle={(event) => setContextOpen(event.currentTarget.open)}
+          >
+            <summary>
+              Calendar and balance · {draft.planning.balance || 'Set your'} vacation days
+            </summary>
+            <div className="field-grid">
+              <PlanningFields
+                prefix="compare-"
+                value={draft.planning}
+                onChange={(planning) => edit({ ...draft, planning })}
+              />
+            </div>
+          </details>
         </fieldset>
         <button className="button button--primary" type="submit" disabled={busy}>
-          {busy ? 'Comparing dates…' : 'Compare dates'}
+          {busy ? 'Comparing dates…' : result ? 'Update comparison' : 'Compare dates'}
         </button>
       </form>
       {error && (
@@ -148,21 +213,23 @@ export default function ComparisonWorkspace({
           {error}
         </p>
       )}
+      <p className="comparison-status" role="status">
+        {busy
+          ? 'Calculating your dates and nearby options…'
+          : error
+            ? ''
+            : stale
+              ? 'Inputs changed · update to recalculate.'
+              : result
+                ? 'Comparison ready. Your dates are the reference for every option below.'
+                : ''}
+      </p>
       {result && (
-        <div className="comparison-baseline" aria-label="Your dates">
-          <p className="section-kicker">Your dates</p>
-          <h3>
-            {result.baseline.window.start_date} – {result.baseline.window.end_date}
-          </h3>
-          <p>{result.baseline.window.total_days} total days off</p>
-          <p>{result.baseline.window.vacation_days_used} vacation days used</p>
-          <p>{result.baseline.remaining_balance} vacation days remaining</p>
-          {!result.baseline.feasible && (
-            <p className="form-notice form-notice--error">
-              These dates exceed your vacation-day allowance.
-            </p>
-          )}
-        </div>
+        <ComparisonResults
+          key={result.comparison_id}
+          result={result}
+          stale={stale || busy || Boolean(error)}
+        />
       )}
     </section>
   )

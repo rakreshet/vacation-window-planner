@@ -23,7 +23,11 @@ export default function App() {
   const [comparisonKey, setComparisonKey] = useState(0)
   const opener = useRef<HTMLElement | null>(null)
 
+  const searchScroll = useRef(0)
+
   function openComparison(dates?: DateRange) {
+    if (mode === 'compare') return
+    searchScroll.current = window.scrollY
     opener.current = document.activeElement as HTMLElement
     if (dates && confirmedContext && sessionToken && results) {
       setComparisonDraft({ dates, planning: planningFromSession(confirmedContext) })
@@ -39,8 +43,12 @@ export default function App() {
   }
 
   function closeComparison() {
+    if (mode === 'search') return
     setMode('search')
-    setTimeout(() => opener.current?.focus(), 0)
+    setTimeout(() => {
+      opener.current?.focus({ preventScroll: true })
+      window.scrollTo({ top: searchScroll.current, behavior: 'instant' })
+    }, 0)
   }
 
   useEffect(() => {
@@ -99,7 +107,7 @@ export default function App() {
       </header>
 
       <main id="top">
-        <section className="hero" aria-labelledby="hero-heading">
+        <section className="hero" aria-labelledby="hero-heading" hidden={mode !== 'search'}>
           <div className="hero-copy">
             <p className="eyebrow">Make every leave day count</p>
             <h1 id="hero-heading">
@@ -152,7 +160,10 @@ export default function App() {
           </aside>
         </section>
 
-        <nav className="planning-tabs" aria-label="Planning task">
+        <nav
+          className={`planning-tabs ${mode === 'compare' ? 'planning-tabs--compact' : ''}`}
+          aria-label="Planning task"
+        >
           <button type="button" aria-pressed={mode === 'search'} onClick={closeComparison}>
             Find dates
           </button>
