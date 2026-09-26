@@ -61,7 +61,7 @@ The [Phase 0.5 plan](phase-0.5-plan.md) is proposed in [#35](https://github.com/
 | Task | Deliverable | PR(s) | Status |
 | --- | --- | --- | --- |
 | P05 01 | Comparison UX prototype | [#36](https://github.com/rakreshet/vacation-window-planner/pull/36) | PR open |
-| P05 02 | Shared exact-window accounting | — | Planned |
+| P05 02 | Shared exact-window accounting | [#37](https://github.com/rakreshet/vacation-window-planner/pull/37) | PR open |
 | P05 03 | Local-date context | — | Planned |
 | P05 04 | Comparison policy and contracts | — | Planned |
 | P05 05 | Exact baseline service and API | — | Planned |
