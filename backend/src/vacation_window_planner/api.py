@@ -15,6 +15,7 @@ from pydantic import BaseModel, ConfigDict, Field, StrictInt, field_validator
 from starlette.exceptions import HTTPException as StarletteHTTPException
 from starlette.middleware.base import RequestResponseEndpoint
 
+from vacation_window_planner.annual_interpreter import AnnualInterpretationInput, AnnualProposal
 from vacation_window_planner.annual_workflow import (
     AnnualPlannerBusy,
     AnnualPlanningRequest,
@@ -141,6 +142,8 @@ def create_app(
     annual_service: Callable[[AnnualPlanningRequest], AnnualRun] | None = None,
     comparison_service: Callable[[ComparisonRequest], ComparisonResult] | None = None,
     interpretation_service: Callable[[str], ConstraintProposal] | None = None,
+    annual_interpretation_service: Callable[[AnnualInterpretationInput], AnnualProposal]
+    | None = None,
     feedback_service: Callable[[UUID, int, UUID, FeedbackValue], None] | None = None,
     session_creator: Callable[[SessionHttpRequest, datetime], CreatedAnonymousSession]
     | None = None,
@@ -331,6 +334,21 @@ def create_app(
             return _error(422, "UNSUPPORTED_CALENDAR", str(error), ["context.country_code"])
         except (CalendarResolutionUnavailable, CalendarCoverageError):
             return _error(503, "CALENDAR_UNAVAILABLE", "Calendar data is unavailable; try again")
+
+    @app.post(
+        "/annual-plans/interpret", response_model=AnnualProposal, response_model_exclude_none=True
+    )
+    def interpret_annual(body: AnnualInterpretationInput) -> AnnualProposal | JSONResponse:
+        if annual_interpretation_service is None:
+            return _error(
+                503,
+                "INTERPRETATION_UNAVAILABLE",
+                "Use structured annual fields; interpretation is not configured",
+            )
+        try:
+            return annual_interpretation_service(body)
+        except InterpretationError:
+            return _error(502, "INTERPRETATION_ERROR", "Annual text interpretation failed")
 
     @app.post("/interpret", response_model=ConstraintProposal)
     def interpret(body: InterpretationInput) -> ConstraintProposal | JSONResponse:

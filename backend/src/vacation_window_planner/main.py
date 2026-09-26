@@ -5,6 +5,7 @@ from uuid import UUID
 
 from sqlalchemy.exc import SQLAlchemyError
 
+from vacation_window_planner.annual_interpreter import build_annual_interpreter
 from vacation_window_planner.annual_workflow import AnnualPlanningRequest, AnnualRun, AnnualWorkflow
 from vacation_window_planner.api import SessionHttpRequest, create_app
 from vacation_window_planner.comparison_workflow import ComparisonRequest, ComparisonWorkflow
@@ -49,6 +50,7 @@ policy = RecommendationPolicy()
 comparison_policy = ComparisonPolicy()
 calendar_provider = PythonHolidaysCalendarProvider()
 interpreter = build_interpreter(settings)
+annual_interpreter = build_annual_interpreter(settings)
 
 
 def utc_now() -> datetime:
@@ -147,6 +149,9 @@ app = create_app(
     comparison_service=compare,
     annual_service=plan_annual,
     interpretation_service=interpreter.interpret if interpreter is not None else None,
+    annual_interpretation_service=annual_interpreter.interpret
+    if annual_interpreter is not None
+    else None,
     feedback_service=save_feedback,
     session_creator=create_session,
     clock=utc_now,
