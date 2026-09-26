@@ -108,8 +108,8 @@ Base verified September 26, 2026: `origin/main` = `20df229`; #50 merged; #51–#
 | AP 04 | Authenticated workflow/HTTP, annual snapshots and resource controls | AP 03 | [#65](https://github.com/rakreshet/vacation-window-planner/pull/65) | In review |
 | AP 05 | Structured annual workspace and first integrated planning journey | AP 04 | [#66](https://github.com/rakreshet/vacation-window-planner/pull/66) | In review |
 | AP 06 | Year view, whole-plan comparison and lock/recalculate UX | AP 05 | [#67](https://github.com/rakreshet/vacation-window-planner/pull/67) | 94 frontend tests; live generated alternatives, preserved lock and keyboard details verified |
-| AP 07 | Optional interpretation with proposal review and explicit references | AP 06 | Preparing PR | Typed proposal/review flow; 269 backend and 100 frontend tests pass |
-| AP 08 | Same-browser saved annual plans and explicit reopening/recalculation | AP 07 | — | Planned |
+| AP 07 | Optional interpretation with proposal review and explicit references | AP 06 | [#68](https://github.com/rakreshet/vacation-window-planner/pull/68) | Typed proposal/review flow; 269 backend and 100 frontend tests pass |
+| AP 08 | Same-browser saved annual plans and explicit reopening/recalculation | AP 07 | Preparing PR | Immutable browser snapshots; 108 frontend tests; live reload and separate recalculation verified |
 | AP 09 | Whole-plan calendar download and leave-request copy | AP 08 | — | Planned |
 | AP 10 | Integrated acceptance, performance, accessibility and runbook | AP 09 | — | Planned |
 
