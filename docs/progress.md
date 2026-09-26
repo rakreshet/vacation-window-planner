@@ -56,7 +56,7 @@ These gaps are relative to the existing task plan, not regressions in the runnin
 
 ## Phase 0.5 — compare vacation dates
 
-The [Phase 0.5 plan](phase-0.5-plan.md) is proposed on `codex/phase05-what-if-plan`, based on the open Phase 0 tip at PR #34. The tasks below are planned; no implementation PR has opened. Add each real PR link and update its status as the stack progresses. Keep Search, its results, and feedback working at each step.
+The [Phase 0.5 plan](phase-0.5-plan.md) is proposed in [#35](https://github.com/rakreshet/vacation-window-planner/pull/35), based on the open Phase 0 tip at PR #34. The tasks below are planned; no implementation PR has opened. Add each real PR link and update its status as the stack progresses. Keep Search, its results, and feedback working at each step.
 
 | Task | Deliverable | PR(s) | Status |
 | --- | --- | --- | --- |
@@ -99,3 +99,4 @@ The rows follow the [recommended execution order](implementation-plan.md#recomme
 | [#2](https://github.com/rakreshet/vacation-window-planner/pull/2) | Merged | Recorded the four Phase 0 product-rule decisions in the PRD, HLD, and task plan; added domain language. |
 | [#3](https://github.com/rakreshet/vacation-window-planner/pull/3) | Merged | Introduced this delivery progress and PR map. |
 | [#4](https://github.com/rakreshet/vacation-window-planner/pull/4) | Open | First Phase 0 stack PR: records search-completeness and interpretation-confirmation rules. |
+| [#35](https://github.com/rakreshet/vacation-window-planner/pull/35) | Open | Proposes the Phase 0.5 comparison UX and backend plan, ten gradual tasks, test-first delivery rules, and its progress table. Stacked on #34. |
