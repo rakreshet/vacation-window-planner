@@ -1,6 +1,8 @@
 import os
+from collections.abc import Iterator
 from datetime import UTC, datetime
 from pathlib import Path
+from types import ModuleType
 from urllib.parse import urlparse
 from uuid import UUID
 
@@ -8,9 +10,12 @@ import pytest
 from alembic import command
 from alembic.config import Config
 from fastapi.testclient import TestClient
+from sqlalchemy.orm import Session
 
 from vacation_window_planner.api import create_app
 from vacation_window_planner.domain.calendar import FakeCalendarProvider
+
+type AnnualApi = tuple[TestClient, ModuleType]
 
 NOW = datetime(2026, 9, 26, 22, tzinfo=UTC)
 LOCKED_REQUEST = {
@@ -34,7 +39,7 @@ CONTEXT = {
 
 
 @pytest.fixture
-def annual_api(monkeypatch: pytest.MonkeyPatch):
+def annual_api(monkeypatch: pytest.MonkeyPatch) -> Iterator[AnnualApi]:
     url = os.environ.get("TEST_DATABASE_URL")
     if url is None:
         pytest.skip("Requires disposable PostgreSQL")
@@ -59,7 +64,7 @@ def annual_api(monkeypatch: pytest.MonkeyPatch):
         yield client, main
 
 
-def test_authenticated_annual_result_is_saved_before_success(annual_api) -> None:
+def test_authenticated_annual_result_is_saved_before_success(annual_api: AnnualApi) -> None:
     from vacation_window_planner.repositories.annual_plans import AnnualRunRepository
 
     client, main = annual_api
@@ -89,7 +94,7 @@ def test_authenticated_annual_result_is_saved_before_success(annual_api) -> None
 
 @pytest.mark.parametrize("failure_event", ["before_flush", "before_commit"])
 def test_failed_annual_transaction_rolls_back_and_allows_a_clean_retry(
-    annual_api, failure_event
+    annual_api: AnnualApi, failure_event: str
 ) -> None:
     from sqlalchemy import event
     from sqlalchemy.exc import SQLAlchemyError
@@ -108,7 +113,7 @@ def test_failed_annual_transaction_rolls_back_and_allows_a_clean_retry(
     with main.sessions() as session:
         store = AnnualRunRepository(session)
 
-        def fail_transaction(*args):
+        def fail_transaction(*args: object) -> None:
             raise SQLAlchemyError("controlled persistence failure")
 
         event.listen(session, failure_event, fail_transaction)
@@ -133,7 +138,7 @@ def test_failed_annual_transaction_rolls_back_and_allows_a_clean_retry(
 
 @pytest.mark.parametrize("outcome", ["infeasible", "conflict", "too_broad"])
 def test_every_evaluable_outcome_has_an_immutable_snapshot(
-    annual_api, monkeypatch, outcome
+    annual_api: AnnualApi, monkeypatch: pytest.MonkeyPatch, outcome: str
 ) -> None:
     from vacation_window_planner.domain.annual import AnnualPolicy
     from vacation_window_planner.repositories.annual_plans import AnnualRunRepository
@@ -160,7 +165,7 @@ def test_every_evaluable_outcome_has_an_immutable_snapshot(
 
 
 def test_http_commit_failure_returns_retryable_error_then_clean_request_succeeds(
-    annual_api,
+    annual_api: AnnualApi,
 ) -> None:
     from sqlalchemy import event
     from sqlalchemy.exc import SQLAlchemyError
@@ -169,7 +174,7 @@ def test_http_commit_failure_returns_retryable_error_then_clean_request_succeeds
     owner = client.post("/sessions", json=CONTEXT).json()
     headers = {"Authorization": f"Bearer {owner['token']}"}
 
-    def reject_commit(session):
+    def reject_commit(session: Session) -> None:
         raise SQLAlchemyError("controlled commit failure")
 
     event.listen(main.sessions.class_, "before_commit", reject_commit)
