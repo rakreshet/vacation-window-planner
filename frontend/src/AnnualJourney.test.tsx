@@ -88,7 +88,7 @@ test('explicit generation shows aggregate leave and chronological charged dates'
     reserve_days: 3,
     minimum_gap_days: 7,
   })
-  expect(result.queryByRole('button', { name: /Save|Copy|Download/ })).not.toBeInTheDocument()
+  expect(result.queryByRole('button', { name: /Copy|Download/ })).not.toBeInTheDocument()
 })
 
 test('year, months, spacing and ordered slots are explicit draft edits', async () => {

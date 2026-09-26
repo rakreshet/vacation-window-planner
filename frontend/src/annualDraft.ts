@@ -1,3 +1,5 @@
+import type { AnnualResult } from './savedAnnualPlans'
+import { planningFromSession } from './planning'
 import { annualRequestSchema, type AnnualRequest } from './annualContracts'
 import type { DateRange } from './api'
 import type { PlanningDraft } from './planning'
@@ -63,4 +65,20 @@ export function annualInput(draft: AnnualDraft): AnnualRequest {
   )
     throw new Error('Reserve must fit within an available balance of 0 to 366 days')
   return input.data
+}
+
+export function draftFromAnnual(result: AnnualResult): AnnualDraft {
+  return {
+    planning: planningFromSession(result.calculation_context.planning),
+    year: String(result.input.year),
+    reserve: String(result.input.reserve_days),
+    gap: String(result.input.minimum_gap_days),
+    months: [...result.input.allowed_start_months],
+    slots: result.input.slots.map((slot) => ({
+      id: slot.slot_id,
+      minimum: String(slot.min_days),
+      maximum: String(slot.max_days),
+      dates: slot.locked_dates ? { ...slot.locked_dates } : undefined,
+    })),
+  }
 }

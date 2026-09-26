@@ -1,3 +1,4 @@
+import SavedAnnualPlansView from './SavedAnnualPlansView'
 import AnnualPlanWorkspace from './AnnualPlanWorkspace'
 import type { PlanningDraft } from './planning'
 import SavedOptionsView from './SavedOptionsView'
@@ -23,6 +24,7 @@ export default function App() {
 
   const [planning, setPlanning] = useState(emptyPlanning)
   const [confirmedContext, setConfirmedContext] = useState<SessionInput | null>(null)
+  const [savedTab, setSavedTab] = useState<'vacations' | 'annual'>('vacations')
   const [mode, setMode] = useState<'search' | 'compare' | 'saved' | 'annual'>('search')
   const [comparisonDraft, setComparisonDraft] = useState<ComparisonDraft | null>(null)
   const [origin, setOrigin] = useState<ComparisonOrigin | undefined>()
@@ -295,7 +297,28 @@ export default function App() {
         )}
         {savedVisited && (
           <div hidden={mode !== 'saved'}>
-            <SavedOptionsView onCheck={checkSaved} />
+            <nav className="planning-tabs" aria-label="Saved categories">
+              <button
+                type="button"
+                aria-pressed={savedTab === 'vacations'}
+                onClick={() => setSavedTab('vacations')}
+              >
+                Vacations
+              </button>
+              <button
+                type="button"
+                aria-pressed={savedTab === 'annual'}
+                onClick={() => setSavedTab('annual')}
+              >
+                Annual plans
+              </button>
+            </nav>
+            <div hidden={savedTab !== 'vacations'}>
+              <SavedOptionsView onCheck={checkSaved} />
+            </div>
+            <div hidden={savedTab !== 'annual'}>
+              <SavedAnnualPlansView />
+            </div>
           </div>
         )}
       </main>
