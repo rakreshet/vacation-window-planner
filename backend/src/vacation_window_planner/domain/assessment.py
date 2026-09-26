@@ -16,12 +16,15 @@ class CalendarCoverageError(ValueError):
     """The requested calendar coverage cannot be represented or assessed."""
 
 
+type DayKind = Literal[
+    "extra_working_day", "personal_day_off", "public_holiday", "weekend", "ordinary_working"
+]
+
+
 class DayDetail(DomainValue):
     date: date
     charged: bool
-    kind: Literal[
-        "extra_working_day", "personal_day_off", "public_holiday", "weekend", "ordinary_working"
-    ]
+    kind: DayKind
     is_public_holiday: bool
     is_weekend: bool
     unavailable: bool
@@ -121,14 +124,7 @@ def assess_window(
         day = date.fromordinal(ordinal)
         holiday = day in prepared.base.observed_holidays
         weekend = day.weekday() in prepared.base.weekend_days
-        kind: Literal[
-            "extra_working_day", "personal_day_off", "public_holiday", "weekend", "ordinary_working"
-        ]
-        kind = "public_holiday" if holiday else "weekend" if weekend else "ordinary_working"
-        for rule in prepared.context.personal_calendar.date_overrides:
-            if rule.start_date <= day <= rule.end_date:
-                kind = rule.kind
-                break
+        kind = effective_day_kind(day, prepared, holiday=holiday, weekend=weekend)
         charged_day = kind in ("extra_working_day", "ordinary_working")
         blocked = any(
             r.start_date <= day <= r.end_date
@@ -152,15 +148,7 @@ def assess_window(
                     unavailable=blocked,
                 )
             )
-    reasons: list[EligibilityReason] = []
-    if unavailable:
-        reasons.append(UnavailableDates(dates=tuple(unavailable)))
-    earliest = prepared.earliest_start_date
-    if start_date < earliest:
-        reasons.append(InsufficientNotice(earliest_start_date=earliest))
-    permitted = prepared.context.balance_days + prepared.context.allowed_negative_days
-    if cost > permitted:
-        reasons.append(OverBudget(required_days=cost, permitted_days=permitted))
+    reasons = eligibility_reasons(start_date, cost, unavailable, prepared)
     remaining = prepared.context.balance_days - cost
     warnings: tuple[Literal["full_balance", "negative_balance"], ...] = ()
     if remaining < 0:
@@ -185,3 +173,27 @@ def assess_window(
     return WindowAssessment(
         **summary.model_dump(), charged_dates=tuple(charged), day_details=tuple(days)
     )
+
+
+def effective_day_kind(
+    day: date, prepared: PreparedCalendar, *, holiday: bool, weekend: bool
+) -> DayKind:
+    for rule in prepared.context.personal_calendar.date_overrides:
+        if rule.start_date <= day <= rule.end_date:
+            return rule.kind
+    return "public_holiday" if holiday else "weekend" if weekend else "ordinary_working"
+
+
+def eligibility_reasons(
+    start_date: date, cost: int, unavailable: list[date], prepared: PreparedCalendar
+) -> tuple[EligibilityReason, ...]:
+    reasons: list[EligibilityReason] = []
+    if unavailable:
+        reasons.append(UnavailableDates(dates=tuple(unavailable)))
+    earliest = prepared.earliest_start_date
+    if start_date < earliest:
+        reasons.append(InsufficientNotice(earliest_start_date=earliest))
+    permitted = prepared.context.balance_days + prepared.context.allowed_negative_days
+    if cost > permitted:
+        reasons.append(OverBudget(required_days=cost, permitted_days=permitted))
+    return tuple(reasons)

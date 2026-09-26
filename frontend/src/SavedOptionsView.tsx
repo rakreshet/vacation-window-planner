@@ -1,5 +1,5 @@
 import ExportActions from './ExportActions'
-import { useEffect, useState } from 'react'
+import { useCallback, useEffect, useState } from 'react'
 import type { ActionSnapshot } from './actionSnapshots'
 import {
   browserSavedOptions,
@@ -33,38 +33,32 @@ export default function SavedOptionsView({
   function access() {
     return store ?? browserSavedOptions()
   }
-  function refresh() {
+  const refresh = useCallback(() => {
     try {
-      setRecords(access().list())
+      setRecords((store ?? browserSavedOptions()).list())
       setError('')
     } catch {
       setError('Browser storage is unavailable. Existing saved data has not been cleared.')
     }
-  }
-  useEffect(() => {
-    const reload = () => {
-      try {
-        setRecords((store ?? browserSavedOptions()).list())
-        setError('')
-      } catch {
-        setError('Browser storage is unavailable. Existing saved data has not been cleared.')
-      }
-    }
-    reload()
-    window.addEventListener('storage', reload)
-    window.addEventListener(savedOptionsChanged, reload)
-    return () => {
-      window.removeEventListener('storage', reload)
-      window.removeEventListener(savedOptionsChanged, reload)
-    }
   }, [store])
+  useEffect(() => {
+    refresh()
+    window.addEventListener('storage', refresh)
+    window.addEventListener(savedOptionsChanged, refresh)
+    return () => {
+      window.removeEventListener('storage', refresh)
+      window.removeEventListener(savedOptionsChanged, refresh)
+    }
+  }, [refresh])
   function change(action: () => void) {
     try {
       action()
       refresh()
       notifySavedOptionsChanged()
+      return true
     } catch (caught) {
       setError(caught instanceof Error ? caught.message : 'Could not update saved options')
+      return false
     }
   }
   function remove(id: string) {
@@ -128,7 +122,7 @@ function SavedOptionCard({
   item: SavedOption
   onCheck: (snapshot: ActionSnapshot) => void
   onRemove: () => void
-  onRename: (name: string) => void
+  onRename: (name: string) => boolean
 }) {
   const [renaming, setRenaming] = useState(false)
   const [name, setName] = useState(item.name)
@@ -144,14 +138,19 @@ function SavedOptionCard({
         <form
           onSubmit={(event) => {
             event.preventDefault()
-            onRename(name)
-            setRenaming(false)
+            if (onRename(name)) setRenaming(false)
           }}
         >
           <label>
             Option name
             <input
               value={name}
+              onKeyDown={(event) => {
+                if (event.key === 'Escape') {
+                  event.preventDefault()
+                  setRenaming(false)
+                }
+              }}
               maxLength={80}
               required
               onChange={(event) => setName(event.target.value)}
