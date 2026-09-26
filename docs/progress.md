@@ -103,7 +103,7 @@ Base verified September 26, 2026: `origin/main` = `20df229`; #50 merged; #51–#
 | --- | --- | --- | --- | --- |
 | AP 00 | Versioned BE/FE/UX plan, test strategy, domain terms and PR sequence | P075 10 branch tip | [#61](https://github.com/rakreshet/vacation-window-planner/pull/61) | Merged into prerequisite stack |
 | AP 01 | Locked-only annual assessment, shared budget/reserve and conflict facts | AP 00 + explicit implementation authorization | [#62](https://github.com/rakreshet/vacation-window-planner/pull/62) | In review |
-| AP 02 | Complete annual candidates and exact full-mix optimizer | AP 01 | — | Implemented; preparing PR |
+| AP 02 | Complete annual candidates and exact full-mix optimizer | AP 01 | [#63](https://github.com/rakreshet/vacation-window-planner/pull/63) | In review |
 | AP 03 | Diverse full plans, labeled reductions and truthful diagnostics | AP 02 | — | Planned |
 | AP 04 | Authenticated workflow/HTTP, annual snapshots and resource controls | AP 03 | — | Planned |
 | AP 05 | Structured annual workspace and first integrated planning journey | AP 04 | — | Planned |
