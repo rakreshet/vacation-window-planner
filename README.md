@@ -82,3 +82,9 @@ The backend test uses a separate disposable `vacation_test` PostgreSQL database;
 ## Local-run skill
 
 Codex can use the versioned [run-vacation-window-planner skill](.agents/skills/run-vacation-window-planner/SKILL.md) when you ask it to start or check this app locally. The skill follows this README and preserves existing local configuration and database data.
+
+## Annual multi-vacation planning
+
+**Plan my year** coordinates up to six breaks under one available-leave budget and protected reserve. Review complete alternatives, lock dates and explicitly recalculate, save one historical plan in this browser, or export/copy the whole plan. Locked trips count in the mix. Natural-language interpretation is optional and only proposes editable inputs.
+
+See the [annual plan](docs/annual-plans-plan.md), [acceptance results and remaining calendar-import checks](docs/annual-plans-acceptance.md), [progress/PR stack](docs/progress.md#annual-planning--several-vacations-one-budget), and [operations](docs/runbook.md#annual-planning).

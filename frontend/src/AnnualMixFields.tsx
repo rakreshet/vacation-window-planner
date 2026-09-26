@@ -1,3 +1,4 @@
+import { FieldError, useFieldValidation } from './FieldValidation'
 import AnnualLockEditor from './AnnualLockEditor'
 import type { AnnualDraft } from './annualDraft'
 
@@ -22,6 +23,7 @@ export default function AnnualMixFields({
   draft: AnnualDraft
   onChange: (draft: AnnualDraft) => void
 }) {
+  const field = useFieldValidation()
   const localYear = Number(
     new Intl.DateTimeFormat('en', { year: 'numeric', timeZone: draft.planning.timeZone }).format(
       new Date(),
@@ -38,6 +40,7 @@ export default function AnnualMixFields({
         <label className="field">
           Plan year
           <select
+            {...field('year')}
             value={draft.year}
             onChange={(event) => onChange({ ...draft, year: event.target.value })}
           >
@@ -48,23 +51,27 @@ export default function AnnualMixFields({
               <option key={year}>{year}</option>
             ))}
           </select>
+          <FieldError field="year" />
         </label>
         <label className="field">
           Minimum dates between breaks
           <input
+            {...field('minimum_gap_days')}
             type="number"
             min="0"
             max="60"
             value={draft.gap}
             onChange={(event) => onChange({ ...draft, gap: event.target.value })}
           />
+          <FieldError field="minimum_gap_days" />
         </label>
       </div>
       <p>
         Separate breaks also need at least one working date between them. Past dates are excluded
         from new breaks.
       </p>
-      <fieldset className="annual-months">
+      <fieldset className="annual-months" tabIndex={-1} {...field('allowed_start_months')}>
+        <FieldError field="allowed_start_months" />
         <legend>Start months for new breaks</legend>
         <div className="day-picker">
           {months.map((month, index) => (
@@ -93,12 +100,14 @@ export default function AnnualMixFields({
       <h2>Your requested breaks</h2>
       <p>Locked trips count in this mix. Priority when reducing: top to bottom.</p>
       {draft.slots.map((slot, index) => (
-        <fieldset className="annual-slot" key={slot.id}>
+        <fieldset className="annual-slot" key={slot.id} tabIndex={-1} {...field(`slots.${index}`)}>
           <legend>Break {index + 1}</legend>
           <div className="field-grid">
             <label className="field">
+              <FieldError field={`slots.${index}.min_days`} />
               Minimum days away
               <input
+                {...field(`slots.${index}.min_days`)}
                 type="number"
                 min={slot.dates ? '1' : '3'}
                 max="28"
@@ -114,8 +123,10 @@ export default function AnnualMixFields({
               />
             </label>
             <label className="field">
+              <FieldError field={`slots.${index}.max_days`} />
               Maximum days away
               <input
+                {...field(`slots.${index}.max_days`)}
                 type="number"
                 min={slot.dates ? '1' : '3'}
                 max="28"

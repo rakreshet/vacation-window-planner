@@ -3,11 +3,17 @@ import { browserAnnualPlans, notifyAnnualPlansChanged } from './browserAnnualPla
 import AnnualInterpretation from './AnnualInterpretation'
 import { useEffect, useRef, useState } from 'react'
 import type { PlanningDraft } from './planning'
-import { annualInput, newAnnualDraft, type AnnualDraft } from './annualDraft'
+import { AnnualDraftError, annualInput, newAnnualDraft, type AnnualDraft } from './annualDraft'
 import PlanningFields from './PlanningFields'
 import { createSession } from './api'
 import { planningSession } from './planning'
-import { generateAnnualPlans } from './annualApi'
+import {
+  FieldValidation,
+  FieldError,
+  useFieldValidation,
+  type FieldProblem,
+} from './FieldValidation'
+import { AnnualError, generateAnnualPlans } from './annualApi'
 import type { AnnualBreak, AnnualPlan, AnnualRun } from './annualContracts'
 import AnnualPlanResults from './AnnualPlanResults'
 import AnnualMixFields from './AnnualMixFields'
@@ -36,6 +42,7 @@ export default function AnnualPlanWorkspace({
     active.current = null
     setBusy(false)
     setError(null)
+    setProblem(null)
     setFailedOutcome(null)
     setDraft(next)
   }
@@ -59,6 +66,7 @@ export default function AnnualPlanWorkspace({
   }
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  const [problem, setProblem] = useState<FieldProblem | null>(null)
   async function save(plan: AnnualPlan) {
     if (!result || stale || busy) return
     const submittedRevision = revision.current
@@ -83,6 +91,7 @@ export default function AnnualPlanWorkspace({
     const submittedRevision = revision.current
     setBusy(true)
     setError(null)
+    setProblem(null)
     try {
       const input = annualInput(draft)
       const token = await createSession(planningSession(draft.planning))
@@ -103,9 +112,12 @@ export default function AnnualPlanWorkspace({
     } catch (caught) {
       if (controller.signal.aborted || submittedRevision !== revision.current) return
       setCalculatedRevision(-1)
-      setError(
-        caught instanceof Error ? caught.message : 'Annual planning is unavailable. Try again.',
-      )
+      setProblem({
+        message:
+          caught instanceof Error ? caught.message : 'Annual planning is unavailable. Try again.',
+        fields:
+          caught instanceof AnnualDraftError || caught instanceof AnnualError ? caught.fields : [],
+      })
     } finally {
       if (active.current === controller) {
         active.current = null
@@ -128,70 +140,85 @@ export default function AnnualPlanWorkspace({
         <p>Annual planning uses zero allowed negative days.</p>
       )}
       <AnnualInterpretation draft={draft} onChange={edit} />
-      <form
-        onSubmit={(event) => {
-          event.preventDefault()
-          void generate()
-        }}
-      >
-        <fieldset>
-          <div className="field-grid">
-            <PlanningFields
-              annual
-              prefix={idPrefix}
-              value={draft.planning}
-              onChange={(planning) => edit({ ...draft, planning })}
-            />
-            <label className="field">
-              Protected reserve
-              <input
-                type="number"
-                min="0"
-                step="1"
-                value={draft.reserve}
-                onChange={(event) => edit({ ...draft, reserve: event.target.value })}
+      <FieldValidation problem={problem}>
+        <form
+          noValidate
+          onSubmit={(event) => {
+            event.preventDefault()
+            void generate()
+          }}
+        >
+          <fieldset>
+            <div className="field-grid">
+              <PlanningFields
+                annual
+                prefix={idPrefix}
+                value={draft.planning}
+                onChange={(planning) => edit({ ...draft, planning })}
               />
-            </label>
-          </div>
-          <AnnualMixFields draft={draft} onChange={edit} />
-          <button className="button button--primary" type="submit" disabled={busy}>
-            {busy ? 'Calculating…' : result ? 'Recalculate plans' : 'Generate plans'}
-          </button>
-        </fieldset>
-      </form>
-      {notice && <p role="status">{notice}</p>}
-      {error && <p role="alert">{error}</p>}
-      {failedOutcome && <AnnualPlanResults result={failedOutcome} />}
-      {result ? (
-        <AnnualPlanResults
-          result={result}
-          stale={stale}
-          busy={busy}
-          previousPlan={previousPlan}
-          onLock={lockDates}
-          onSave={(plan) => void save(plan)}
-          onUseReduced={(plan) =>
-            edit({
-              ...draft,
-              slots: draft.slots.filter((slot) => plan.retained_slot_ids.includes(slot.id)),
-            })
-          }
-          selectedId={selectedId}
-          onSelect={setSelectedId}
-        />
-      ) : (
-        <aside className="annual-results">
-          <h2>Your year, planned together</h2>
-          <p>
-            Choose your breaks and protect a reserve. Generate plans to see dates that work together
-            under one calendar and one leave budget.
-          </p>
-          <p>
-            Include allocated leave for any locked trips even if your HR balance already excludes
-            it.
-          </p>
-        </aside>
-      )}
+              <ReserveField
+                value={draft.reserve}
+                onChange={(reserve) => edit({ ...draft, reserve })}
+              />
+            </div>
+            <AnnualMixFields draft={draft} onChange={edit} />
+            <button className="button button--primary" type="submit" disabled={busy}>
+              {busy ? 'Calculating…' : result ? 'Recalculate plans' : 'Generate plans'}
+            </button>
+          </fieldset>
+        </form>
+        {notice && <p role="status">{notice}</p>}
+        {error && <p role="alert">{error}</p>}
+        {failedOutcome && <AnnualPlanResults result={failedOutcome} />}
+        {result ? (
+          <AnnualPlanResults
+            result={result}
+            stale={stale}
+            busy={busy}
+            previousPlan={previousPlan}
+            onLock={lockDates}
+            onSave={(plan) => void save(plan)}
+            onUseReduced={(plan) =>
+              edit({
+                ...draft,
+                slots: draft.slots.filter((slot) => plan.retained_slot_ids.includes(slot.id)),
+              })
+            }
+            selectedId={selectedId}
+            onSelect={setSelectedId}
+          />
+        ) : (
+          <aside className="annual-results">
+            <h2>Your year, planned together</h2>
+            <p>
+              Choose your breaks and protect a reserve. Generate plans to see dates that work
+              together under one calendar and one leave budget.
+            </p>
+            <p>
+              Include allocated leave for any locked trips even if your HR balance already excludes
+              it.
+            </p>
+          </aside>
+        )}
+      </FieldValidation>
     </section>
+  )
+}
+
+function ReserveField({ value, onChange }: { value: string; onChange: (value: string) => void }) {
+  const field = useFieldValidation()
+  return (
+    <label className="field">
+      Protected reserve
+      <input
+        {...field('reserve_days')}
+        type="number"
+        min="0"
+        step="1"
+        value={value}
+        onChange={(event) => onChange(event.target.value)}
+      />
+      <FieldError field="reserve_days" />
+    </label>
   )
 }

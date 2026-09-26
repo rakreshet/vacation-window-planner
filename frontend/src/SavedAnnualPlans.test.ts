@@ -110,3 +110,16 @@ test('changed annual constraints create a distinct capture while objective label
     first.capture_id,
   )
 })
+
+test('a stored plan with an invalid time zone is isolated before reopening can crash', async () => {
+  const storage = new MemoryOptionStorage()
+  const store = new SavedAnnualPlansStore(storage)
+  const run = annualRunSchema.parse(annualFixture())
+  store.save(await createAnnualSnapshot(run, run.plans[0].plan_id))
+  const key = storage.key(0)!
+  const record = JSON.parse(storage.getItem(key)!)
+  record.snapshot.result.calculation_context.planning.time_zone = 'Invalid/Timezone'
+  storage.setItem(key, JSON.stringify(record))
+  expect(store.list().items).toHaveLength(0)
+  expect(store.list().invalid).toEqual([key])
+})

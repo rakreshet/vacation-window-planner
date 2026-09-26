@@ -43,8 +43,38 @@ export function newAnnualDraft(planning: PlanningDraft): AnnualDraft {
   }
 }
 
+export class AnnualDraftError extends Error {
+  constructor(
+    message: string,
+    readonly fields: string[],
+  ) {
+    super(message)
+  }
+}
+
 export function annualInput(draft: AnnualDraft): AnnualRequest {
-  if (draft.editingSlotId) throw new Error('Keep or cancel the exact dates before calculating')
+  if (draft.editingSlotId)
+    throw new AnnualDraftError('Keep or cancel the exact dates before calculating', [
+      `slots.${draft.slots.findIndex((slot) => slot.id === draft.editingSlotId)}`,
+    ])
+  if (draft.planning.calendarEditor)
+    throw new AnnualDraftError('Apply or cancel the calendar rule before calculating', [
+      'context.personal_calendar',
+    ])
+  if (draft.planning.pendingCountry)
+    throw new AnnualDraftError('Keep or clear date overrides before calculating', [
+      'context.country_code',
+    ])
+  const notice = draft.planning.personalCalendar?.minimum_notice_days ?? 0
+  if (!Number.isInteger(notice) || notice < 0 || notice > 90)
+    throw new AnnualDraftError('Minimum notice must be a whole number from 0 to 90', [
+      'context.personal_calendar.minimum_notice_days',
+    ])
+  const balance = Number(draft.planning.balance)
+  if (!draft.planning.balance || !Number.isInteger(balance) || balance < 0 || balance > 366)
+    throw new AnnualDraftError('Enter available leave from 0 to 366 whole days', [
+      'context.balance_days',
+    ])
   const input = annualRequestSchema.safeParse({
     year: Number(draft.year),
     reserve_days: Number(draft.reserve),
@@ -57,13 +87,25 @@ export function annualInput(draft: AnnualDraft): AnnualRequest {
       locked_dates: slot.dates ?? null,
     })),
   })
-  if (!input.success || !draft.year || !draft.reserve || !draft.gap)
-    throw new Error('Check the year, reserve, start months and break lengths')
+  if (!input.success || !draft.year || !draft.reserve || !draft.gap) {
+    const fields = !input.success
+      ? input.error.issues.map((issue) => {
+          const path = issue.path.join('.')
+          if (/^slots\.\d+$/.test(path)) return `${path}.min_days`
+          return path || 'allowed_start_months'
+        })
+      : [!draft.year ? 'year' : !draft.reserve ? 'reserve_days' : 'minimum_gap_days']
+    throw new AnnualDraftError('Check the year, reserve, start months and break lengths', [
+      ...new Set(fields),
+    ])
+  }
   if (
     Number(draft.planning.balance) > 366 ||
     input.data.reserve_days > Number(draft.planning.balance)
   )
-    throw new Error('Reserve must fit within an available balance of 0 to 366 days')
+    throw new AnnualDraftError('Reserve must fit within an available balance of 0 to 366 days', [
+      Number(draft.planning.balance) > 366 ? 'context.balance_days' : 'reserve_days',
+    ])
   return input.data
 }
 

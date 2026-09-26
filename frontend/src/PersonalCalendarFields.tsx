@@ -1,3 +1,4 @@
+import { FieldError, useFieldValidation } from './FieldValidation'
 import { useState } from 'react'
 import CalendarRuleEditor from './CalendarRuleEditor'
 import CalendarRuleList from './CalendarRuleList'
@@ -10,6 +11,7 @@ type PersonalCalendarFieldsProps = {
 }
 
 export default function PersonalCalendarFields({ value, onChange }: PersonalCalendarFieldsProps) {
+  const field = useFieldValidation()
   const calendar = value.personalCalendar ?? emptyPersonalCalendar()
   const ruleDraft = value.calendarEditor
   const [error, setError] = useState<string | null>(null)
@@ -26,8 +28,13 @@ export default function PersonalCalendarFields({ value, onChange }: PersonalCale
   }
 
   return (
-    <fieldset className="field field--wide personal-calendar">
+    <fieldset
+      className="field field--wide personal-calendar"
+      tabIndex={-1}
+      {...field('context.personal_calendar')}
+    >
       <legend>My calendar</legend>
+      <FieldError field="context.personal_calendar" />
       <p>
         Personal days off use no leave. Extra working days override holidays and weekends.
         Unavailable dates exclude the entire break.
@@ -35,6 +42,7 @@ export default function PersonalCalendarFields({ value, onChange }: PersonalCale
       <label>
         Minimum notice days
         <input
+          {...field('context.personal_calendar.minimum_notice_days')}
           type="number"
           min="0"
           max="90"
@@ -48,6 +56,7 @@ export default function PersonalCalendarFields({ value, onChange }: PersonalCale
           }
         />
       </label>
+      <FieldError field="context.personal_calendar.minimum_notice_days" />
       <small>Calendar days from today before a break may start.</small>
       <CalendarRuleList
         calendar={calendar}
