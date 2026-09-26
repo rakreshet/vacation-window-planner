@@ -4,6 +4,19 @@ from typing import Literal, Self
 
 from pydantic import Field, StrictInt, field_validator, model_validator
 
+from vacation_window_planner.domain.annual_budget import (
+    DEFAULT_ANNUAL_POLICY,
+    LimitReason,
+    WorkCounters,
+    WorkLimitExceeded,
+)
+from vacation_window_planner.domain.annual_budget import (
+    AnnualPolicy as AnnualPolicy,
+)
+from vacation_window_planner.domain.annual_budget import (
+    WorkBudget as WorkBudget,
+)
+from vacation_window_planner.domain.annual_search import Selection, select_annual_breaks
 from vacation_window_planner.domain.assessment import DayDetail, PreparedCalendar, assess_window
 from vacation_window_planner.domain.contracts import VacationWindow
 from vacation_window_planner.domain.personal_calendar import DateRange
@@ -112,20 +125,58 @@ type AnnualConflict = (
 
 
 class AnnualOutcome(DomainValue):
-    status: Literal["complete", "conflict"] = "complete"
+    status: Literal["complete", "conflict", "infeasible", "too_broad"] = "complete"
     plans: tuple[AnnualPlan, ...] = Field(default=())
     locked_assessments: tuple[AnnualBreak, ...] = ()
     conflicts: tuple[AnnualConflict, ...] = ()
     year_calendar: tuple[DayDetail, ...]
+    policy: AnnualPolicy = AnnualPolicy()
+    counters: WorkCounters = WorkCounters()
+    limit_reason: LimitReason | None = None
 
 
-def plan_year(request: AnnualRequest, calendar: PreparedCalendar) -> AnnualOutcome:
+def plan_year(
+    request: AnnualRequest,
+    calendar: PreparedCalendar,
+    *,
+    policy: AnnualPolicy = DEFAULT_ANNUAL_POLICY,
+    work_budget: WorkBudget | None = None,
+) -> AnnualOutcome:
+    budget = work_budget or WorkBudget(policy)
+    if budget.policy != policy:
+        raise ValueError("Work budget and annual policy must match")
+    try:
+        budget.checkpoint()
+        result = calculate_year(request, calendar, budget)
+        budget.checkpoint()
+        return result.model_copy(update={"policy": policy, "counters": budget.counters})
+    except WorkLimitExceeded as error:
+        return AnnualOutcome(
+            status="too_broad",
+            year_calendar=(),
+            policy=policy,
+            counters=budget.counters,
+            limit_reason=error.reason,
+        )
+
+
+def calculate_year(
+    request: AnnualRequest, calendar: PreparedCalendar, budget: WorkBudget
+) -> AnnualOutcome:
     validate_annual_context(request, calendar)
     year_calendar = assess_window(
         date(request.year, 1, 1), date(request.year, 12, 31), calendar
     ).day_details
     breaks = assess_locked_breaks(request, calendar)
     conflicts = locked_conflicts(request, calendar, breaks)
+    plan_breaks = breaks
+    if not conflicts and any(slot.locked_dates is None for slot in request.slots):
+        selected = select_annual_breaks(request, calendar, year_calendar, breaks, budget)
+        if selected is None:
+            return AnnualOutcome(
+                status="infeasible", year_calendar=year_calendar, locked_assessments=breaks
+            )
+        plan_breaks = assess_selection(request, calendar, selected)
     return AnnualOutcome(
         status="conflict" if conflicts else "complete",
         year_calendar=year_calendar,
@@ -135,12 +186,35 @@ def plan_year(request: AnnualRequest, calendar: PreparedCalendar) -> AnnualOutco
         if conflicts
         else (
             AnnualPlan(
-                breaks=breaks,
+                breaks=plan_breaks,
                 accounting=annual_accounting(
-                    breaks, calendar.context.balance_days, request.reserve_days
+                    plan_breaks, calendar.context.balance_days, request.reserve_days
                 ),
             ),
         ),
+    )
+
+
+def assess_selection(
+    request: AnnualRequest,
+    calendar: PreparedCalendar,
+    selection: Selection,
+) -> tuple[AnnualBreak, ...]:
+    selected_slots = list(request.slots)
+    for index, candidate in selection:
+        selected_slots[index] = selected_slots[index].model_copy(
+            update={
+                "locked_dates": DateRange(
+                    start_date=candidate.start_date, end_date=candidate.end_date
+                ),
+            }
+        )
+    locked_ids = {slot.slot_id for slot in request.slots if slot.locked_dates is not None}
+    return tuple(
+        item.model_copy(update={"locked": item.slot_id in locked_ids})
+        for item in assess_locked_breaks(
+            request.model_copy(update={"slots": tuple(selected_slots)}), calendar
+        )
     )
 
 
@@ -155,7 +229,7 @@ def assess_locked_breaks(
         key=lambda item: item.locked_dates.start_date if item.locked_dates else date.max,
     ):
         if slot.locked_dates is None:
-            raise ValueError("This calculation requires exact locked dates")
+            continue
         assessment = assess_window(
             slot.locked_dates.start_date, slot.locked_dates.end_date, calendar
         )
@@ -250,6 +324,11 @@ def annual_accounting(
 
 
 def validate_annual_context(request: AnnualRequest, calendar: PreparedCalendar) -> None:
+    if (
+        calendar.base.country_code != calendar.context.country_code
+        or calendar.base.weekend_days != calendar.context.weekend_days
+    ):
+        raise ValueError("Resolved calendar must match the common planning context")
     if calendar.context.allowed_negative_days:
         raise ValueError("Annual planning does not use a negative allowance")
     if not calendar.local_today.year <= request.year <= calendar.local_today.year + 2:

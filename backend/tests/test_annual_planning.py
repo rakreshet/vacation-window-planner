@@ -298,3 +298,135 @@ def test_all_lock_conflicts_have_stable_slot_and_code_order() -> None:
         "locked_budget",
         "locked_unavailable",
     ]
+
+
+def test_one_generated_break_uses_every_eligible_date_before_selecting_the_best() -> None:
+    request = AnnualRequest.model_validate(
+        {
+            "year": 2027,
+            "slots": [
+                {"slot_id": "short", "min_days": 3, "max_days": 4},
+            ],
+            "allowed_start_months": [1],
+        }
+    )
+    calendar = prepared_annual_calendar(
+        balance=1,
+        personal_calendar={
+            "unavailable_ranges": [
+                {"start_date": "2027-01-04", "end_date": "2027-12-31"},
+            ]
+        },
+    )
+    result = plan_year(request, calendar)
+    assert result.status == "complete"
+    selected = result.plans[0].breaks[0]
+    assert (selected.window.start_date, selected.window.end_date) == (
+        date(2027, 1, 1),
+        date(2027, 1, 3),
+    )
+    assert selected.locked is False
+    assert result.plans[0].accounting.total_leave_used == 1
+
+
+def test_joint_optimization_fills_the_mix_when_the_longest_individual_break_cannot() -> None:
+    request = AnnualRequest.model_validate(
+        {
+            "year": 2027,
+            "minimum_gap_days": 0,
+            "allowed_start_months": [1],
+            "slots": [
+                {"slot_id": "first", "min_days": 3, "max_days": 4},
+                {"slot_id": "second", "min_days": 3, "max_days": 4},
+            ],
+        }
+    )
+    calendar = prepared_annual_calendar(
+        balance=2,
+        personal_calendar={
+            "unavailable_ranges": [
+                {"start_date": "2027-01-04", "end_date": "2027-01-06"},
+                {"start_date": "2027-01-10", "end_date": "2027-01-19"},
+                {"start_date": "2027-01-24", "end_date": "2027-12-31"},
+            ]
+        },
+    )
+    plan = plan_year(request, calendar).plans[0]
+    assert [(item.window.start_date, item.window.end_date) for item in plan.breaks] == [
+        (date(2027, 1, 1), date(2027, 1, 3)),
+        (date(2027, 1, 7), date(2027, 1, 9)),
+    ]
+    assert (plan.accounting.total_days_away, plan.accounting.total_leave_used) == (6, 2)
+
+
+def test_generated_breaks_respect_locked_dates_spacing_and_their_shared_cost() -> None:
+    request = AnnualRequest.model_validate(
+        {
+            "year": 2027,
+            "minimum_gap_days": 0,
+            "allowed_start_months": [1],
+            "slots": [
+                locked_slot("arranged", "2027-01-01", "2027-01-03"),
+                {"slot_id": "new", "min_days": 3, "max_days": 4},
+            ],
+        }
+    )
+    calendar = prepared_annual_calendar(
+        balance=2,
+        personal_calendar={
+            "unavailable_ranges": [
+                {"start_date": "2027-01-04", "end_date": "2027-01-06"},
+                {"start_date": "2027-01-10", "end_date": "2027-12-31"},
+            ]
+        },
+    )
+    result = plan_year(request, calendar)
+    assert result.status == "complete"
+    assert [
+        (item.slot_id, item.window.start_date, item.locked) for item in result.plans[0].breaks
+    ] == [
+        ("arranged", date(2027, 1, 1), True),
+        ("new", date(2027, 1, 7), False),
+    ]
+    assert result.plans[0].accounting.remaining_days == 0
+    assert (
+        plan_year(
+            request,
+            prepared_annual_calendar(
+                balance=1,
+                personal_calendar={
+                    "unavailable_ranges": [
+                        {"start_date": "2027-01-04", "end_date": "2027-01-06"},
+                        {"start_date": "2027-01-10", "end_date": "2027-12-31"},
+                    ],
+                },
+            ),
+        ).status
+        == "infeasible"
+    )
+
+
+def test_resource_exhaustion_never_claims_that_a_mix_is_infeasible() -> None:
+    from vacation_window_planner.domain.annual import AnnualPolicy, WorkBudget
+
+    request = AnnualRequest.model_validate(
+        {
+            "year": 2027,
+            "allowed_start_months": [1],
+            "slots": [
+                {"slot_id": "short", "min_days": 3, "max_days": 5},
+            ],
+        }
+    )
+    for limit in ("candidate_limit", "state_limit", "transition_limit"):
+        policy = AnnualPolicy.model_validate({limit: 1})
+        result = plan_year(request, prepared_annual_calendar(), policy=policy)
+        assert result.status == "too_broad"
+        assert result.plans == ()
+        assert result.limit_reason == limit
+    times = iter([0.0, 6.0])
+    result = plan_year(
+        request, prepared_annual_calendar(), work_budget=WorkBudget(clock=lambda: next(times))
+    )
+    assert result.status == "too_broad"
+    assert result.limit_reason == "deadline"
