@@ -4,12 +4,14 @@ from datetime import UTC, datetime, timedelta
 from uuid import UUID
 
 from vacation_window_planner.api import SessionHttpRequest, create_app
+from vacation_window_planner.comparison_workflow import ComparisonRequest, ComparisonWorkflow
 from vacation_window_planner.database import (
     database_is_reachable,
     make_engine,
     make_session_factory,
 )
 from vacation_window_planner.domain.calendar import PythonHolidaysCalendarProvider
+from vacation_window_planner.domain.comparison import ComparisonPolicy, ComparisonResult
 from vacation_window_planner.domain.contracts import FeedbackValue
 from vacation_window_planner.domain.policy import RecommendationPolicy
 from vacation_window_planner.interpreter import build_interpreter
@@ -33,6 +35,7 @@ configure_json_logging()
 engine = make_engine(settings.database_url)
 sessions = make_session_factory(engine)
 policy = RecommendationPolicy()
+comparison_policy = ComparisonPolicy()
 calendar_provider = PythonHolidaysCalendarProvider()
 interpreter = build_interpreter(settings)
 
@@ -82,6 +85,17 @@ def recommend(request: RecommendationRequest) -> RecommendationResult:
             raise
 
 
+def compare(request: ComparisonRequest) -> ComparisonResult:
+    with sessions() as session:
+        workflow = ComparisonWorkflow(
+            calendar_provider=calendar_provider,
+            policy=comparison_policy,
+            clock=utc_now,
+            source_search_owned=SearchSnapshotRepository(session).belongs_to_session,
+        )
+        return workflow.compare(request)
+
+
 def save_feedback(search_id: UUID, rank: int, session_id: UUID, value: FeedbackValue) -> None:
     with sessions() as session:
         FeedbackRepository(session).set_for_rank(
@@ -98,6 +112,7 @@ app = create_app(
     database_probe=lambda: database_is_reachable(engine),
     session_lookup=find_session,
     recommendation_service=recommend,
+    comparison_service=compare,
     interpretation_service=interpreter.interpret if interpreter is not None else None,
     feedback_service=save_feedback,
     session_creator=create_session,

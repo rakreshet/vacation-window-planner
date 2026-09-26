@@ -15,7 +15,13 @@ from pydantic import BaseModel, ConfigDict, Field, StrictInt, field_validator
 from starlette.exceptions import HTTPException as StarletteHTTPException
 from starlette.middleware.base import RequestResponseEndpoint
 
+from vacation_window_planner.comparison_workflow import (
+    ComparisonOriginError,
+    ComparisonRequest,
+    InvalidComparisonError,
+)
 from vacation_window_planner.domain.calendar import UnsupportedCalendarError
+from vacation_window_planner.domain.comparison import ComparisonInput, ComparisonResult
 from vacation_window_planner.domain.contracts import (
     FeedbackValue,
     Recommendation,
@@ -105,6 +111,7 @@ def create_app(
     database_probe: Callable[[], bool],
     session_lookup: Callable[[str, datetime], AnonymousSessionState | None] | None = None,
     recommendation_service: Callable[[RecommendationRequest], RecommendationResult] | None = None,
+    comparison_service: Callable[[ComparisonRequest], ComparisonResult] | None = None,
     interpretation_service: Callable[[str], ConstraintProposal] | None = None,
     feedback_service: Callable[[UUID, int, UUID, FeedbackValue], None] | None = None,
     session_creator: Callable[[SessionHttpRequest, datetime], CreatedAnonymousSession]
@@ -219,6 +226,34 @@ def create_app(
             return _error(422, "INVALID_SEARCH", str(error))
         except SearchSnapshotPersistenceError:
             return _error(503, "PERSISTENCE_ERROR", "Search could not be saved")
+
+    @app.post("/comparisons", response_model=ComparisonResult)
+    def comparisons(
+        body: ComparisonInput,
+        authorization: Annotated[str | None, Header()] = None,
+    ) -> ComparisonResult | JSONResponse:
+        if session_lookup is None or comparison_service is None:
+            return _error(503, "SERVICE_UNAVAILABLE", "Comparison service is unavailable")
+        if authorization is None or not authorization.startswith("Bearer "):
+            return _error(401, "INVALID_SESSION", "A bearer session token is required")
+        token = authorization.removeprefix("Bearer ").strip()
+        session = session_lookup(token, clock()) if token else None
+        if session is None:
+            return _error(401, "SESSION_EXPIRED", "Session is expired or unknown")
+        context = UserVacationContext(
+            session_id=session.id,
+            balance_days=session.balance_days,
+            allowed_negative_days=session.allowed_negative_days,
+            country_code=session.country_code,
+            weekend_days=session.weekend_days,
+            time_zone=session.time_zone,
+        )
+        try:
+            return comparison_service(ComparisonRequest(context=context, dates=body))
+        except ComparisonOriginError as error:
+            return _error(404, "NOT_FOUND", str(error))
+        except (InvalidComparisonError, UnsupportedCalendarError) as error:
+            return _error(422, "INVALID_COMPARISON", str(error))
 
     @app.post("/interpret", response_model=ConstraintProposal)
     def interpret(body: InterpretationInput) -> ConstraintProposal | JSONResponse:

@@ -84,6 +84,16 @@ class SearchSnapshotRepository:
             raise SearchSnapshotPersistenceError("completed search was not persisted") from error
         return search_id
 
+    def belongs_to_session(self, search_id: UUID, session_id: UUID) -> bool:
+        return (
+            self._session.scalar(
+                select(SearchRecord.id).where(
+                    SearchRecord.id == search_id, SearchRecord.session_id == session_id
+                )
+            )
+            is not None
+        )
+
     def get(self, search_id: UUID) -> SearchSnapshot | None:
         search = self._session.get(SearchRecord, search_id)
         if search is None:
