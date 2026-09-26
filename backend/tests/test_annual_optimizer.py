@@ -2,7 +2,7 @@ from datetime import date, timedelta
 from random import Random
 from uuid import UUID
 
-from annual_oracle import exhaustive_plan
+from annual_oracle import exhaustive_alternatives, exhaustive_plan
 
 from vacation_window_planner.domain.annual import AnnualRequest, plan_year
 from vacation_window_planner.domain.assessment import prepare_calendar
@@ -55,9 +55,25 @@ def test_optimizer_matches_independent_exhaustive_combinations_on_small_calendar
             request, working, unavailable, budget - request.reserve_days, first, final
         )
         result = plan_year(request, calendar)
+        expected_options, retained_ids = exhaustive_alternatives(
+            request,
+            working,
+            unavailable,
+            budget - request.reserve_days,
+            first,
+            final,
+        )
+        assert (
+            tuple(
+                tuple((item.window.start_date, item.window.end_date) for item in plan.breaks)
+                for plan in result.plans
+            )
+            == expected_options
+        ), case
+        assert all(plan.retained_slot_ids == retained_ids for plan in result.plans), case
         if expected is None:
             assert result.status == "infeasible", case
-            assert not result.plans
+            assert all(plan.fulfillment == "reduced" for plan in result.plans)
         else:
             assert result.status == "complete", case
             actual = tuple(
