@@ -1,4 +1,5 @@
-import { changePlanningCountry, type PlanningDraft } from './planning'
+import PersonalCalendarFields from './PersonalCalendarFields'
+import { changePlanningCountry, resolveCalendarCountry, type PlanningDraft } from './planning'
 
 const weekdays = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday']
 
@@ -69,6 +70,20 @@ export default function PlanningFields({
               : 'Observed public holidays'}
         </small>
       </div>
+      {value.pendingCountry && (
+        <div className="field field--wide form-notice">
+          <p>Keep or clear your date overrides before changing the public holiday calendar.</p>
+          <button type="button" onClick={() => onChange(resolveCalendarCountry(value, true))}>
+            Keep date overrides
+          </button>
+          <button type="button" onClick={() => onChange(resolveCalendarCountry(value, false))}>
+            Clear date overrides
+          </button>
+          <button type="button" onClick={() => onChange({ ...value, pendingCountry: undefined })}>
+            Cancel calendar change
+          </button>
+        </div>
+      )}
       <fieldset className="field field--wide weekend-field">
         <legend>Weekend days</legend>
         <small>
@@ -96,6 +111,7 @@ export default function PlanningFields({
           ))}
         </div>
       </fieldset>
+      <PersonalCalendarFields value={value} onChange={onChange} />
     </>
   )
 }

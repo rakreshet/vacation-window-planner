@@ -44,7 +44,14 @@ export type RecommendationResponse = {
   notice?: string | null
 }
 
+export type PersonalCalendar = {
+  schema_version: 1
+  date_overrides: (DateRange & { kind: 'personal_day_off' | 'extra_working_day' })[]
+  unavailable_ranges: DateRange[]
+  minimum_notice_days: number
+}
 export type SessionInput = {
+  personal_calendar?: PersonalCalendar
   time_zone?: string
   balance_days: number
   allowed_negative_days: number

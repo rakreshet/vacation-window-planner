@@ -265,8 +265,8 @@ export default function ComparisonResults({
             ))}
             <p className="comparison-scope">
               Starts within {result.policy.shift_days} days of your dates, with up to{' '}
-              {result.policy.extra_days} extra days off. Work and personal availability have not
-              been checked.
+              {result.policy.extra_days} extra days off. Suggestions respect the calendar rules
+              entered. Other commitments and employer approval have not been checked.
             </p>
             {result.notices.map((notice) => (
               <p key={notice}>{notice}</p>

@@ -83,7 +83,7 @@ The [Phase 0.75 plan](phase-0.75-plan.md) defines ten behavior PRs plus this des
 | P075 00 | Product/backend/frontend plan, UX walkthrough, and PR sequence | [#50](https://github.com/rakreshet/vacation-window-planner/pull/50) | Done |
 | P075 01 | Shared calendar normalization and window assessment | [#51](https://github.com/rakreshet/vacation-window-planner/pull/51) | In review |
 | P075 02 | Personal context persistence and typed calculation results | [#52](https://github.com/rakreshet/vacation-window-planner/pull/52) | In review |
-| P075 03 | Personal calendar controls in Find and Compare | — | Planned |
+| P075 03 | Personal calendar controls in Find and Compare | — | In review |
 | P075 04 | Opportunity policy, scoring, and bounded detection | — | Planned |
 | P075 05 | Opportunity workflow and atomic snapshots | — | Planned |
 | P075 06 | Separate opportunities section and comparison entry | — | Planned |
