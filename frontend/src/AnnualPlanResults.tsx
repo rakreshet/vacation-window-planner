@@ -1,3 +1,4 @@
+import AnnualExportActions from './AnnualExportActions'
 import type { AnnualResult } from './savedAnnualPlans'
 import { useId } from 'react'
 import AnnualPlanComparison from './AnnualPlanComparison'
@@ -113,6 +114,12 @@ export default function AnnualPlanResults({
               Save this plan
             </button>
           )}
+          <AnnualExportActions
+            key={`${plan.plan_id}-${result.calculation_context.calculated_at}`}
+            result={result}
+            planId={plan.plan_id}
+            disabled={stale || busy}
+          />
           <AnnualYearView result={result} plan={plan} detailPrefix={headingId} />
           <ol>
             {plan.breaks.map((item) => (
