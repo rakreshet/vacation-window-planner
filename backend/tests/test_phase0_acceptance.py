@@ -17,7 +17,7 @@ from vacation_window_planner.database import make_engine, make_session_factory
 from vacation_window_planner.domain.calendar import FakeCalendarProvider
 from vacation_window_planner.domain.contracts import FeedbackValue, YearMonth
 from vacation_window_planner.domain.policy import RecommendationPolicy
-from vacation_window_planner.interpreter import ConstraintProposal
+from vacation_window_planner.interpreter import ConstraintProposal, InterpretationInput
 from vacation_window_planner.repositories.feedback import FeedbackRepository
 from vacation_window_planner.repositories.searches import SearchSnapshotRepository
 from vacation_window_planner.repositories.sessions import (
@@ -104,9 +104,9 @@ def test_representative_phase0_journey_and_cap_safety() -> None:
             )
             session.commit()
 
-    def interpret(source_text: str) -> ConstraintProposal:
+    def interpret(request: InterpretationInput) -> ConstraintProposal:
         return ConstraintProposal(
-            source_text=source_text,
+            source_text=request.text,
             balance_days=8,
             country_code="IL",
             months=(YearMonth(year=2026, month=10),),

@@ -8,6 +8,7 @@ from vacation_window_planner.interpreter import (
     ConstraintInterpreter,
     ConstraintProposal,
     InterpretationError,
+    InterpretationInput,
 )
 
 
@@ -23,8 +24,8 @@ def test_interpret_returns_proposal_without_starting_search() -> None:
         create_app(
             database_probe=lambda: True,
             recommendation_service=recommendation_service,
-            interpretation_service=lambda text: ConstraintProposal(
-                source_text=text,
+            interpretation_service=lambda request: ConstraintProposal(
+                source_text=request.text,
                 balance_days=8,
                 country_code="IL",
                 months=(),
@@ -53,7 +54,7 @@ def test_interpret_is_optional_while_structured_endpoint_remains_registered() ->
 
 
 def test_provider_failure_does_not_expose_details() -> None:
-    def failed_interpretation(_text: str) -> ConstraintProposal:
+    def failed_interpretation(_request: InterpretationInput) -> ConstraintProposal:
         raise InterpretationError("sensitive provider response")
 
     client = TestClient(
@@ -92,7 +93,7 @@ def test_interpret_api_uses_validated_model_output_and_country_workweek() -> Non
 
 
 def test_interpret_api_rejects_invalid_input_before_model_call() -> None:
-    def interpretation_service(_text: str) -> ConstraintProposal:
+    def interpretation_service(_request: InterpretationInput) -> ConstraintProposal:
         raise AssertionError("model must not run for invalid input")
 
     client = TestClient(
@@ -105,3 +106,21 @@ def test_interpret_api_rejects_invalid_input_before_model_call() -> None:
     response = client.post("/interpret", json={"text": ""})
 
     assert response.status_code == 422
+
+
+def test_interpret_passes_validated_time_zone_and_rejects_invalid_zone() -> None:
+    requests: list[InterpretationInput] = []
+
+    def interpret(request: InterpretationInput) -> ConstraintProposal:
+        requests.append(request)
+        return ConstraintProposal(source_text=request.text, missing_fields=("months",))
+
+    client = TestClient(create_app(database_probe=lambda: True, interpretation_service=interpret))
+    response = client.post(
+        "/interpret", json={"text": "next April", "time_zone": "America/Los_Angeles"}
+    )
+    assert response.status_code == 200
+    assert requests[0].time_zone == "America/Los_Angeles"
+    response = client.post("/interpret", json={"text": "next April", "time_zone": "not/a-zone"})
+    assert response.status_code == 422
+    assert len(requests) == 1
