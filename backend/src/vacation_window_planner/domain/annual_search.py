@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 from datetime import date, timedelta
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Literal
 
 from vacation_window_planner.domain.annual_budget import WorkBudget
 from vacation_window_planner.domain.assessment import DayDetail, PreparedCalendar, assess_window
@@ -63,7 +63,8 @@ def annual_candidates(
 
 
 type Selection = tuple[tuple[int, AnnualCandidate], ...]
-type StateKey = tuple[int, int]
+type StateKey = tuple[int, int, int]
+type SearchObjective = Literal["most_days_away", "fewer_leave_days"]
 type DateOrder = tuple[tuple[tuple[date, date], ...], tuple[int, ...]]
 
 
@@ -143,32 +144,46 @@ def build_candidate_graph(
     )
 
 
-def select_annual_breaks(
-    request: AnnualRequest,
-    calendar: PreparedCalendar,
-    days: tuple[DayDetail, ...],
-    locked: tuple[AnnualBreak, ...],
+def solve_annual_graph(
+    graph: CandidateGraph,
     budget: WorkBudget,
+    *,
+    objective: SearchObjective = "most_days_away",
+    previous: tuple[Selection, ...] = (),
+    target_mask: int | None = None,
+    allow_reduced: bool = False,
 ) -> Selection | None:
-    graph = build_candidate_graph(request, calendar, days, locked, budget)
-    return solve_annual_graph(graph, budget)
-
-
-def solve_annual_graph(graph: CandidateGraph, budget: WorkBudget) -> Selection | None:
+    novelty = {
+        candidate: novelty_flags(candidate, previous)
+        for choices in graph.by_start
+        for candidate in choices
+    }
+    required_novelty = (1 << len(previous)) - 1
+    target = graph.complete_mask if target_mask is None else target_mask
     states: list[dict[StateKey, PlanPrefix]] = [{} for _ in range(len(graph.by_start) + 1)]
     budget.state()
-    states[0][(graph.locked_mask, graph.locked_cost)] = PlanPrefix()
-    best: tuple[int, int, DateOrder] | None = None
+    states[0][(graph.locked_mask, graph.locked_cost, 0)] = PlanPrefix()
+    best: tuple[tuple[int, ...], DateOrder] | None = None
     selected: Selection | None = None
     for cursor, current in enumerate(states):
         for key, prefix in current.items():
-            filled, spent = key
-            if filled == graph.complete_mask:
-                rank = (-prefix.total_days, spent, prefix.dates)
+            filled, spent, flags = key
+            if (filled == target or (allow_reduced and filled)) and flags == required_novelty:
+                metrics: tuple[int, ...] = (
+                    (spent, -prefix.total_days)
+                    if objective == "fewer_leave_days"
+                    else (-prefix.total_days, spent)
+                )
+                if allow_reduced:
+                    priority = tuple(
+                        -int(bool(filled & (1 << slot))) for slot in range(graph.slot_count)
+                    )
+                    metrics = (-filled.bit_count(), *priority, *metrics)
+                rank = (metrics, prefix.dates)
                 if best is None or rank < best:
                     best, selected = rank, prefix.selection
-            elif cursor < len(graph.by_start):
-                advance_prefix(graph, states, cursor, key, prefix, budget)
+            if filled != target and cursor < len(graph.by_start):
+                advance_prefix(graph, states, cursor, key, prefix, budget, novelty, target)
         current.clear()
     return selected
 
@@ -180,8 +195,10 @@ def advance_prefix(
     key: StateKey,
     prefix: PlanPrefix,
     budget: WorkBudget,
+    novelty: dict[AnnualCandidate, int],
+    target_mask: int,
 ) -> None:
-    filled, spent = key
+    filled, spent, flags = key
     budget.transition()
     keep_prefix(states[cursor + 1], key, prefix, budget)
     for candidate in graph.by_start[cursor]:
@@ -191,14 +208,17 @@ def advance_prefix(
         for slot in range(graph.slot_count):
             budget.transition()
             bit = 1 << slot
-            if filled & bit or not candidate.slot_mask & bit:
+            if filled & bit or not candidate.slot_mask & bit or not target_mask & bit:
                 continue
             updated = PlanPrefix(
                 prefix.total_days + candidate.total_days, prefix.selection + ((slot, candidate),)
             )
             next_cursor = graph.successors[candidate.end_date.toordinal() - graph.first_ordinal]
             keep_prefix(
-                states[next_cursor], (filled | bit, spent + candidate.leave_days), updated, budget
+                states[next_cursor],
+                (filled | bit, spent + candidate.leave_days, flags | novelty[candidate]),
+                updated,
+                budget,
             )
 
 
@@ -219,3 +239,18 @@ def compatible_with_locks(
         if not any(day.charged and left_end < day.date < right_start for day in days):
             return False
     return True
+
+
+def novelty_flags(candidate: AnnualCandidate, previous: tuple[Selection, ...]) -> int:
+    flags = 0
+    for index, selection in enumerate(previous):
+        if all(is_materially_different(candidate, item) for _, item in selection):
+            flags |= 1 << index
+    return flags
+
+
+def is_materially_different(left: AnnualCandidate, right: AnnualCandidate) -> bool:
+    overlap = max(
+        0, (min(left.end_date, right.end_date) - max(left.start_date, right.start_date)).days + 1
+    )
+    return overlap * 2 < min(left.total_days, right.total_days)
