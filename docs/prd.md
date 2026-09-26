@@ -6,13 +6,15 @@ This document defines the first product release, the decisions already made, and
 
 | Field | Value |
 | --- | --- |
-| **Status** | Phase 0 and Phase 0.5 delivered; Phase 0.75 design in review; Phase 1 planned |
+| **Status** | Phase 0/0.5 delivered; Phase 0.75 implemented in review with client acceptance pending; annual planning proposed; Phase 1 planned |
 | **Prepared for** | POC product and engineering implementation |
 | **Version date** | 2026-09-26 |
 
 Delivery and original PR links are recorded in the [progress tracker](progress.md). Phase 0.5 requirements and task details are maintained in the [comparison plan](phase-0.5-plan.md), with completed validation in the [acceptance record](phase-0.5-acceptance.md).
 
-The [Phase 0.75 plan](phase-0.75-plan.md) and [UX walkthrough](phase-0.75-ux.md) define the next proposed scope and exact rules, contracts, scoring, PR sequence, and acceptance gates. They supersede the placement of proactive opportunities in Phase 1. Implementation awaits the user's explicit readiness instruction.
+The [Phase 0.75 plan](phase-0.75-plan.md) and [UX walkthrough](phase-0.75-ux.md) define its rules, contracts, scoring, PR sequence, and acceptance gates. They supersede the placement of proactive opportunities in Phase 1. Its implementation is in the open #51–#60 stack; see [acceptance](phase-0.75-acceptance.md) for remaining client checks.
+
+The [annual planning plan](annual-plans-plan.md) and [UX walkthrough](annual-plans-ux.md) are the next documentation-only proposal: several vacations within one year, one leave budget, a protected reserve, and exact locked dates. Locks count toward the requested mix; the pool covers included future trips, excluding past-trip accounting, accrual, and carryover. Infeasible mixes receive an explanation and clearly labeled reduced plans when possible. Its defaults and [TDD seams](annual-plans-testing.md) are for review; implementation needs a later explicit user instruction. Annual planning uses AP task IDs and does not replace Phase 1.
 
 ## Product decision
 
@@ -36,7 +38,8 @@ Employees can see balances and calendars in HR tools, but they still have to dis
 | --- | --- | --- |
 | Phase 0 | Vacation window generation, ranking, explanations, anonymous session state, persisted search snapshots, simple feedback | Destinations, flight search, booking, user accounts, accrual forecasting |
 | Phase 0.5 | Exact-date comparison from manual dates or Search, nearby savings and longer breaks, local-date context, immutable comparison snapshots | Broad proactive scans, destinations, flights, mobile certification |
-| Phase 0.75 (design) | Manual personal calendars, separate opportunities after explicit Search, same-browser saved options, ICS export, copyable leave-request details | Accounts, cross-device recovery, connected calendars, notifications, annual allocation, accrual, travel enrichment |
+| Phase 0.75 (implementation in review) | Manual personal calendars, separate opportunities after explicit Search, same-browser saved options, ICS export, copyable leave-request details | Accounts, cross-device recovery, connected calendars, notifications, annual allocation, accrual, travel enrichment |
+| Annual planning (AP, proposed) | One-year coordinated plans, shared budget/reserve, locks included in the mix, structured/optional interpreted input, reduced alternatives, year view and browser saves/export | Past-trip ledger, accrual/carryover, accounts, connected calendars, notifications, household budgets, travel enrichment |
 | Phase 1 | Destination matching and live flight enrichment (multi passenger, one origin, economy default); preserve opportunity independence | Flight booking and payment; LLM based opportunity decisions |
 
 ## Phase 0 user experience

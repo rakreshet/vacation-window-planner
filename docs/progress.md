@@ -1,12 +1,13 @@
 # Delivery progress and pull request map
 
-This is the versioned record of what has been merged and which pull request delivered each task. The [Phase 0 and Phase 1 implementation task plan](implementation-plan.md), [Phase 0.5 comparison plan](phase-0.5-plan.md), and [Phase 0.75 plan](phase-0.75-plan.md) define each task's scope, tests, and definition of done; this file tracks delivery, not a second copy of the plans.
+This is the versioned record of what has been merged and which pull request delivered each task. The [Phase 0 and Phase 1 implementation task plan](implementation-plan.md), [Phase 0.5 comparison plan](phase-0.5-plan.md), [Phase 0.75 plan](phase-0.75-plan.md), and [annual planning plan](annual-plans-plan.md) define each task's scope, tests, and definition of done; this file tracks delivery, not a second copy of the plans.
 
 ## How to use this tracker
 
 - Use one task ID per pull request by default, with its tests in the same PR. Start new work from current `main`. If work needs a stack, base each PR on its predecessor and agree how to land it; a merge commit from the verified stack tip into `main` can preserve all commits without rebasing each PR.
 - For Phase 0.5 behavior work, write one failing test at an agreed public seam, implement only that behavior, and repeat within the same PR. Keep the Phase 0 regression suite green at every PR tip.
 - Phase 0.75 carries forward this test-first process at the seams listed in its plan. P075 00 is design-only; the user approved implementation on 2026-09-26 after merging the plan. Keep prior phase regression checks green at each implementation PR.
+- Annual planning AP 00 is documentation only. Its [test seams](annual-plans-testing.md#proposed-public-test-seams) and dependent PR sequence are proposed for review. AP 01–10 require later explicit implementation authorization and use one behavioral red/green slice at a time. They are not authorized by creation or merge of the planning PR.
 - Add the PR link when it opens. Use **Done** only when the task's scope, tests, and definition of done are on `main` with passing checks, including work incorporated through another PR. Task status records delivery; it need not match the original PR's GitHub state. Use **Partial** when a merged PR delivered only part of the task; list the remaining work below.
 - If a PR combines tasks, record the same PR against each task and explain the exception. PR #1 bundled the initial foundation (P0 01–05).
 - Keep documentation-only PRs without an explicit task in the history below. A planned design task such as P05 01 is tracked in its phase table.
@@ -18,7 +19,7 @@ Phase 0, Phase 0.5, and both Phase 0.5 follow-ups are complete on `main`. [#47](
 
 GitHub marked #4 as merged indirectly. PRs #5–#46 were closed after verifying that every head commit was already an ancestor of `main`; their **Closed** state does not mean their work was discarded. The tables retain the original implementation PRs for traceability. [#48](https://github.com/rakreshet/vacation-window-planner/pull/48) was then rebased onto `main`, passed [CI](https://github.com/rakreshet/vacation-window-planner/actions/runs/36233553175), and merged separately as `7e9d4cd` to ignore IntelliJ project files. No PR from #1–#48 remains open.
 
-Phase 0.75 is the next proposed release and Phase 1 remains planned after it. Desktop Search and Compare run without an interpretation provider key; the optional Interpret action requires its selected provider's key. The documentation refresh [#49](https://github.com/rakreshet/vacation-window-planner/pull/49) is merged as `b203ea6`.
+Phase 0.75 is implemented in the unmerged #51–#60 stack, with the client acceptance caveats recorded below. Annual planning is the next proposed feature; Phase 1 retains its later flight scope. Desktop Search and Compare run without an interpretation provider key; the optional Interpret action requires its selected provider's key. The documentation refresh [#49](https://github.com/rakreshet/vacation-window-planner/pull/49) is merged as `b203ea6`.
 
 ## Phase 0
 
@@ -76,7 +77,7 @@ The [Phase 0.5 plan](phase-0.5-plan.md), its ten implementation tasks, and follo
 
 ## Phase 0.75 — personal calendars, opportunities, and saved options
 
-The [Phase 0.75 plan](phase-0.75-plan.md) defines ten behavior PRs plus this design PR. The [UX walkthrough](phase-0.75-ux.md) records the inspectable flows and fixed fixtures. Implementation is underway in a dependent PR stack; In review does not mean delivered.
+The [Phase 0.75 plan](phase-0.75-plan.md) defines ten behavior PRs plus its design PR. The [UX walkthrough](phase-0.75-ux.md) records the inspectable flows and fixed fixtures. Implementation is complete in the dependent PR stack, still open as verified September 26, 2026. The [acceptance record](phase-0.75-acceptance.md) retains actual browser-download/client-import limitations; In review does not mean delivered.
 
 | Task | Deliverable | PR(s) | Status |
 | --- | --- | --- | --- |
@@ -91,6 +92,28 @@ The [Phase 0.75 plan](phase-0.75-plan.md) defines ten behavior PRs plus this des
 | P075 08 | Same-browser Saved options journey | [#58](https://github.com/rakreshet/vacation-window-planner/pull/58) | In review |
 | P075 09 | Calendar export and leave-request copy | [#59](https://github.com/rakreshet/vacation-window-planner/pull/59) | In review |
 | P075 10 | Full acceptance, accessibility, performance, and operational documentation | [#60](https://github.com/rakreshet/vacation-window-planner/pull/60) | In review; client imports pending |
+
+## Annual planning — several vacations, one budget
+
+The [annual plan](annual-plans-plan.md), [UX walkthrough](annual-plans-ux.md), and [test strategy](annual-plans-testing.md) define AP 00–10. The user confirmed that locked trips count toward the requested mix and the balance covers included future trips without past-trip, accrual, or carryover calculations. Remaining product defaults and test seams are proposed for review.
+
+Base verified September 26, 2026: `origin/main` = `20df229`; #50 merged; #51–#60 open; local and remote #60 tip = `aaabf4e`. AP 00 targets #60's branch so its diff is documentation only. Recheck and retarget when that stack lands. No prior PR is merged by this work. Implementation is explicitly out of scope for the current request.
+
+| Task | Deliverable | Depends on | PR(s) | Status |
+| --- | --- | --- | --- | --- |
+| AP 00 | Versioned BE/FE/UX plan, test strategy, domain terms and PR sequence | P075 10 branch tip | [#61](https://github.com/rakreshet/vacation-window-planner/pull/61) | In review |
+| AP 01 | Locked-only annual assessment, shared budget/reserve and conflict facts | AP 00 + explicit implementation authorization | — | Planned |
+| AP 02 | Complete annual candidates and exact full-mix optimizer | AP 01 | — | Planned |
+| AP 03 | Diverse full plans, labeled reductions and truthful diagnostics | AP 02 | — | Planned |
+| AP 04 | Authenticated workflow/HTTP, annual snapshots and resource controls | AP 03 | — | Planned |
+| AP 05 | Structured annual workspace and first integrated planning journey | AP 04 | — | Planned |
+| AP 06 | Year view, whole-plan comparison and lock/recalculate UX | AP 05 | — | Planned |
+| AP 07 | Optional interpretation with proposal review and explicit references | AP 06 | — | Planned |
+| AP 08 | Same-browser saved annual plans and explicit reopening/recalculation | AP 07 | — | Planned |
+| AP 09 | Whole-plan calendar download and leave-request copy | AP 08 | — | Planned |
+| AP 10 | Integrated acceptance, performance, accessibility and runbook | AP 09 | — | Planned |
+
+The [ordered breakdown](annual-plans-plan.md#ordered-dependent-pr-breakdown) supplies each task's scope, acceptance evidence, and stacking policy. Do not create implementation PRs or mark work Done in advance. Planning review/merge alone is not permission to implement.
 
 ## Phase 1
 

@@ -65,5 +65,41 @@ Editable vacation-search fields inferred from optional conversational text befor
 _Avoid_: Search result, recommendation
 
 **Interpretation provider**:
-The configured language-model provider used only to turn conversational text into a search proposal. It does not choose vacation windows or start a search.
+The configured language-model provider used only to turn conversational text into an editable search or annual planning proposal. It does not choose vacation windows or start a calculation.
 _Avoid_: Recommendation engine, search provider
+
+**Annual plan**:
+A coordinated set of vacation windows within one calendar year, assessed together against one effective calendar and one shared leave budget. It does not book, deduct, or approve leave.
+_Avoid_: Saved option, annual entitlement, approved schedule
+
+**Shared leave budget**:
+The vacation days the person makes available for all future breaks included in an annual plan, including its locked breaks.
+_Avoid_: Full-year entitlement, forecast balance
+
+**Leave reserve**:
+The part of the shared leave budget protected from allocation to planned breaks. It remains part of the plan's remaining balance.
+_Avoid_: Extra allowance, spent leave
+
+**Requested mix**:
+The person's requested set of breaks and their length ranges, including any locked breaks.
+_Avoid_: Additional trips, independent search results
+
+**Break slot**:
+One requested break within a mix, filled by a generated vacation window or exact locked dates.
+_Avoid_: Recommendation rank, saved option
+
+**Locked break**:
+A break whose exact start and end dates the person has chosen to preserve during annual recalculation. Its vacation-day cost still follows the plan's current effective calendar.
+_Avoid_: Approved leave, fixed leave cost, personal day off
+
+**Reduced plan**:
+A feasible annual plan that explicitly omits one or more requested unlocked breaks while preserving every lock and the leave reserve.
+_Avoid_: Full plan, best effort result, partially calculated plan
+
+**Unallocated leave**:
+The remaining vacation days above the protected reserve after all breaks in an annual plan are counted.
+_Avoid_: Remaining balance, entitlement
+
+**Annual planning proposal**:
+Editable annual planning fields inferred from optional conversational text, with unresolved references left for the person to resolve.
+_Avoid_: Annual plan, executed request
