@@ -476,6 +476,6 @@ test('explicit Search requests opportunities and displays them separately', asyn
   fillRequiredSearchFields()
   fireEvent.click(screen.getByRole('button', { name: 'Search' }))
   await screen.findByRole('heading', { name: 'Other opportunities' })
-  expect(searches[0]).toMatchObject({ include_opportunities: true })
+  expect(searches[0]).toMatchObject({ include_opportunities: true, include_action_details: true })
   expect(screen.getByText('No feasible vacation windows found.')).toBeInTheDocument()
 })

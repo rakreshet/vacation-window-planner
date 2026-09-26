@@ -6,7 +6,8 @@ from datetime import datetime, timedelta
 from typing import Protocol
 from uuid import UUID
 
-from vacation_window_planner.domain.assessment import CalendarCoverageError
+from vacation_window_planner.domain.action_details import attach_action_details
+from vacation_window_planner.domain.assessment import CalendarCoverageError, prepare_calendar
 from vacation_window_planner.domain.calculation_context import CalculationContext, capture_context
 from vacation_window_planner.domain.calendar import CalendarProvider
 from vacation_window_planner.domain.contracts import (
@@ -49,6 +50,7 @@ class RecommendationRequest:
     constraints: SearchConstraints
     source_text: str | None = None
     include_opportunities: bool = False
+    include_action_details: bool = False
 
 
 @dataclass(frozen=True)
@@ -107,6 +109,11 @@ class RecommendationWorkflow:
             today=today,
         )
         recommendation_tuple = self._rank_recommendations(windows, request)
+        if request.include_action_details:
+            prepared = prepare_calendar(
+                calendar, request.context, (calendar_start, calendar_end), today
+            )
+            recommendation_tuple = attach_action_details(recommendation_tuple, prepared)
         calculation_context = capture_context(request.context, now, today)
         structured_input: dict[str, object] = {
             "context": request.context.model_dump(mode="json"),

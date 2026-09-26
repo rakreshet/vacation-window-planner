@@ -76,7 +76,7 @@ The [Phase 0.5 plan](phase-0.5-plan.md), its ten implementation tasks, and follo
 
 ## Phase 0.75 — personal calendars, opportunities, and saved options
 
-The [Phase 0.75 plan](phase-0.75-plan.md) defines ten behavior PRs plus this design PR. The [UX walkthrough](phase-0.75-ux.md) records the inspectable flows and fixed fixtures. No implementation task has started; In review does not mean delivered.
+The [Phase 0.75 plan](phase-0.75-plan.md) defines ten behavior PRs plus this design PR. The [UX walkthrough](phase-0.75-ux.md) records the inspectable flows and fixed fixtures. Implementation is underway in a dependent PR stack; In review does not mean delivered.
 
 | Task | Deliverable | PR(s) | Status |
 | --- | --- | --- | --- |
@@ -86,8 +86,8 @@ The [Phase 0.75 plan](phase-0.75-plan.md) defines ten behavior PRs plus this des
 | P075 03 | Personal calendar controls in Find and Compare | [#53](https://github.com/rakreshet/vacation-window-planner/pull/53) | In review |
 | P075 04 | Opportunity policy, scoring, and bounded detection | [#54](https://github.com/rakreshet/vacation-window-planner/pull/54) | In review |
 | P075 05 | Opportunity workflow and atomic snapshots | [#55](https://github.com/rakreshet/vacation-window-planner/pull/55) | In review |
-| P075 06 | Separate opportunities section and comparison entry | — | In review |
-| P075 07 | Complete action snapshots for every visible date | — | Planned |
+| P075 06 | Separate opportunities section and comparison entry | [#56](https://github.com/rakreshet/vacation-window-planner/pull/56) | In review |
+| P075 07 | Complete action snapshots for every visible date | — | In review |
 | P075 08 | Same-browser Saved options journey | — | Planned |
 | P075 09 | Calendar export and leave-request copy | — | Planned |
 | P075 10 | Full acceptance, accessibility, performance, and operational documentation | — | Planned |
