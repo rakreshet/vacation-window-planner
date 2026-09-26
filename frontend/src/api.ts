@@ -16,7 +16,15 @@ export type InterpretationProposal = {
   missing_fields: string[]
 }
 
+export type CalculationContext = {
+  accounting_version: 'phase075-v1'
+  calculated_at: string
+  local_today: string
+  planning: Required<SessionInput>
+}
 export type Recommendation = {
+  assessment?: WindowAssessment
+  alternative_assessments?: WindowAssessment[]
   window: {
     start_date: string
     end_date: string
@@ -64,6 +72,7 @@ export type OpportunityResponse = {
   items: Opportunity[]
 }
 export type RecommendationResponse = {
+  calculation_context?: CalculationContext
   opportunities?: OpportunityResponse
   search_id: string
   recommendations: Recommendation[]
@@ -87,6 +96,7 @@ export type SessionInput = {
 
 export type SearchInput = {
   include_opportunities?: boolean
+  include_action_details?: boolean
   months: YearMonth[]
   preferred_length_days: number
   result_limit: number
@@ -231,6 +241,7 @@ export type ComparisonAlternative = {
   explanation: string
 }
 export type ComparisonResponse = {
+  calculation_context?: CalculationContext
   comparison_id: string
   baseline: ComparedWindow
   save_leave: ComparisonAlternative[]

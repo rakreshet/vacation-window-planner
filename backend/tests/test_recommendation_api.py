@@ -307,3 +307,27 @@ def test_opportunity_request_flag_is_explicit_and_unrequested_output_is_absent()
         assert response.status_code == 200
         assert "opportunities" not in response.json()
     assert requested == [False, True]
+
+
+def test_action_details_flag_reaches_workflow_and_oversized_results_fail_atomically() -> None:
+    from vacation_window_planner.domain.action_details import ActionDetailsTooLarge
+    from vacation_window_planner.workflow import RecommendationRequest
+
+    def recommend(request: RecommendationRequest) -> RecommendationResult:
+        assert request.include_action_details
+        raise ActionDetailsTooLarge("Reduce break length or result count")
+
+    client = TestClient(
+        create_app(
+            database_probe=lambda: True,
+            session_lookup=lambda *_: active_session(),
+            recommendation_service=recommend,
+        )
+    )
+    response = client.post(
+        "/recommendations",
+        headers={"Authorization": "Bearer token"},
+        json={**body(), "include_action_details": True},
+    )
+    assert response.status_code == 422
+    assert response.json()["error"]["code"] == "ACTION_DETAILS_TOO_LARGE"

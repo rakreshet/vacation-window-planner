@@ -20,6 +20,10 @@ from vacation_window_planner.comparison_workflow import (
     ComparisonRequest,
     InvalidComparisonError,
 )
+from vacation_window_planner.domain.action_details import (
+    ActionableRecommendation,
+    ActionDetailsTooLarge,
+)
 from vacation_window_planner.domain.assessment import CalendarCoverageError
 from vacation_window_planner.domain.calculation_context import CalculationContext
 from vacation_window_planner.domain.calendar import UnsupportedCalendarError
@@ -57,6 +61,7 @@ from vacation_window_planner.workflow import (
 
 class RecommendationHttpRequest(BaseModel):
     include_opportunities: bool = False
+    include_action_details: bool = False
     model_config = ConfigDict(extra="forbid")
 
     months: tuple[YearMonth, ...] = Field(min_length=1)
@@ -71,7 +76,7 @@ class RecommendationHttpResponse(BaseModel):
     )
     calculation_context: CalculationContext | None = None
     search_id: UUID
-    recommendations: tuple[Recommendation, ...]
+    recommendations: tuple[ActionableRecommendation | Recommendation, ...]
     notice: str | None = None
 
 
@@ -236,9 +241,12 @@ def create_app(
             ),
             source_text=body.source_text,
             include_opportunities=body.include_opportunities,
+            include_action_details=body.include_action_details,
         )
         try:
             return recommendation_service(request)
+        except ActionDetailsTooLarge as error:
+            return _error(422, "ACTION_DETAILS_TOO_LARGE", str(error))
         except SearchTooBroadError as error:
             return _error(422, error.code, str(error))
         except (PastSearchRangeError, UnsupportedCalendarError, CalendarCoverageError) as error:

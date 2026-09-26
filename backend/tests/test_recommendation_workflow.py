@@ -343,3 +343,22 @@ def test_opportunity_cap_preserves_explicit_results_and_resolved_facts() -> None
     assert result.opportunities.status == "too_broad"
     assert not result.opportunities.items
     assert writer.calls[0]["structured_input"]["opportunity_calendar"] is not None
+
+
+def test_action_details_cover_every_visible_exact_window() -> None:
+    from dataclasses import replace
+
+    result = workflow(FakeSnapshotWriter()).recommend(
+        replace(request(), include_action_details=True)
+    )
+    for recommendation in result.recommendations:
+        assert recommendation.assessment.window == recommendation.window
+        assert recommendation.assessment.remaining_balance == recommendation.remaining_balance
+        assert (
+            tuple(detail.window for detail in recommendation.alternative_assessments)
+            == recommendation.alternative_windows
+        )
+        assert all(
+            len(detail.charged_dates) == detail.window.vacation_days_used
+            for detail in recommendation.alternative_assessments
+        )
