@@ -88,6 +88,7 @@ export default function AnnualExportActions({
       {error && <p role="alert">{error}</p>}
       {preview === snapshot && !unavailable && snapshot && (
         <AnnualCopyPreview
+          key={String(includeBudget)}
           snapshot={snapshot}
           includeBudget={includeBudget}
           onClose={() => {

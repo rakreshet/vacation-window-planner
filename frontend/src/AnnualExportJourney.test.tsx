@@ -1,4 +1,4 @@
-import { cleanup, fireEvent, render, screen, waitFor } from '@testing-library/react'
+import { act, cleanup, fireEvent, render, screen, waitFor } from '@testing-library/react'
 import { afterEach, beforeEach, expect, test, vi } from 'vitest'
 import { webcrypto } from 'node:crypto'
 import AnnualPlanWorkspace from './AnnualPlanWorkspace'
@@ -37,11 +37,12 @@ test('annual copy preview defaults to private budget, survives clipboard denial,
     expect(screen.getByRole('button', { name: 'Copy annual leave request' })).toBeEnabled(),
   )
   fireEvent.click(screen.getByRole('button', { name: 'Copy annual leave request' }))
-  const text = screen.getByRole('textbox', { name: 'Annual leave request text' })
+  let text = screen.getByRole('textbox', { name: 'Annual leave request text' })
   expect(text).toHaveFocus()
   expect((text as HTMLTextAreaElement).value).not.toContain('protected reserve')
   expect(screen.getByLabelText('Include budget and reserve')).not.toBeChecked()
   fireEvent.click(screen.getByLabelText('Include budget and reserve'))
+  text = screen.getByRole('textbox', { name: 'Annual leave request text' })
   expect((text as HTMLTextAreaElement).value).toContain('protected reserve: 3')
   fireEvent.click(screen.getByRole('button', { name: 'Copy annual text' }))
   await screen.findByText('Clipboard unavailable. Select the text and copy it manually.')
@@ -98,4 +99,43 @@ test('a failed save leaves direct annual download available with one calendar fi
   expect(downloads).toEqual(['annual-vacations-2027.ics'])
   expect(createUrl).toHaveBeenCalledTimes(1)
   expect(screen.queryByText('Annual plan saved in this browser')).not.toBeInTheDocument()
+})
+
+test('changing budget privacy invalidates completed and pending clipboard confirmations', async () => {
+  vi.stubGlobal(
+    'fetch',
+    vi.fn(async (url: string) => ({
+      ok: true,
+      json: async () => (url.endsWith('/sessions') ? { token: 'token' } : annualFixture()),
+    })),
+  )
+  let finishCopy: () => void = () => undefined
+  const copy = vi
+    .fn()
+    .mockResolvedValueOnce(undefined)
+    .mockImplementationOnce(
+      () =>
+        new Promise<void>((resolve) => {
+          finishCopy = resolve
+        }),
+    )
+  Object.defineProperty(navigator, 'clipboard', { configurable: true, value: { writeText: copy } })
+  render(
+    <AnnualPlanWorkspace
+      initialPlanning={{ ...emptyPlanning, balance: '18', timeZone: 'Asia/Jerusalem' }}
+    />,
+  )
+  fireEvent.click(screen.getByRole('button', { name: 'Generate plans' }))
+  await waitFor(() =>
+    expect(screen.getByRole('button', { name: 'Copy annual leave request' })).toBeEnabled(),
+  )
+  fireEvent.click(screen.getByRole('button', { name: 'Copy annual leave request' }))
+  fireEvent.click(screen.getByRole('button', { name: 'Copy annual text' }))
+  await screen.findByText('Copied to clipboard')
+  fireEvent.click(screen.getByLabelText('Include budget and reserve'))
+  expect(screen.queryByText('Copied to clipboard')).not.toBeInTheDocument()
+  fireEvent.click(screen.getByRole('button', { name: 'Copy annual text' }))
+  fireEvent.click(screen.getByLabelText('Include budget and reserve'))
+  await act(async () => finishCopy())
+  expect(screen.queryByText('Copied to clipboard')).not.toBeInTheDocument()
 })
