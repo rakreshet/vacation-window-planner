@@ -103,3 +103,4 @@ The rows follow the [recommended execution order](implementation-plan.md#recomme
 | [#4](https://github.com/rakreshet/vacation-window-planner/pull/4) | Merged indirectly via #47 | Recorded search-completeness and interpretation-confirmation rules. |
 | [#35](https://github.com/rakreshet/vacation-window-planner/pull/35) | Closed; delivered via #47 | Defined the approved Phase 0.5 comparison plan, ten tasks, test-first delivery rules, and progress table. |
 | [#48](https://github.com/rakreshet/vacation-window-planner/pull/48) | Merged | Ignore IntelliJ IDEA project directories and module files. |
+| [#49](https://github.com/rakreshet/vacation-window-planner/pull/49) | Open | Refresh delivery tables and product, architecture, operational, and local-run documentation after the stack merge. |
