@@ -1,3 +1,5 @@
+import { formatSavedDate } from './displayDates'
+import { Icon } from './InterfaceArtwork'
 import AnnualSavedContext from './AnnualSavedContext'
 import { useEffect, useRef, useState } from 'react'
 import AnnualPlanResults from './AnnualPlanResults'
@@ -10,7 +12,7 @@ import {
 import type { SavedAnnualPlan } from './savedAnnualPlans'
 import { draftFromAnnual } from './annualDraft'
 
-export default function SavedAnnualPlansView() {
+export default function SavedAnnualPlansView({ onPlan }: { onPlan?: () => void }) {
   const [records, setRecords] = useState<{ items: SavedAnnualPlan[]; invalid: string[] }>({
     items: [],
     invalid: [],
@@ -66,7 +68,19 @@ export default function SavedAnnualPlansView() {
           does not deduct or approve leave.
         </p>
         {error && <p role="alert">{error}</p>}
-        {!records.items.length && !error && <p>No saved annual plans yet.</p>}
+        {!records.items.length && !records.invalid.length && !error && (
+          <div className="empty-results">
+            <Icon name="calendar" />
+            <h3>Make this a year to look forward to.</h3>
+            <p>No saved annual plans yet.</p>
+            <p>Plan several breaks with one leave budget, then keep your favorite plan here.</p>
+            {onPlan && (
+              <button type="button" className="button button--primary" onClick={onPlan}>
+                Start planning my year <Icon name="arrow" />
+              </button>
+            )}
+          </div>
+        )}
         {removed && (
           <p role="status">
             Annual plan removed.{' '}
@@ -104,7 +118,7 @@ export default function SavedAnnualPlansView() {
               {item.snapshot.result.input.reserve_days} reserved
             </p>
             <p>
-              Calculated {item.snapshot.result.calculation_context.calculated_at}
+              Calculated {formatSavedDate(item.snapshot.result.calculation_context.calculated_at)}
               {item.snapshot.result.plans[0].fulfillment === 'reduced' ? ' · Reduced plan' : ''}
             </p>
             <AnnualName

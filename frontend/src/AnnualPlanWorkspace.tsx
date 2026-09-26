@@ -1,3 +1,4 @@
+import { EscapeScene, Icon } from './InterfaceArtwork'
 import { createAnnualSnapshot } from './savedAnnualPlans'
 import { browserAnnualPlans, notifyAnnualPlansChanged } from './browserAnnualPlans'
 import AnnualInterpretation from './AnnualInterpretation'
@@ -139,7 +140,14 @@ export default function AnnualPlanWorkspace({
       {initialPlanning.allowedNegative !== '0' && (
         <p>Annual planning uses zero allowed negative days.</p>
       )}
-      <AnnualInterpretation draft={draft} onChange={edit} />
+      <details className="annual-assistant">
+        <summary>
+          <Icon name="spark" />
+          <span>Plan your year in your own words</span>
+          <small>Optional AI assistant</small>
+        </summary>
+        <AnnualInterpretation draft={draft} onChange={edit} />
+      </details>
       <FieldValidation problem={problem}>
         <form
           noValidate
@@ -188,13 +196,28 @@ export default function AnnualPlanWorkspace({
             onSelect={setSelectedId}
           />
         ) : (
-          <aside className="annual-results">
+          <aside className="annual-results annual-empty">
+            <EscapeScene />
             <h2>Your year, planned together</h2>
             <p>
               Choose your breaks and protect a reserve. Generate plans to see dates that work
               together under one calendar and one leave budget.
             </p>
-            <p>
+            <div className="year-preview-stats">
+              <div>
+                <strong>{draft.slots.length}</strong>
+                <span>requested breaks</span>
+              </div>
+              <div>
+                <strong>{draft.planning.balance || '—'}</strong>
+                <span>available days</span>
+              </div>
+              <div>
+                <strong>{draft.reserve || '0'}</strong>
+                <span>days protected</span>
+              </div>
+            </div>
+            <p className="annual-empty-note">
               Include allocated leave for any locked trips even if your HR balance already excludes
               it.
             </p>

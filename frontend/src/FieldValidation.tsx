@@ -10,7 +10,14 @@ function target(prefix: string, field: string): HTMLElement | null {
   const path = field.split('.')
   while (path.length) {
     const element = document.getElementById(`${prefix}${path.join('.')}`)
-    if (element) return element
+    if (element) {
+      let ancestor = element.parentElement
+      while (ancestor) {
+        if (ancestor instanceof HTMLDetailsElement) ancestor.open = true
+        ancestor = ancestor.parentElement
+      }
+      return element
+    }
     path.pop()
   }
   return null

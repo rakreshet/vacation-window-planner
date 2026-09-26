@@ -1,3 +1,4 @@
+import type { ReactNode } from 'react'
 import { FieldError, useFieldValidation } from './FieldValidation'
 import PersonalCalendarFields from './PersonalCalendarFields'
 import { changePlanningCountry, resolveCalendarCountry, type PlanningDraft } from './planning'
@@ -9,11 +10,13 @@ export default function PlanningFields({
   onChange,
   prefix = '',
   annual = false,
+  children,
 }: {
   value: PlanningDraft
   onChange: (value: PlanningDraft) => void
   prefix?: string
   annual?: boolean
+  children?: ReactNode
 }) {
   const field = useFieldValidation()
   const balanceId = annual ? field('context.balance_days').id : `${prefix}balance`
@@ -46,24 +49,7 @@ export default function PlanningFields({
           </small>
         </div>
       </div>
-      {!annual && (
-        <div className="field">
-          <label htmlFor={`${prefix}allowed-negative`}>Allowed negative days</label>
-          <div className="input-with-suffix">
-            <input
-              id={`${prefix}allowed-negative`}
-              type="number"
-              min="0"
-              max="5"
-              step="1"
-              value={value.allowedNegative}
-              onChange={(e) => onChange({ ...value, allowedNegative: e.target.value })}
-            />
-            <span>days</span>
-          </div>
-          <small>How far below zero you will accept</small>
-        </div>
-      )}
+      {children}
       <div className="field planning-country">
         <label htmlFor={`${prefix}country`}>Public holiday calendar</label>
         <select
@@ -105,10 +91,7 @@ export default function PlanningFields({
       )}
       <fieldset className="field field--wide weekend-field">
         <legend>Weekend days</legend>
-        <small>
-          Choose the days that are normally free for you. Usual weekends follow the calendar; custom
-          selections are kept.
-        </small>
+        <small>Your usual days off. We’ll use these to stretch your break.</small>
         <div className="day-picker">
           {weekdays.map((day, index) => (
             <label key={day}>
@@ -130,7 +113,26 @@ export default function PlanningFields({
           ))}
         </div>
       </fieldset>
-      <PersonalCalendarFields value={value} onChange={onChange} />
+      <PersonalCalendarFields value={value} onChange={onChange}>
+        {!annual && (
+          <div className="field planning-allowance">
+            <label htmlFor={`${prefix}allowed-negative`}>Allowed negative days</label>
+            <div className="input-with-suffix">
+              <input
+                id={`${prefix}allowed-negative`}
+                type="number"
+                min="0"
+                max="5"
+                step="1"
+                value={value.allowedNegative}
+                onChange={(e) => onChange({ ...value, allowedNegative: e.target.value })}
+              />
+              <span>days</span>
+            </div>
+            <small>How far below zero you will accept</small>
+          </div>
+        )}
+      </PersonalCalendarFields>
     </>
   )
 }
