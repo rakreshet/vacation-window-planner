@@ -3,7 +3,7 @@ import { compareDates, ComparisonError, createSession } from './api'
 import type { ComparisonResponse, DateRange, SessionInput } from './api'
 import PlanningFields from './PlanningFields'
 import ComparisonResults from './ComparisonResults'
-import { planningSession } from './planning'
+import { planningSession, planningFromSession } from './planning'
 import type { PlanningDraft } from './planning'
 
 export type ComparisonDraft = { dates: DateRange; planning: PlanningDraft }
@@ -53,7 +53,8 @@ export default function ComparisonWorkspace({
         const reuse =
           originUsable.current &&
           origin &&
-          JSON.stringify(context) === JSON.stringify(origin.context)
+          JSON.stringify(context) ===
+            JSON.stringify(planningSession(planningFromSession(origin.context)))
         const token = reuse ? origin.token : await createSession(context)
         const response = await compareDates(token, value.dates, reuse ? origin.searchId : undefined)
         if (alive.current) {

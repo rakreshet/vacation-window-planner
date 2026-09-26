@@ -12,6 +12,7 @@ type HealthState = 'checking' | 'ready' | 'unavailable'
 
 export default function App() {
   const [health, setHealth] = useState<HealthState>('checking')
+  const [searchStale, setSearchStale] = useState(false)
   const [results, setResults] = useState<RecommendationResponse | null>(null)
   const [sessionToken, setSessionToken] = useState<string | null>(null)
 
@@ -26,7 +27,7 @@ export default function App() {
   const searchScroll = useRef(0)
 
   function openComparison(dates?: DateRange) {
-    if (mode === 'compare') return
+    if (mode === 'compare' || (dates && searchStale)) return
     searchScroll.current = window.scrollY
     opener.current = document.activeElement as HTMLElement
     if (dates && confirmedContext && sessionToken && results) {
@@ -174,8 +175,13 @@ export default function App() {
         <div hidden={mode !== 'search'}>
           <SearchForm
             planning={planning}
-            onPlanningChange={setPlanning}
+            onDraftChange={() => setSearchStale(true)}
+            onPlanningChange={(value) => {
+              setPlanning(value)
+              setSearchStale(true)
+            }}
             onResults={(result, token, context) => {
+              setSearchStale(false)
               setResults(result)
               setSessionToken(token)
               setConfirmedContext(context)
@@ -185,6 +191,7 @@ export default function App() {
             <RecommendationResults
               key={results.search_id}
               result={results}
+              stale={searchStale}
               onCompare={(window) =>
                 openComparison({ start_date: window.start_date, end_date: window.end_date })
               }

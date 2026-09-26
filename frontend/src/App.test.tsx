@@ -120,9 +120,14 @@ test('interpretation only fills editable proposal fields and never searches', as
   fireEvent.click(screen.getByRole('checkbox', { name: 'Friday' }))
   fireEvent.click(screen.getByRole('checkbox', { name: 'Sunday' }))
   expect(screen.getByRole('checkbox', { name: 'Sunday' })).toBeChecked()
+  fireEvent.click(screen.getByRole('button', { name: 'Add calendar rule' }))
+  fireEvent.change(screen.getByLabelText('Rule start date'), { target: { value: '2027-01-07' } })
+  fireEvent.change(screen.getByLabelText('Rule end date'), { target: { value: '2027-01-07' } })
+  fireEvent.click(screen.getByRole('button', { name: 'Apply rule' }))
   fireEvent.click(screen.getByRole('button', { name: 'Interpret' }))
 
   expect(await screen.findByDisplayValue('8')).toBeInTheDocument()
+  expect(screen.getByText(/2027-01-07.*Personal day off/)).toBeInTheDocument()
   expect(screen.getByLabelText('Allowed negative days')).toHaveValue(1)
   expect(screen.getByLabelText('Selected month')).toHaveValue('2027-01')
   expect(screen.getByLabelText('Preferred length in days')).toHaveValue(7)
@@ -320,4 +325,122 @@ test('shows the actionable narrow-search error without rendering partial results
   expect(
     screen.queryByRole('heading', { name: 'Your best vacation windows' }),
   ).not.toBeInTheDocument()
+})
+
+test('unfinished calendar rules block Search and applied rules are submitted with notice', async () => {
+  const sessions: unknown[] = []
+  vi.stubGlobal(
+    'fetch',
+    vi.fn(async (input: RequestInfo | URL, init?: RequestInit) => {
+      if (String(input).endsWith('/sessions')) {
+        sessions.push(JSON.parse(String(init?.body)))
+        return { ok: true, json: async () => ({ token: 'token' }) }
+      }
+      if (String(input).endsWith('/recommendations'))
+        return { ok: true, json: async () => ({ search_id: 'search', recommendations: [] }) }
+      return { ok: true, json: async () => ({ status: 'ok', database: 'connected' }) }
+    }),
+  )
+  render(<App />)
+  await screen.findByText('Service ready')
+  fillRequiredSearchFields()
+  fireEvent.click(screen.getByRole('button', { name: 'Add calendar rule' }))
+  fireEvent.click(screen.getByRole('button', { name: 'Search' }))
+  expect(
+    await screen.findByText(/Apply or cancel the calendar rule before calculating/),
+  ).toBeInTheDocument()
+  expect(sessions).toHaveLength(0)
+  fireEvent.change(screen.getByLabelText('Rule start date'), { target: { value: '2027-01-07' } })
+  fireEvent.change(screen.getByLabelText('Rule end date'), { target: { value: '2027-01-07' } })
+  fireEvent.click(screen.getByRole('button', { name: 'Apply rule' }))
+  fireEvent.change(screen.getByLabelText('Minimum notice days'), { target: { value: '7' } })
+  fireEvent.click(screen.getByRole('button', { name: 'Search' }))
+  await screen.findByText('Search complete')
+  expect(sessions[0]).toMatchObject({
+    personal_calendar: {
+      schema_version: 1,
+      minimum_notice_days: 7,
+      unavailable_ranges: [],
+      date_overrides: [
+        { start_date: '2027-01-07', end_date: '2027-01-07', kind: 'personal_day_off' },
+      ],
+    },
+  })
+})
+
+test('editing after Search keeps results visible but disables Compare until recalculated', async () => {
+  vi.stubGlobal(
+    'fetch',
+    vi.fn(async (input: RequestInfo | URL) => {
+      const data = String(input).endsWith('/health')
+        ? { status: 'ok', database: 'connected' }
+        : String(input).endsWith('/sessions')
+          ? { token: 'token' }
+          : {
+              search_id: 'search',
+              recommendations: [
+                {
+                  rank: 1,
+                  score: 75,
+                  explanation: 'A useful break',
+                  remaining_balance: 3,
+                  warnings: [],
+                  window: {
+                    start_date: '2027-01-03',
+                    end_date: '2027-01-07',
+                    total_days: 5,
+                    vacation_days_used: 5,
+                    holiday_dates: [],
+                  },
+                },
+              ],
+            }
+      return { ok: true, json: async () => data }
+    }),
+  )
+  render(<App />)
+  await screen.findByText('Service ready')
+  fillRequiredSearchFields()
+  fireEvent.click(screen.getByRole('button', { name: 'Search' }))
+  const compare = await screen.findByRole('button', {
+    name: 'Compare nearby dates for recommendation 1',
+  })
+  fireEvent.change(screen.getByLabelText('Selected month'), { target: { value: '2027-02' } })
+  expect(compare).toBeDisabled()
+  expect(screen.getByText(/Your inputs changed/)).toBeInTheDocument()
+  expect(screen.getByText('A useful break')).toBeInTheDocument()
+})
+
+test('a Search response arriving after an edit cannot become current results', async () => {
+  let finish: ((value: unknown) => void) | undefined
+  vi.stubGlobal(
+    'fetch',
+    vi.fn(async (input: RequestInfo | URL) => {
+      if (String(input).endsWith('/recommendations'))
+        return {
+          ok: true,
+          json: () =>
+            new Promise((resolve) => {
+              finish = resolve
+            }),
+        }
+      return {
+        ok: true,
+        json: async () =>
+          String(input).endsWith('/sessions')
+            ? { token: 'token' }
+            : { status: 'ok', database: 'connected' },
+      }
+    }),
+  )
+  render(<App />)
+  await screen.findByText('Service ready')
+  fillRequiredSearchFields()
+  fireEvent.click(screen.getByRole('button', { name: 'Search' }))
+  await waitFor(() => expect(finish).toBeDefined())
+  fireEvent.change(screen.getByLabelText('Vacation balance'), { target: { value: '2' } })
+  finish?.({ search_id: 'obsolete', recommendations: [] })
+  await waitFor(() => expect(screen.getByRole('button', { name: 'Search' })).toBeEnabled())
+  expect(screen.queryByText('Search complete')).not.toBeInTheDocument()
+  expect(screen.queryByText('No feasible vacation windows found.')).not.toBeInTheDocument()
 })

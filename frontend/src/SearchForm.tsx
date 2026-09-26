@@ -1,21 +1,27 @@
-import { useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import type { FormEvent } from 'react'
 
 import { createSession, interpretText, searchRecommendations } from './api'
 import type { RecommendationResponse, SessionInput } from './api'
 import PlanningFields from './PlanningFields'
-import { planningSession } from './planning'
+import { planningSession, changePlanningCountry } from './planning'
 import type { PlanningDraft } from './planning'
 
 type SearchFormProps = {
   onResults: (result: RecommendationResponse, token: string, context: SessionInput) => void
   planning: PlanningDraft
   onPlanningChange: (value: PlanningDraft) => void
+  onDraftChange?: () => void
 }
 
 type BusyAction = 'interpret' | 'search' | null
 
-export default function SearchForm({ onResults, planning, onPlanningChange }: SearchFormProps) {
+export default function SearchForm({
+  onResults,
+  planning,
+  onPlanningChange,
+  onDraftChange,
+}: SearchFormProps) {
   const [sourceText, setSourceText] = useState('')
   const { balance, allowedNegative, country } = planning
   const [month, setMonth] = useState('')
@@ -24,6 +30,17 @@ export default function SearchForm({ onResults, planning, onPlanningChange }: Se
   const [error, setError] = useState<string | null>(null)
   const [interpretError, setInterpretError] = useState<string | null>(null)
   const [busy, setBusy] = useState<BusyAction>(null)
+  const revision = useRef(0)
+  const alive = useRef(true)
+  useEffect(() => {
+    revision.current += 1
+  }, [planning, month, preferredLength, sourceText])
+  useEffect(() => {
+    alive.current = true
+    return () => {
+      alive.current = false
+    }
+  }, [])
 
   async function interpret() {
     setError(null)
@@ -35,12 +52,17 @@ export default function SearchForm({ onResults, planning, onPlanningChange }: Se
     setBusy('interpret')
     setInterpretError(null)
     try {
+      const requestRevision = revision.current
       const proposal = await interpretText(sourceText)
+      if (!alive.current || requestRevision !== revision.current) return
+      const next = changePlanningCountry(planning, proposal.country_code ?? planning.country)
       onPlanningChange({
+        ...next,
         balance: proposal.balance_days !== null ? String(proposal.balance_days) : planning.balance,
         allowedNegative: String(proposal.allowed_negative_days),
-        country: proposal.country_code ?? planning.country,
-        weekendDays: proposal.weekend_days ?? planning.weekendDays,
+        weekendDays: next.pendingCountry
+          ? planning.weekendDays
+          : (proposal.weekend_days ?? next.weekendDays),
       })
       if (proposal.months.length > 0) {
         const selected = proposal.months[0]
@@ -80,8 +102,10 @@ export default function SearchForm({ onResults, planning, onPlanningChange }: Se
       return
     }
     const [year, selectedMonth] = month.split('-').map(Number)
+    onDraftChange?.()
     setBusy('search')
     try {
+      const requestRevision = revision.current
       const context = planningSession(planning)
       const token = await createSession(context)
       const result = await searchRecommendations(token, {
@@ -90,6 +114,7 @@ export default function SearchForm({ onResults, planning, onPlanningChange }: Se
         result_limit: 5,
         source_text: sourceText.trim() || null,
       })
+      if (!alive.current || requestRevision !== revision.current) return
       onResults(result, token, context)
       setMessage('Search complete')
     } catch (caught) {
@@ -179,7 +204,10 @@ export default function SearchForm({ onResults, planning, onPlanningChange }: Se
                   aria-label="Selected month"
                   type="month"
                   value={month}
-                  onChange={(event) => setMonth(event.target.value)}
+                  onChange={(event) => {
+                    setMonth(event.target.value)
+                    onDraftChange?.()
+                  }}
                 />
                 <small>Windows may finish in the next month</small>
               </div>
@@ -197,7 +225,10 @@ export default function SearchForm({ onResults, planning, onPlanningChange }: Se
                     step="1"
                     value={preferredLength}
                     placeholder="7"
-                    onChange={(event) => setPreferredLength(event.target.value)}
+                    onChange={(event) => {
+                      setPreferredLength(event.target.value)
+                      onDraftChange?.()
+                    }}
                   />
                   <span>days</span>
                 </div>
