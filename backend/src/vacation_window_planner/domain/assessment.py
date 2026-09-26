@@ -12,6 +12,10 @@ from vacation_window_planner.domain.contracts import (
 )
 
 
+class CalendarCoverageError(ValueError):
+    """The requested calendar coverage cannot be represented or assessed."""
+
+
 class DayDetail(DomainValue):
     date: date
     charged: bool
@@ -71,13 +75,13 @@ def prepare_calendar(
     local_today: date,
 ) -> PreparedCalendar:
     if coverage[1] < coverage[0]:
-        raise ValueError("coverage end must not precede its start")
+        raise CalendarCoverageError("coverage end must not precede its start")
     try:
         earliest = local_today + timedelta(
             days=planning_context.personal_calendar.minimum_notice_days
         )
     except OverflowError as error:
-        raise ValueError("minimum notice exceeds supported dates") from error
+        raise CalendarCoverageError("minimum notice exceeds supported dates") from error
     return PreparedCalendar(base_calendar, planning_context, coverage, local_today, earliest)
 
 
@@ -107,7 +111,7 @@ def assess_window(
     if end_date < start_date:
         raise ValueError("end date must not precede start date")
     if start_date < prepared.coverage[0] or end_date > prepared.coverage[1]:
-        raise ValueError("window lies outside prepared calendar coverage")
+        raise CalendarCoverageError("window lies outside prepared calendar coverage")
     days: list[DayDetail] = []
     charged: list[date] = []
     holidays: set[date] = set()

@@ -7,7 +7,7 @@ from urllib.parse import urlparse
 import pytest
 from alembic import command
 from alembic.config import Config
-from sqlalchemy import create_engine, inspect
+from sqlalchemy import create_engine, inspect, text
 
 
 def test_upgrade_and_downgrade_session_schema() -> None:
@@ -23,7 +23,29 @@ def test_upgrade_and_downgrade_session_schema() -> None:
     engine = create_engine(database_url)
 
     try:
+        command.upgrade(config, "20260926_06")
+        with engine.begin() as connection:
+            connection.execute(
+                text("""
+                INSERT INTO anonymous_sessions
+                (id, token_hash, created_at, expires_at, balance_days, allowed_negative_days,
+                 country_code, weekend_days, time_zone)
+                VALUES ('00000000-0000-0000-0000-000000000099', 'migration-fixture',
+                        now(), now() + interval '1 day', 8, 0, 'IL', '[4,5]', 'Asia/Jerusalem')
+            """)
+            )
         command.upgrade(config, "head")
+        with engine.connect() as connection:
+            assert (
+                connection.execute(
+                    text(
+                        "SELECT personal_calendar FROM anonymous_sessions "
+                        "WHERE token_hash = 'migration-fixture'"
+                    )
+                ).scalar_one()
+                == {}
+            )
+
         assert inspect(engine).has_table("anonymous_sessions")
         assert {
             "balance_days",
@@ -31,6 +53,7 @@ def test_upgrade_and_downgrade_session_schema() -> None:
             "country_code",
             "weekend_days",
             "time_zone",
+            "personal_calendar",
         } <= {column["name"] for column in inspect(engine).get_columns("anonymous_sessions")}
         assert inspect(engine).has_table("searches")
         assert inspect(engine).has_table("recommendations")

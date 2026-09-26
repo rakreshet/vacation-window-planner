@@ -156,7 +156,29 @@ export async function submitFeedback(
 }
 
 export type DateRange = { start_date: string; end_date: string }
+export type EligibilityReason =
+  | { code: 'unavailable_dates'; dates: string[] }
+  | { code: 'insufficient_notice'; earliest_start_date: string }
+  | { code: 'over_budget'; required_days: number; permitted_days: number }
+export type WindowAssessment = {
+  window: Recommendation['window']
+  charged_dates: string[]
+  remaining_balance: number
+  eligible: boolean
+  eligibility_reasons: EligibilityReason[]
+  warnings: ('full_balance' | 'negative_balance')[]
+  day_details: {
+    date: string
+    charged: boolean
+    kind:
+      'extra_working_day' | 'personal_day_off' | 'public_holiday' | 'weekend' | 'ordinary_working'
+    is_public_holiday: boolean
+    is_weekend: boolean
+    unavailable: boolean
+  }[]
+}
 export type ComparedWindow = {
+  assessment?: WindowAssessment | null
   window: Recommendation['window']
   charged_dates: string[]
   weekend_dates: string[]

@@ -6,6 +6,8 @@ from datetime import datetime, timedelta
 from typing import Protocol
 from uuid import UUID
 
+from vacation_window_planner.domain.assessment import CalendarCoverageError
+from vacation_window_planner.domain.calculation_context import CalculationContext, capture_context
 from vacation_window_planner.domain.calendar import CalendarProvider
 from vacation_window_planner.domain.contracts import (
     Recommendation,
@@ -50,6 +52,7 @@ class RecommendationResult:
     search_id: UUID
     recommendations: tuple[Recommendation, ...]
     notice: str | None = None
+    calculation_context: CalculationContext | None = None
 
 
 class RecommendationWorkflow:
@@ -70,15 +73,17 @@ class RecommendationWorkflow:
 
     def recommend(self, request: RecommendationRequest) -> RecommendationResult:
         now = self._clock()
-        normalized = normalize_selected_months(
-            request.constraints.months, local_today(now, request.context.time_zone)
-        )
+        today = local_today(now, request.context.time_zone)
+        normalized = normalize_selected_months(request.constraints.months, today)
         calendar_start = normalized.start_dates[0].start_date
         latest_start = normalized.start_dates[-1].end_date
         maximum_length = (
             request.constraints.preferred_length_days + self._policy.length_tolerance_days
         )
-        calendar_end = latest_start + timedelta(days=maximum_length - 1)
+        try:
+            calendar_end = latest_start + timedelta(days=maximum_length - 1)
+        except OverflowError as error:
+            raise CalendarCoverageError("Search dates exceed the supported calendar") from error
         calendar = self._calendar_provider.resolve(
             request.context.country_code,
             calendar_start,
@@ -92,6 +97,7 @@ class RecommendationWorkflow:
             calendar=calendar,
             generation_cap=self._policy.generation_cap,
             length_tolerance_days=self._policy.length_tolerance_days,
+            today=today,
         )
         scored = score_vacation_windows(
             windows,
@@ -124,13 +130,20 @@ class RecommendationWorkflow:
             )
             previous_score = item.score
 
+        calculation_context = capture_context(request.context, now, today)
         recommendation_tuple = tuple(recommendations)
         structured_input: dict[str, object] = {
             "context": request.context.model_dump(mode="json"),
+            "calculation_context": calculation_context.model_dump(mode="json"),
             "constraints": request.constraints.model_dump(mode="json"),
             "policy": self._policy.model_dump(mode="json"),
             "calendar": calendar.model_dump(mode="json"),
             "clipping_notice": normalized.notice,
+            "local_today": today.isoformat(),
+            "coverage": {
+                "start_date": calendar_start.isoformat(),
+                "end_date": calendar_end.isoformat(),
+            },
         }
         snapshot_recommendations = tuple(
             RecommendationSnapshotInput(
@@ -152,4 +165,5 @@ class RecommendationWorkflow:
             search_id=search_id,
             recommendations=recommendation_tuple,
             notice=normalized.notice,
+            calculation_context=calculation_context,
         )

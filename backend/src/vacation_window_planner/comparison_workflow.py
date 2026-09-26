@@ -6,6 +6,8 @@ from datetime import date, datetime, timedelta
 from typing import Protocol
 from uuid import UUID, uuid4
 
+from vacation_window_planner.domain.assessment import prepare_calendar
+from vacation_window_planner.domain.calculation_context import capture_context
 from vacation_window_planner.domain.calendar import CalendarProvider
 from vacation_window_planner.domain.comparison import (
     ComparisonInput,
@@ -86,15 +88,28 @@ class ComparisonWorkflow:
             + timedelta(days=self._policy.shift_days + self._policy.max_length_days - 1),
             weekend_override=context.weekend_days,
         )
-        baseline = describe_window(dates.start_date, dates.end_date, calendar, context)
+        coverage = (
+            date.fromordinal(
+                max(today.toordinal(), dates.start_date.toordinal() - self._policy.shift_days)
+            ),
+            dates.start_date
+            + timedelta(days=self._policy.shift_days + self._policy.max_length_days - 1),
+        )
+        prepared = prepare_calendar(calendar, context, coverage, today)
+        baseline = describe_window(
+            dates.start_date, dates.end_date, calendar, context, prepared=prepared
+        )
         saved, longer = discover_alternatives(
             baseline,
             calendar=calendar,
             context=context,
             policy=self._policy,
             today=today,
+            prepared=prepared,
         )
+        calculation_context = capture_context(context, now, today)
         result = ComparisonResult(
+            calculation_context=calculation_context,
             comparison_id=uuid4(),
             baseline=baseline,
             save_leave=saved,
@@ -106,10 +121,15 @@ class ComparisonWorkflow:
             session_id=context.session_id,
             structured_input={
                 "context": context.model_dump(mode="json"),
+                "calculation_context": calculation_context.model_dump(mode="json"),
                 "dates": dates.model_dump(mode="json"),
                 "calendar": calendar.model_dump(mode="json"),
                 "policy": self._policy.model_dump(mode="json"),
                 "local_today": today.isoformat(),
+                "coverage": {
+                    "start_date": coverage[0].isoformat(),
+                    "end_date": coverage[1].isoformat(),
+                },
             },
             result=result.model_dump(mode="json"),
             created_at=now,
