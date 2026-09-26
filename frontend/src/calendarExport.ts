@@ -50,7 +50,7 @@ export function calendarFile(
     .join('\r\n')
 }
 
-function escapeText(value: string): string {
+export function escapeText(value: string): string {
   return value
     .replaceAll('\\', '\\\\')
     .replace(/\r\n|\r|\n/g, '\\n')
@@ -58,7 +58,7 @@ function escapeText(value: string): string {
     .replaceAll(',', '\\,')
 }
 
-function foldLine(value: string): string {
+export function foldLine(value: string): string {
   const lines: string[] = []
   let current = ''
   let bytes = 0

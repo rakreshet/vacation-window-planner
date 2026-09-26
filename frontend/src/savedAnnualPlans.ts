@@ -44,7 +44,7 @@ const savedAnnualSchema = z
 export type SavedAnnualPlan = z.infer<typeof savedAnnualSchema>
 
 export async function createAnnualSnapshot(
-  run: AnnualRun,
+  run: AnnualResult,
   planId: string,
 ): Promise<AnnualSnapshot> {
   const plan = run.plans.find((item) => item.plan_id === planId)
