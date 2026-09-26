@@ -65,7 +65,17 @@ export const annualContextSchema = z.strictObject({
     allowed_negative_days: z.literal(0),
     country_code: z.enum(['IL', 'US', 'GB']),
     weekend_days: z.array(count.max(6)).max(7),
-    time_zone: z.string().min(1),
+    time_zone: z
+      .string()
+      .min(1)
+      .refine((timeZone) => {
+        try {
+          new Intl.DateTimeFormat('en', { timeZone }).format(new Date(0))
+          return true
+        } catch {
+          return false
+        }
+      }, 'Choose a supported time zone'),
     personal_calendar: z.strictObject({
       schema_version: z.literal(1),
       minimum_notice_days: count.max(90),

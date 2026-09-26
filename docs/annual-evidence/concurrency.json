@@ -1,0 +1,34 @@
+[
+  {
+    "index": 0,
+    "http": 200,
+    "status": "too_broad",
+    "plans": 0,
+    "reason": "deadline",
+    "counters": {
+      "candidates": 9113,
+      "states": 53332,
+      "transitions": 2579002
+    },
+    "seconds": 5.0300502920290455
+  },
+  {
+    "index": 1,
+    "http": 200,
+    "status": "too_broad",
+    "plans": 0,
+    "reason": "deadline",
+    "counters": {
+      "candidates": 9113,
+      "states": 56780,
+      "transitions": 2851531
+    },
+    "seconds": 5.029830416024197
+  },
+  {
+    "index": 2,
+    "http": 503,
+    "code": "ANNUAL_PLANNER_BUSY",
+    "seconds": 0.056786792003549635
+  }
+]
