@@ -138,6 +138,18 @@ Opportunity tasks have moved to Phase 0.75; Moved is a scope change, not complet
 
 ## Documentation and repository maintenance PRs
 
+### Calendar export acceptance follow-up — October 2, 2026
+
+The Phase 0.75 and annual implementation stacks were incorporated into `main` through [#72](https://github.com/rakreshet/vacation-window-planner/pull/72). The earlier phase tables preserve their pre-consolidation review status. This follow-up adds real browser-download regression coverage; [acceptance evidence](calendar-export-acceptance.md) separates passing browser delivery from still-pending calendar-client imports.
+
+| Deliverable | PR | Status |
+| --- | --- | --- |
+| Individual vacation download in Chromium/WebKit, independent file parsing and CI | [#76](https://github.com/rakreshet/vacation-window-planner/pull/76) | In review; all CI checks passed |
+| Selected/reduced annual downloads, privacy and stable identity | [#77](https://github.com/rakreshet/vacation-window-planner/pull/77) | In review; based on #76; all CI checks passed |
+| Browser delivery evidence and pending client-import checklist | [#78](https://github.com/rakreshet/vacation-window-planner/pull/78) | In review; based on #77 |
+
+The final documentation PR [#78](https://github.com/rakreshet/vacation-window-planner/pull/78) targets #77's branch and records live-app evidence, blocked client access and the manual checklist. No implementation PR is marked Done by this follow-up; full calendar-client acceptance remains conditional.
+
 | PR | Status | Result |
 | --- | --- | --- |
 | [#2](https://github.com/rakreshet/vacation-window-planner/pull/2) | Merged | Recorded the four Phase 0 product-rule decisions in the PRD, HLD, and task plan; added domain language. |

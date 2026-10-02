@@ -1,5 +1,7 @@
 # Annual planning acceptance — AP 10
 
+October 2 follow-up: the implementation was merged into `main` through [#72](https://github.com/rakreshet/vacation-window-planner/pull/72). [Calendar export acceptance](calendar-export-acceptance.md) records successful Chromium/WebKit downloads for full and reduced annual plans, with Google Calendar/second-client imports still pending. The September record below preserves the original measurements.
+
 Measured September 26, 2026. AP 01–09 are stacked review PRs #62–#70; AP 10 completes the implementation stack without merging it. Original review base: AP 09 `1b2950b`; subsequent AP09 CI test-query fixes are incorporated through the dependent branch. Full checks cover application commit `3fa2b40`; focused checks and type/build verification cover the subsequent test-only fixes through `e2cdc8c`. Backend production code is unchanged since AP07. The application changes and evidence in this PR are the acceptance candidate. The prerequisite Phase 0.75 stack is still required. See [progress](progress.md#annual-planning--several-vacations-one-budget) and the [approved test matrix](annual-plans-testing.md).
 
 **Conditional release acceptance:** automated correctness, normal-request performance, resource limits and the recorded browser journeys pass. Actual calendar-file delivery from the in-app browser and imports into Google Calendar plus a second client remain unverified. This is not a claim of complete export-client acceptance.

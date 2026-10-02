@@ -1,5 +1,7 @@
 # Phase 0.75 acceptance record
 
+October 2 follow-up: the implementation was merged into `main` through [#72](https://github.com/rakreshet/vacation-window-planner/pull/72). [Calendar export acceptance](calendar-export-acceptance.md) records successful Chromium/WebKit file delivery and the still-pending Google Calendar/second-client imports. The September record below preserves the original verification conditions.
+
 Recorded 2026-09-26. The implementation is in an unmerged stack, #51–#59 plus [#60](https://github.com/rakreshet/vacation-window-planner/pull/60), the final acceptance PR. The local app is available at http://localhost:15173/. Features are implemented; release acceptance remains conditional on real Google Calendar and a second calendar-client import. Those checks are not replaced by parser tests.
 
 ## Automated evidence

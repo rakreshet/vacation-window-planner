@@ -92,7 +92,7 @@ npx playwright install chromium webkit
 npm run test:browser
 ```
 
-The runner starts its own production preview at `http://127.0.0.1:4173` and stops it afterward. Test traces and screenshots are retained on failure. Real Google Calendar and second-client imports remain separate acceptance checks.
+The runner starts its own production preview at `http://127.0.0.1:4173` and stops it afterward. Test traces and screenshots are retained on failure. Real Google Calendar and second-client imports remain separate acceptance checks; see the [current evidence and manual checklist](docs/calendar-export-acceptance.md).
 
 ## Local-run skill
 
