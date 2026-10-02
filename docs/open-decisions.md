@@ -13,7 +13,7 @@ Phase 0, Phase 0.5, Phase 0.75, and annual planning are delivered on `main` thro
 
 ## Future choices
 
-- The [Phase 0.75 plan](phase-0.75-plan.md) and [UX](phase-0.75-ux.md) record delivered personal calendar controls, opportunities after explicit Search, and same-browser saved options with leave-request copying and no accounts. Calendar-export requirements in those original plans are superseded below.
+- The [Phase 0.75 plan](phase-0.75-plan.md) and [UX](phase-0.75-ux.md) record delivered personal calendar controls, opportunities after explicit Search, and same-browser saved options with leave-request copying and no accounts.
 - Phase 0.75 takes over proactive discovery and its base workflow from P1 09–14; Phase 1 retains the later travel-adapter independence check. Choose a live flight provider and its cost/cache policy for Phase 1. No travel provider is needed for Phase 0.75.
 - Before an external pilot, review retention settings, access controls, and request-rate limits for that deployment.
 - Additional holiday regions and mobile support need explicit scope and acceptance checks. Current `GB` sessions must continue to mean England & Wales.
@@ -22,4 +22,4 @@ Phase 0, Phase 0.5, Phase 0.75, and annual planning are delivered on `main` thro
 
 On October 2, 2026, the user canceled calendar downloads and calendar-client imports. The follow-up acceptance PRs [#76](https://github.com/rakreshet/vacation-window-planner/pull/76), [#77](https://github.com/rakreshet/vacation-window-planner/pull/77), and [#78](https://github.com/rakreshet/vacation-window-planner/pull/78) were closed and their branches deleted.
 
-Remove the individual and annual `.ics` download controls, serializers, export UID metadata and parser dependency. Keep existing browser saves readable without changing their storage keys or capture identities. Leave-request previews/copying, holiday/weekend accounting, personal calendar rules, annual year views and saved plans remain supported. Historical export/import requirements and acceptance gates in the PRD, phase plans, UX documents and acceptance records are superseded by this decision; recorded historical evidence remains for traceability.
+PR [#79](https://github.com/rakreshet/vacation-window-planner/pull/79) removes the individual and annual calendar-download feature and updates the related docs. It is canceled rather than deferred: do not retain it as a roadmap item or acceptance requirement. Keep existing browser saves readable with their storage keys and capture identities. Leave-request previews/copying, holiday/weekend accounting, personal calendar rules, annual year views and saved plans remain supported.

@@ -1,10 +1,10 @@
 # Annual planning acceptance — AP 10
 
-**Scope update — October 2, 2026:** calendar downloads and client imports were [canceled](open-decisions.md#calendar-export-canceled). The export/import gates below are historical and no longer required. Annual saving, year views and leave-request copying remain supported.
+**Scope update — October 2, 2026:** scope follows the [cancellation decision](open-decisions.md#calendar-export-canceled). This record retains annual planning, saving, year-view and leave-request copy evidence.
 
 Measured September 26, 2026. AP 01–09 are stacked review PRs #62–#70; AP 10 completes the implementation stack without merging it. Original review base: AP 09 `1b2950b`; subsequent AP09 CI test-query fixes are incorporated through the dependent branch. Full checks cover application commit `3fa2b40`; focused checks and type/build verification cover the subsequent test-only fixes through `e2cdc8c`. Backend production code is unchanged since AP07. The application changes and evidence in this PR are the acceptance candidate. The prerequisite Phase 0.75 stack is still required. See [progress](progress.md#annual-planning--several-vacations-one-budget) and the [approved test matrix](annual-plans-testing.md).
 
-**Conditional release acceptance:** automated correctness, normal-request performance, resource limits and the recorded browser journeys pass. Actual calendar-file delivery from the in-app browser and imports into Google Calendar plus a second client remain unverified. This is not a claim of complete export-client acceptance.
+**Recorded acceptance:** automated correctness, normal-request performance, resource limits and the recorded browser journeys passed at the commits identified above. The measurements below are historical evidence, not fresh verification of the current PR.
 
 ## Fresh required checks
 
@@ -81,12 +81,6 @@ These commands create synthetic anonymous sessions and annual snapshots. The col
 | Reduced plans | Live IL available 1/reserve 0: two of three breaks, seven days away, one leave day, omitted long slot explicitly named; [1024px capture](annual-evidence/ap10-reduced-1024.png) |
 | Multiple lock conflicts | Live Aug 6–14 and Aug 8–10 retains both locks; reports overlap and unique five-day lock cost against one available day; [1440px capture](annual-evidence/ap10-conflict-1440.png); Enter on Edit Break 2 focuses its fieldset |
 | Keyboard and responsive structure | Existing AP06 details/Back focus evidence plus AP10 error/conflict links. At 1024 and 1440, document width equals viewport width. Month summaries and chronological charged-date details give non-color equivalents; no 365-control tab sequence |
-| Export/copy | Independent ICS parser covers multi-event identity, escaping/UTF-8 folding, privacy, omissions, leap/year/DST dates. Rendered denial/quota/stale-preview/pending-copy tests and live preview capture |
+| Leave-request copy | Exact dates and aggregate cost, privacy defaults and reduced-plan omissions. Rendered denial/quota/stale-preview/pending-copy tests and live preview capture |
 
-The screenshots were inspected for layout and legibility. Keyboard focus and semantic output were checked with browser accessibility state; this does not claim a complete screen-reader or automated WCAG audit. Reduced-motion behavior uses the existing CSS preference and immediate details scrolling. No live paid interpretation call, real calendar account import, invitation, email or external notification was performed.
-
-## Outstanding manual export gate
-
-AP09's real Download action in the in-app browser did not yield its documented download event, and no matching file appeared in Downloads. Both the semantic button and native accessibility action were attempted. The parser and simulated download adapter establish file content and app action behavior; they do not establish delivery through that browser host.
-
-Before claiming full export release acceptance, download a whole plan in a supported ordinary browser and record the resulting file. Import it into a disposable Google Calendar and a second client. Confirm each inclusive interval renders as an all-day event through its correct last date, tentative/nonblocking handling where supported, no invitation/attendee, reduced-plan disclosure, default budget privacy and stable identity on repeated export. Record client/version and any deduplication behavior; do not describe repeated import as synchronization. Google Calendar was signed out during earlier verification; no credentials or account changes were attempted. See the [export criteria](annual-plans-testing.md) and [server operations](annual-plans-server.md).
+The screenshots were inspected for layout and legibility. Keyboard focus and semantic output were checked with browser accessibility state; this does not claim a complete screen-reader or automated WCAG audit. Reduced-motion behavior uses the existing CSS preference and immediate details scrolling. No live paid interpretation call, email or external notification was performed.

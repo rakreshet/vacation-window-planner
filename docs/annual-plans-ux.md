@@ -90,7 +90,7 @@ May 7–10    Short break   4 days away · 1 vacation day  · 15 remain  [Lock d
 Aug 6–14    Long break    9 days away · 5 vacation days · 10 remain  [Locked]
 Each break: [Charged dates and day details]
 
-[Save this plan] [Download calendar] [Copy leave request]
+[Save this plan] [Copy leave request]
 ```
 
 The dates and totals above use fixture A below. Other columns deliberately contain no invented rankings or numbers. The UI must use actual backend plans and objective facts. The first plan is selected initially. Up to three cards are sufficient; if only one exists, show it with “No materially different plans found under these rules,” only after a completed search.
@@ -110,7 +110,7 @@ The chart is a budget allocation: Used + Reserved + Unallocated = Available. The
 
 Locking is available from the selected current plan only. Unlocked cards in an old result cannot overwrite a newer draft. Unlock an ordinary slot to make its date range variable again; an exact-date slot first asks for a generated length range. Switching plans is viewing, not locking or saving. Switching to Find dates/Compare preserves their earlier state and the annual draft independently.
 
-Input edits disable live Save/Download/Copy and close or invalidate their previews. Saved-record actions remain bound to their historical snapshots. Late responses cannot replace a more recent result; after any input change during a request, completion stays tied to the submitted revision or is discarded, never attached to the edited draft.
+Input edits disable live Save/Copy and close or invalidate their previews. Saved-record actions remain bound to their historical snapshots. Late responses cannot replace a more recent result; after any input change during a request, completion stays tied to the submitted revision or is discarded, never attached to the edited draft.
 
 ## Screen E: conflicts, reductions, and resource limits
 
@@ -126,7 +126,7 @@ Not included: second short break, 3–5 days
 [Edit budget] [Edit months] [Edit mix or spacing]
 ```
 
-Only show this state after a completed infeasibility proof. A reduced plan is a coherent feasible plan and displays its own totals, year view and exact omissions. It may be saved/exported with that disclosure. Use this reduced mix creates a new draft; viewing a reduction leaves the original three-break request intact. Omission priority is the form's visible order.
+Only show this state after a completed infeasibility proof. A reduced plan is a coherent feasible plan and displays its own totals, year view and exact omissions. It may be saved or copied with that disclosure. Use this reduced mix creates a new draft; viewing a reduction leaves the original three-break request intact. Omission priority is the form's visible order.
 
 For locks alone costing 5 with available 7 and reserve 3: “Your locked dates use 5 vacation days. This pool allows 4 while keeping 3 in reserve. Shortfall: 1 day.” Offer explicit field/date edits; do not make a reserve-spending or lock-dropping plan. If there are several lock errors, list them all and link to the affected rows.
 
@@ -142,15 +142,15 @@ Interpret proposes changes in a review panel with before/after fields. Absent va
 
 Apply accepted changes returns to the editable form and marks results stale. Generate plans is a separate action. Discard keeps the earlier draft unchanged. If the draft changed while interpretation was running, show that the proposal is outdated and require a fresh review instead of overwriting edits. The form works normally without an interpretation key.
 
-## Screen G: save, reopen, and export
+## Screen G: save, reopen, and copy
 
 Saved → Annual plans shows name, plan year, number of breaks, used/remaining/reserve values, and calculation date. Label reduced plans. Explain once that storage belongs to this browser/profile and can be removed by clearing browser data. Opening a record is offline and displays a historical calculation without claiming the old balance is current.
 
-Recalculate this plan opens a separate draft with its original request and recorded locks. Generated dates are not all converted to locks. Keep the saved snapshot and the previously active workspace intact. If dates are now past, submission points to the affected fields; historical viewing/copying/export still works. Back restores the earlier workspace and invoking focus.
+Recalculate this plan opens a separate draft with its original request and recorded locks. Generated dates are not all converted to locks. Keep the saved snapshot and the previously active workspace intact. If dates are now past, submission points to the affected fields; historical viewing/copying still works. Back restores the earlier workspace and invoking focus.
 
-Save/rename/remove/Undo report success only after storage succeeds. A duplicate save preserves the existing name. Corrupt or unsupported items have their own recovery row and explicit Remove; other items remain usable. A quota error keeps direct Copy/Download available.
+Save/rename/remove/Undo report success only after storage succeeds. A duplicate save preserves the existing name. Corrupt or unsupported items have their own recovery row and explicit Remove; other items remain usable. A quota error keeps direct Copy available.
 
-Download exports the selected plan, one event per break. Copy preview lists inclusive dates, charged working dates, aggregate leave used, calculation date, and reduced-plan omissions. “Include budget and reserve” is off by default. No unrelated unavailable dates, credentials or interpretation text appear. Calendar files are tentative snapshots, not invitations, approvals, or synchronized calendars. If clipboard access fails, retain selectable text and no false Copied message.
+Copy preview lists inclusive dates, charged working dates, aggregate leave used, calculation date, and reduced-plan omissions. “Include budget and reserve” is off by default. No unrelated unavailable dates, credentials or interpretation text appear. The preview describes a planning snapshot and does not claim leave approval. If clipboard access fails, retain selectable text and no false Copied message.
 
 ## Independently worked fixtures
 
@@ -183,4 +183,4 @@ The [test strategy](annual-plans-testing.md) adds a deliberately tiny optimizer 
 | Storage/clipboard failure | No false success, intact records and selectable preview |
 | All-locked or zero leave | One valid plan, finite totals, no artificial alternatives or zero-division score |
 
-At AP 05/06 inspect the real Docker app at 1,440 px and 1,024 px; capture form, full plans, expanded charged dates, locks, reduced plans, stale and error states. Check keyboard-only actions, focus restoration, reduced motion, contrast, and meaning without color. AP 08/09 extend evidence to reload, saved/offline, quota/error recovery and actual downloads. This document's diagrams do not count as rendered acceptance.
+At AP 05/06 inspect the real Docker app at 1,440 px and 1,024 px; capture form, full plans, expanded charged dates, locks, reduced plans, stale and error states. Check keyboard-only actions, focus restoration, reduced motion, contrast, and meaning without color. AP 08/09 extend evidence to reload, saved/offline, quota/error recovery and leave-request copying. This document's diagrams do not count as rendered acceptance.

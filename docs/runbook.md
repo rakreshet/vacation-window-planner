@@ -56,7 +56,6 @@ These are backend settings, never request fields. Compose forwards them from `.e
 
 For a smoke check, use **Compare my dates**, an 8-day balance, and January 3–7, 2027. With Friday/Saturday weekends and the Israeli calendar, it should show 5 vacation days used, an alternative of the same length using 3, and a 9-day break using 5. Use future dates if running this check after January 2027. Also compare from a grouped Search date, then return and verify feedback remains selected. See the [acceptance record](phase-0.5-acceptance.md) for the completed checks.
 
-
 ## Supported holiday calendars
 
 The same offline, deterministic calendar provider serves Search and Compare. No LLM or network holiday lookup is needed.
@@ -89,7 +88,7 @@ Action details cover each returned representative and grouped date. More than 6,
 
 Saved options use one localStorage key per record under `vacation-window:saved:v1:`. Limits are 50 records and 64 KiB UTF-8 per record. Tokens, server IDs, and interpretation text are excluded. Storage failures never clear existing records. Corrupt/unsupported items offer explicit removal; they are not silently recalculated. Same-item cross-tab changes use last successful write. Concurrent different-item saves can briefly exceed 50; further new saves are blocked without deleting anything. Storage is browser/profile/origin-specific; clearing browser data or private browsing may lose it. No server-side recovery or device synchronization exists.
 
-Saved-date checking opens a draft and requires explicit submission using a fresh session, preserving the saved timezone and existing planning work. Leave-request copying uses captured accounting and requires no server session. Denied clipboard access leaves selectable text. Calendar downloads and client imports were [canceled](open-decisions.md#calendar-export-canceled). Existing saved options remain readable; obsolete export metadata is ignored. See [acceptance and manual testing](phase-0.75-acceptance.md).
+Saved-date checking opens a draft and requires explicit submission using a fresh session, preserving the saved timezone and existing planning work. Leave-request copying uses captured accounting and requires no server session. Denied clipboard access leaves selectable text. Existing saved options remain readable. See [acceptance and manual testing](phase-0.75-acceptance.md).
 
 ## Annual planning
 
@@ -101,4 +100,4 @@ The engine's `annual-v1` defaults are 12,000 candidates, 500,000 states, 5,000,0
 
 Annual browser storage is separate from individual saved vacations, under `vacation-window:annual:v1:`: at most 20 records, 256 KiB UTF-8 per record, names up to 80 characters. It stores one selected plan with original request, locks, common context and historical facts, excluding server identifiers, tokens and interpretation text. Reopen works without the server; Recalculate opens a separate draft and requires explicit submission. Old years or past locks require edits; saved facts never silently change. Invalid records are isolated with explicit removal. Failed writes preserve existing items and leave direct copying available. Clearing browser/profile/origin storage loses these records; no account, cloud backup or synchronization exists.
 
-Use the [annual acceptance record](annual-plans-acceptance.md) for tests, benchmark commands and browser evidence. Its historical calendar-client delivery/import gate was canceled with calendar export. The local-run commands and database preservation rules above remain unchanged.
+Use the [annual acceptance record](annual-plans-acceptance.md) for tests, benchmark commands and browser evidence. The local-run commands and database preservation rules above remain unchanged.

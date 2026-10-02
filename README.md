@@ -1,6 +1,6 @@
 # Vacation Window Planner
 
-A Docker-based app for finding useful vacation dates. Find dates ranks vacation windows; Compare my dates checks exact dates and nearby alternatives. Personal calendar rules and proactive opportunities help account for work schedules. Plan my year coordinates several vacations under one leave budget and reserve. Save options and annual plans in this browser, and copy reviewed leave requests. These planning features are on `main` through [#72](https://github.com/rakreshet/vacation-window-planner/pull/72). Calendar downloads and client imports were [canceled on October 2, 2026](docs/open-decisions.md#calendar-export-canceled); destinations and live flights remain future scope. See the [delivery record](docs/progress.md), [PRD](docs/prd.md), and [operational decisions](docs/open-decisions.md).
+A Docker-based app for finding useful vacation dates. Find dates ranks vacation windows; Compare my dates checks exact dates and nearby alternatives. Personal calendar rules and proactive opportunities help account for work schedules. Plan my year coordinates several vacations under one leave budget and reserve. Save options and annual plans in this browser, and copy reviewed leave requests. These planning features are on `main` through [#72](https://github.com/rakreshet/vacation-window-planner/pull/72). Destinations and live flights remain future scope. See the [delivery record](docs/progress.md), [PRD](docs/prd.md), and [operational decisions](docs/open-decisions.md).
 
 Search and Compare support Israel, U.S. federal holidays, and England & Wales bank holidays. Weekend days remain editable; see [calendar scope and examples](docs/runbook.md#supported-holiday-calendars).
 
@@ -26,7 +26,7 @@ Search and Compare support Israel, U.S. federal holidays, and England & Wales ba
 - [Security guidance](SECURITY.md)
 - [Domain language](CONTEXT.md)
 
-The Markdown documents are the version-controlled source of truth. Review changes to them in pull requests; any Word copies are point-in-time exports and should be regenerated from the approved Markdown rather than edited independently. Find dates, Compare my dates, and Saved options support manual personal calendars, explicit-Search opportunities, browser-only saves, and reviewed leave-request copying. Historical calendar-export requirements are superseded by the [cancellation decision](docs/open-decisions.md#calendar-export-canceled).
+The Markdown documents are the version-controlled source of truth. Review changes to them in pull requests; any Word copies are point-in-time exports and should be regenerated from the approved Markdown rather than edited independently. Find dates, Compare my dates, and Saved options support manual personal calendars, explicit-Search opportunities, browser-only saves, and reviewed leave-request copying.
 
 Annual planning supports several vacations sharing one budget, with a protected reserve and locked dates. Phase 1 continues to mean destinations and flights.
 

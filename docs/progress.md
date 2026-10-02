@@ -4,7 +4,7 @@ This is the versioned record of what has been merged and which pull request deli
 
 ## Current scope — October 2, 2026
 
-[#72](https://github.com/rakreshet/vacation-window-planner/pull/72) incorporated Phase 0.75 and annual planning into `main` (`6029f25`). The original stack status and acceptance sections below preserve their September 26 review history.
+[#72](https://github.com/rakreshet/vacation-window-planner/pull/72) incorporated Phase 0.75 and annual planning into `main` (`6029f25`). The task tables retain their original PR links; the September 26 acceptance records retain historical measurements.
 
 The user canceled calendar downloads and client imports. Follow-up acceptance PRs [#76](https://github.com/rakreshet/vacation-window-planner/pull/76), [#77](https://github.com/rakreshet/vacation-window-planner/pull/77), and [#78](https://github.com/rakreshet/vacation-window-planner/pull/78) are closed and their local/remote branches deleted. Removal PR [#79](https://github.com/rakreshet/vacation-window-planner/pull/79) is in review, based on `main`, and removes the export logic already merged while retaining date planning, browser saves and leave-request copying. See the [scope decision](open-decisions.md#calendar-export-canceled).
 
@@ -25,7 +25,7 @@ Phase 0, Phase 0.5, and both Phase 0.5 follow-ups are complete on `main`. [#47](
 
 GitHub marked #4 as merged indirectly. PRs #5–#46 were closed after verifying that every head commit was already an ancestor of `main`; their **Closed** state does not mean their work was discarded. The tables retain the original implementation PRs for traceability. [#48](https://github.com/rakreshet/vacation-window-planner/pull/48) was then rebased onto `main`, passed [CI](https://github.com/rakreshet/vacation-window-planner/actions/runs/36233553175), and merged separately as `7e9d4cd` to ignore IntelliJ project files. No PR from #1–#48 remains open.
 
-Phase 0.75 is implemented in the unmerged #51–#60 stack, with the client acceptance caveats recorded below. Annual planning is the next proposed feature; Phase 1 retains its later flight scope. Desktop Search and Compare run without an interpretation provider key; the optional Interpret action requires its selected provider's key. The documentation refresh [#49](https://github.com/rakreshet/vacation-window-planner/pull/49) is merged as `b203ea6`.
+Phase 0.75 and annual planning were subsequently incorporated into `main` through #72; Phase 1 retains its later flight scope. Desktop Search and Compare run without an interpretation provider key; the optional Interpret action requires its selected provider's key. The documentation refresh [#49](https://github.com/rakreshet/vacation-window-planner/pull/49) is merged as `b203ea6`.
 
 ## Phase 0
 
@@ -83,21 +83,21 @@ The [Phase 0.5 plan](phase-0.5-plan.md), its ten implementation tasks, and follo
 
 ## Phase 0.75 — personal calendars, opportunities, and saved options
 
-The [Phase 0.75 plan](phase-0.75-plan.md) defines ten behavior PRs plus its design PR. The [UX walkthrough](phase-0.75-ux.md) records the inspectable flows and fixed fixtures. Implementation is complete in the dependent PR stack, still open as verified September 26, 2026. The [acceptance record](phase-0.75-acceptance.md) retains actual browser-download/client-import limitations; In review does not mean delivered.
+The [Phase 0.75 plan](phase-0.75-plan.md) defines ten behavior PRs plus its design PR. The [UX walkthrough](phase-0.75-ux.md) records the flows and fixed fixtures. The stack was incorporated into `main` through #72. The [acceptance record](phase-0.75-acceptance.md) retains historical planning, save and copy evidence. The current task scope excludes the canceled feature.
 
 | Task | Deliverable | PR(s) | Status |
 | --- | --- | --- | --- |
 | P075 00 | Product/backend/frontend plan, UX walkthrough, and PR sequence | [#50](https://github.com/rakreshet/vacation-window-planner/pull/50) | Done |
-| P075 01 | Shared calendar normalization and window assessment | [#51](https://github.com/rakreshet/vacation-window-planner/pull/51) | In review |
-| P075 02 | Personal context persistence and typed calculation results | [#52](https://github.com/rakreshet/vacation-window-planner/pull/52) | In review |
-| P075 03 | Personal calendar controls in Find and Compare | [#53](https://github.com/rakreshet/vacation-window-planner/pull/53) | In review |
-| P075 04 | Opportunity policy, scoring, and bounded detection | [#54](https://github.com/rakreshet/vacation-window-planner/pull/54) | In review |
-| P075 05 | Opportunity workflow and atomic snapshots | [#55](https://github.com/rakreshet/vacation-window-planner/pull/55) | In review |
-| P075 06 | Separate opportunities section and comparison entry | [#56](https://github.com/rakreshet/vacation-window-planner/pull/56) | In review |
-| P075 07 | Complete action snapshots for every visible date | [#57](https://github.com/rakreshet/vacation-window-planner/pull/57) | In review |
-| P075 08 | Same-browser Saved options journey | [#58](https://github.com/rakreshet/vacation-window-planner/pull/58) | In review |
-| P075 09 | Calendar export and leave-request copy | [#59](https://github.com/rakreshet/vacation-window-planner/pull/59) | In review |
-| P075 10 | Full acceptance, accessibility, performance, and operational documentation | [#60](https://github.com/rakreshet/vacation-window-planner/pull/60) | In review; client imports pending |
+| P075 01 | Shared calendar normalization and window assessment | [#51](https://github.com/rakreshet/vacation-window-planner/pull/51) | Done through #72 |
+| P075 02 | Personal context persistence and typed calculation results | [#52](https://github.com/rakreshet/vacation-window-planner/pull/52) | Done through #72 |
+| P075 03 | Personal calendar controls in Find and Compare | [#53](https://github.com/rakreshet/vacation-window-planner/pull/53) | Done through #72 |
+| P075 04 | Opportunity policy, scoring, and bounded detection | [#54](https://github.com/rakreshet/vacation-window-planner/pull/54) | Done through #72 |
+| P075 05 | Opportunity workflow and atomic snapshots | [#55](https://github.com/rakreshet/vacation-window-planner/pull/55) | Done through #72 |
+| P075 06 | Separate opportunities section and comparison entry | [#56](https://github.com/rakreshet/vacation-window-planner/pull/56) | Done through #72 |
+| P075 07 | Complete action snapshots for every visible date | [#57](https://github.com/rakreshet/vacation-window-planner/pull/57) | Done through #72 |
+| P075 08 | Same-browser Saved options journey | [#58](https://github.com/rakreshet/vacation-window-planner/pull/58) | Done through #72 |
+| P075 09 | Leave-request preview and copy | [#59](https://github.com/rakreshet/vacation-window-planner/pull/59) | Done through #72 |
+| P075 10 | Full acceptance, accessibility, performance, and operational documentation | [#60](https://github.com/rakreshet/vacation-window-planner/pull/60) | Done through #72; current scope |
 
 ## Annual planning — several vacations, one budget
 
@@ -108,16 +108,16 @@ Base verified September 26, 2026: `origin/main` = `20df229`; #50 merged; #51–#
 | Task | Deliverable | Depends on | PR(s) | Status |
 | --- | --- | --- | --- | --- |
 | AP 00 | Versioned BE/FE/UX plan, test strategy, domain terms and PR sequence | P075 10 branch tip | [#61](https://github.com/rakreshet/vacation-window-planner/pull/61) | Merged into prerequisite stack |
-| AP 01 | Locked-only annual assessment, shared budget/reserve and conflict facts | AP 00 + explicit implementation authorization | [#62](https://github.com/rakreshet/vacation-window-planner/pull/62) | In review |
-| AP 02 | Complete annual candidates and exact full-mix optimizer | AP 01 | [#63](https://github.com/rakreshet/vacation-window-planner/pull/63) | In review |
-| AP 03 | Diverse full plans, labeled reductions and truthful diagnostics | AP 02 | [#64](https://github.com/rakreshet/vacation-window-planner/pull/64) | In review |
-| AP 04 | Authenticated workflow/HTTP, annual snapshots and resource controls | AP 03 | [#65](https://github.com/rakreshet/vacation-window-planner/pull/65) | In review |
-| AP 05 | Structured annual workspace and first integrated planning journey | AP 04 | [#66](https://github.com/rakreshet/vacation-window-planner/pull/66) | In review |
-| AP 06 | Year view, whole-plan comparison and lock/recalculate UX | AP 05 | [#67](https://github.com/rakreshet/vacation-window-planner/pull/67) | In review |
-| AP 07 | Optional interpretation with proposal review and explicit references | AP 06 | [#68](https://github.com/rakreshet/vacation-window-planner/pull/68) | In review |
-| AP 08 | Same-browser saved annual plans and explicit reopening/recalculation | AP 07 | [#69](https://github.com/rakreshet/vacation-window-planner/pull/69) | In review |
-| AP 09 | Whole-plan calendar download and leave-request copy | AP 08 | [#70](https://github.com/rakreshet/vacation-window-planner/pull/70) | In review |
-| AP 10 | Integrated acceptance, performance, accessibility and runbook | AP 09 | [#71](https://github.com/rakreshet/vacation-window-planner/pull/71) | In review |
+| AP 01 | Locked-only annual assessment, shared budget/reserve and conflict facts | AP 00 + explicit implementation authorization | [#62](https://github.com/rakreshet/vacation-window-planner/pull/62) | Done through #72 |
+| AP 02 | Complete annual candidates and exact full-mix optimizer | AP 01 | [#63](https://github.com/rakreshet/vacation-window-planner/pull/63) | Done through #72 |
+| AP 03 | Diverse full plans, labeled reductions and truthful diagnostics | AP 02 | [#64](https://github.com/rakreshet/vacation-window-planner/pull/64) | Done through #72 |
+| AP 04 | Authenticated workflow/HTTP, annual snapshots and resource controls | AP 03 | [#65](https://github.com/rakreshet/vacation-window-planner/pull/65) | Done through #72 |
+| AP 05 | Structured annual workspace and first integrated planning journey | AP 04 | [#66](https://github.com/rakreshet/vacation-window-planner/pull/66) | Done through #72 |
+| AP 06 | Year view, whole-plan comparison and lock/recalculate UX | AP 05 | [#67](https://github.com/rakreshet/vacation-window-planner/pull/67) | Done through #72 |
+| AP 07 | Optional interpretation with proposal review and explicit references | AP 06 | [#68](https://github.com/rakreshet/vacation-window-planner/pull/68) | Done through #72 |
+| AP 08 | Same-browser saved annual plans and explicit reopening/recalculation | AP 07 | [#69](https://github.com/rakreshet/vacation-window-planner/pull/69) | Done through #72 |
+| AP 09 | Whole-plan leave-request copy | AP 08 | [#70](https://github.com/rakreshet/vacation-window-planner/pull/70) | Done through #72 |
+| AP 10 | Integrated acceptance, performance, accessibility and runbook | AP 09 | [#71](https://github.com/rakreshet/vacation-window-planner/pull/71) | Done through #72 |
 
 The [ordered breakdown](annual-plans-plan.md#ordered-dependent-pr-breakdown) supplies each task's scope, acceptance evidence, and stacking policy. Do not create implementation PRs or mark work Done in advance. Planning review/merge alone is not permission to implement.
 
@@ -157,4 +157,4 @@ Implementation decision (2026-09-26): the user confirmed there are no deployed c
 
 Code style decision (2026-09-26): use meaningful names and focused functions; avoid comments that repeat clear code. Refactor existing behavior only with test coverage.
 
-Annual AP 10: [acceptance evidence](annual-plans-acceptance.md) records 269 backend / 122 frontend tests, normal-calendar p95 below two seconds, bounded load, and remaining manual calendar delivery/import checks. AP 01–10 are open for review; no implementation PR was merged by the agent.
+Annual AP 10: [acceptance evidence](annual-plans-acceptance.md) records historical 269 backend / 122 frontend test totals, normal-calendar p95 below two seconds and bounded load. AP 01–10 were incorporated into `main` through #72.

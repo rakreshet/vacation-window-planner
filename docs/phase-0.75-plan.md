@@ -1,6 +1,6 @@
 # Phase 0.75: personal calendars, opportunities, and saved options
 
-**Scope update — October 2, 2026:** the [calendar-export cancellation](open-decisions.md#calendar-export-canceled) supersedes download/serializer/client-import requirements in this original plan. Personal calendar rules, saved options and leave-request copying remain supported.
+**Scope update — October 2, 2026:** this plan reflects the [current scope decision](open-decisions.md#calendar-export-canceled). Personal calendar rules, saved options and leave-request copying remain supported.
 
 **Status:** Design prepared for review; implementation has not started. This documentation PR does not authorize implementation. Start behavior work only after the user explicitly says the plan is ready.
 
@@ -10,11 +10,11 @@
 
 ## Outcome and scope
 
-Help a person find vacation windows that respect their real calendar, discover useful alternatives beyond their explicit search, and retain or export a chosen option. This phase adds three capabilities to the existing Find dates and Compare my dates journeys:
+Help a person find vacation windows that respect their real calendar, discover useful alternatives beyond their explicit search, and save a chosen option or copy its leave request. This phase adds three capabilities to the existing Find dates and Compare my dates journeys:
 
 1. Manual personal calendar controls shared by all calculations.
 2. A separate Opportunities worth considering section produced after explicit Search.
-3. Same-browser saved options, calendar-file download, and copyable leave-request details.
+3. Same-browser saved options and copyable leave-request details.
 
 Annual allocation across several breaks, balance forecasting, reservations, approval workflows, accounts, public share links, cross-device recovery, connected calendars, school-calendar feeds, background scans, notifications, destinations, and flights are outside this phase. Saving several options does not combine their budgets or establish a vacation plan for the year.
 
@@ -24,15 +24,15 @@ The user confirmed the first three decisions on September 26, 2026. The remainin
 
 | Topic | Position | Basis |
 | --- | --- | --- |
-| Release scope | Personal calendars + proactive opportunities + save/export, before flight work | User confirmed |
-| Persistence | Same browser, no account; export and copy included | User confirmed |
+| Release scope | Personal calendars + proactive opportunities + saving/copying, before flight work | User confirmed; scope updated October 2, 2026 |
+| Persistence | Same browser, no account; leave-request copying included | User confirmed; scope updated October 2, 2026 |
 | Input and discovery | Manual calendar controls; opportunities only after explicit Search | User confirmed |
 | Work calendar | Dated overrides for days off without using leave and for extra working days; retain editable weekends | Proposed default |
 | Unavailability | Any intersecting date makes a suggested window ineligible, including a weekend or holiday | Proposed default |
 | Notice | Whole calendar days from local today to the start of the entire window; default 0 | Proposed default |
 | Company closures | A personal day off means no vacation balance is charged; mandatory leave allocation is deferred | Proposed default |
 | Saving | A bookmark of an exact calculation; saving never charges, reserves, or approves leave | Proposed default |
-| Ineligible baseline | Keep its accounting visible and permit saving/exporting with the recorded warnings | Proposed default |
+| Ineligible baseline | Keep its accounting visible and permit saving/copying with the recorded warnings | Proposed default |
 | Reopening | Display the saved calculation; checking again is an explicit separate comparison | Proposed default |
 | Opportunity scoring | Separate deterministic 50/35/15 policy, finite zero-leave handling, explicit threshold and bounded scan | Carries forward the planned Phase 1 policy |
 | Existing ranking | Personal rules affect eligibility and cost; opportunity discovery never changes explicit Search ranking for the same submitted context | Preserves the existing product contract |
@@ -131,7 +131,7 @@ Concrete wire shapes (all dates are ISO local dates; date arrays are sorted and 
 | Score breakdown | `{efficiency: {points, max_points}, length: {points, max_points}, low_leave_use: {points, max_points}}`; total points equals raw points |
 | Criteria differences | `{code: "start_month_outside_selection", actual_month: {year, month}}` and/or `{code: "length_outside_tolerance", actual_days, minimum_days, maximum_days}` |
 
-Search's existing `window`, remaining balance, and warnings must equal their assessment projections. Compare's existing window/charged dates/balance and feasible field must equal its nested assessment projections; keep existing budget-warning codes and add no misleading over-budget warning for notice/unavailability alone. No second top-level Compare day-detail representation is added. New frontend renderers prefer nested assessments and retain legacy rendering when absent; new Save/Export actions require the detailed shape.
+Search's existing `window`, remaining balance, and warnings must equal their assessment projections. Compare's existing window/charged dates/balance and feasible field must equal its nested assessment projections; keep existing budget-warning codes and add no misleading over-budget warning for notice/unavailability alone. No second top-level Compare day-detail representation is added. New frontend renderers prefer nested assessments and retain legacy rendering when absent; Save/Copy actions require the detailed shape.
 
 For example, a five-day baseline whose fifth date is a personal day off and whose third date is unavailable has `vacation_days_used = 4`, `remaining_balance = 4` for balance 8, `eligible = false`, and `eligibility_reasons = [{code: "unavailable_dates", dates: ["2027-01-05"]}]`. If notice also excludes the start, append its reason. It must not acquire an over-budget reason merely because it is ineligible.
 
@@ -197,7 +197,7 @@ Each item contains its assessment, opportunity score/breakdown, deterministic re
 
 Keep an editable planning draft separate from each immutable submitted result. Extend the existing shared planning fields rather than building a separate calendar form for each task. Interpret merges only the fields it owns and must preserve personal calendar controls; the model must not invent exception dates or run Search.
 
-Editing any calculation input marks that task's result stale. Keep the prior result available as “Last calculation,” hide obsolete suggestion actions, and require Search/Update comparison. Disable Compare-from-result, Save, Export, and Copy on stale live results; existing saved snapshots remain usable. Close/invalidate open live-result action previews on input edits, resubmission, or result replacement so an already-open Copy button cannot bypass stale handling. Saved-item previews remain bound to their immutable records. A submitted request captures its context and a request revision; late responses cannot overwrite a newer result or attach a result to a different draft. Search/Update is disabled while a date-rule row has unapplied edits; Apply or Cancel is explicit.
+Editing any calculation input marks that task's result stale. Keep the prior result available as “Last calculation,” hide obsolete suggestion actions, and require Search/Update comparison. Disable Compare-from-result, Save, and Copy on stale live results; existing saved snapshots remain usable. Close/invalidate open live-result action previews on input edits, resubmission, or result replacement so an already-open Copy button cannot bypass stale handling. Saved-item previews remain bound to their immutable records. A submitted request captures its context and a request revision; late responses cannot overwrite a newer result or attach a result to a different draft. Search/Update is disabled while a date-rule row has unapplied edits; Apply or Cancel is explicit.
 
 Search-to-Compare copies the submitted context and exact selected dates, including grouped alternatives and opportunities. Preserve the Search draft, results, feedback, scroll, and focus. Retain `source_search_id` only while its owning session/context is still used. Editing context creates a new session and omits the origin. Comparison with notice/block violations shows exact accounting and eligible alternatives. Define three entry intents: manual opens a draft; live-result Compare is the existing explicit action that calculates on entry; saved-record Check only opens a draft. Track the return target and suspend any prior Compare draft, baseline/reset dates, results, stale state, and focus until the saved-check flow is left, including through task navigation.
 
@@ -205,9 +205,9 @@ Search-to-Compare copies the submitted context and exact selected dates, includi
 
 Use a bounded localStorage adapter behind one browser saved-options module, with an in-memory test adapter. One namespaced key per item keeps an update/removal from rewriting every other item. Use storage events to refresh another open tab. Each item is an independent bookmark; cross-tab edits to the same item use last successful write, a documented scope limit.
 
-Records contain literal `schema_version: 1`, a capture ID and export UID, user-editable name (default dates; at most 80 characters), save timestamp, source kind, exact dates, immutable assessment, sanitized submitted planning context, calculation timestamp/local date, accounting version, and applicable policy/reason metadata. Exclude bearer tokens, server ownership identifiers, raw interpretation text, and unrelated result cards. Escape user titles in every display/export context.
+Records contain literal `schema_version: 1`, a capture ID, user-editable name (default dates; at most 80 characters), save timestamp, source kind, exact dates, immutable assessment, sanitized submitted planning context, calculation timestamp/local date, accounting version, and applicable policy/reason metadata. Exclude bearer tokens, server ownership identifiers, raw interpretation text, and unrelated result cards. Render user titles safely in every display context.
 
-Derive one deterministic capture ID from a versioned canonical serialization of exact dates, canonical context, accounting version, and accounting result, excluding source surface, rank, server identifiers, timestamps, editable name, and score/explanation metadata. Use its SHA-256 digest for the storage key and export UID, and retain that UID in the record. A repeat save reports “Already saved” and preserves the existing name. Same dates with materially different context/accounting may be saved as separate records. Concurrent identical saves address the same key; truly concurrent edits to that record remain last-write-wins. UID remains stable across live export, Save, reload, and rename. Permit up to 50 records and at most 64 KiB of serialized UTF-8 data per record; validate dates, counts, arrays, and schema before writing. Reject oversized captures without truncating their accounting; exporting/copying the live result remains possible. Quota or unavailable-storage errors retain existing records and never report success. Simultaneous new saves of different items in separate tabs may briefly exceed the count cap; block further new saves until the count is below 50, without deleting records.
+Derive one deterministic capture ID from a versioned canonical serialization of exact dates, canonical context, accounting version, and accounting result, excluding source surface, rank, server identifiers, timestamps, editable name, and score/explanation metadata. Use its SHA-256 digest for the storage key. Keep previously saved keys and capture identities unchanged when reading older records; ignore obsolete metadata. A repeat save reports “Already saved” and preserves the existing name. Same dates with materially different context/accounting may be saved as separate records. Concurrent identical saves address the same key; truly concurrent edits to that record remain last-write-wins. Capture identity remains stable across Save, reload, and rename. Permit up to 50 records and at most 64 KiB of serialized UTF-8 data per record; validate dates, counts, arrays, and schema before writing. Reject oversized captures without truncating their accounting; copying the live result remains possible. Quota or unavailable-storage errors retain existing records and never report success. Simultaneous new saves of different items in separate tabs may briefly exceed the count cap; block further new saves until the count is below 50, without deleting records.
 
 Saved records survive normal reloads independently of server-session expiry. Browser data can be cleared or unavailable, and private browsing is not durable; explain this once in the Saved options view. Unsupported schema or accounting versions and corrupt records produce a recoverable item-level message and an explicit Remove action; never recalculate or reset the store silently. This release has no JSON import, synchronization, account recovery, or automatic snapshot upgrades that recalculate dates. [MDN browser storage behavior](https://developer.mozilla.org/en-US/docs/Web/API/Storage_API/Storage_quotas_and_eviction_criteria)
 
@@ -217,15 +217,11 @@ Add Saved options as a third task alongside Find dates and Compare my dates. Ope
 
 “Check these dates” opens a separate Compare draft initialized from the saved context. The user reviews balance/rules and explicitly submits, creating a fresh anonymous session without an original Search ID. The saved record remains intact; a subsequent Save captures a new result. Preserve the prior Find dates/Compare drafts when entering this path and restore them on Back.
 
-Opening a Compare draft is allowed even for dates that later fail its current limits; explicit submission performs authoritative server validation and retains the editable draft on error. Saved viewing makes no backend request and must not pretend to know a currently configured limit from an old snapshot. Use the saved context's IANA time zone when initializing this draft, rather than silently regenerating the browser zone; extend the frontend planning draft/restore mapping accordingly. Existing past-start and maximum-length rules remain, with clear error messages on calculation. Viewing, copying, and exporting the historical snapshot remain possible. Unsaved planning edits do not survive a reload; saved items contain the context needed to resume deliberately.
+Opening a Compare draft is allowed even for dates that later fail its current limits; explicit submission performs authoritative server validation and retains the editable draft on error. Saved viewing makes no backend request and must not pretend to know a currently configured limit from an old snapshot. Use the saved context's IANA time zone when initializing this draft, rather than silently regenerating the browser zone; extend the frontend planning draft/restore mapping accordingly. Existing past-start and maximum-length rules remain, with clear error messages on calculation. Viewing and copying the historical snapshot remain possible. Unsaved planning edits do not survive a reload; saved items contain the context needed to resume deliberately.
 
-## Export and copy contract
+## Leave-request copy contract
 
-Offer Save, Download calendar, and Copy leave request on each current representative, each disclosed equivalent date, each opportunity, the comparison baseline, and comparison alternatives. Never substitute the group's representative dates when the user selected another date. Normalize all these sources into the same immutable action snapshot; export/copy read that snapshot, not the current draft. They do not make provider calls or require a still-active anonymous session.
-
-Calendar download is one `.ics` event for the complete inclusive vacation window. Use all-day DATE values, `DTSTART = start`, and exclusive `DTEND = end + 1 day`; include a stable UID for that action snapshot, UTC DTSTAMP, VERSION 2.0, and PRODID. Use tentative status and transparent availability because this is a planning option. The description contains exact charged dates, leave cost, recorded calculation date, and applicable planning warnings. It omits balance, other unavailable ranges, account/session tokens, and raw text. There are no attendees, invitation sending, or booking/approval claims.
-
-Follow RFC 5545 for CRLF, text escaping, UTF-8-safe line folding, and date overflow handling; validate with an independent parser and real calendar imports at acceptance. Repeated-import behavior depends on the calendar client and is not promised as synchronization. [RFC 5545](https://www.rfc-editor.org/info/rfc5545/)
+Offer Save and Copy leave request on each current representative, each disclosed equivalent date, each opportunity, the comparison baseline, and comparison alternatives. Never substitute the group's representative dates when the user selected another date. Normalize all these sources into the same immutable action snapshot; copy previews read that snapshot, not the current draft. They do not make provider calls or require a still-active anonymous session.
 
 Copy leave request produces readable plain text: complete break dates, exact working dates to request, total vacation days, recorded calculation date, and planning warnings. For zero leave, say no vacation days are required under the recorded calendar. Keep “not an approval” clear in the preview. A denied clipboard operation opens selectable text; successful copy alone may show a success message. No email, calendar write, or manager request is sent by the app.
 
@@ -244,14 +240,14 @@ Use one task ID per PR, tests with behavior in the same PR, no predicted PR numb
 | P075 06 | Separate opportunities section and comparison entry | 03, 05 | Criteria-difference copy, independent score labeling, empty/failure presentation, captured context, preserved results/focus, and integrated Search-to-opportunity-to-Compare journey |
 | P075 07 | Complete action snapshots for every visible date | 02, 05 | Add Search action-details flag and 6,000-date budget; exact representative/grouped/opportunity/baseline/alternative accounting and sanitized metadata; all summaries match; one frontend normalization module, no duplicate leave math |
 | P075 08 | Same-browser Saved options journey | 03, 06, 07 | Browser adapter/record validation; deterministic identity, reload/session expiry, quota/corruption/version errors, removal/undo and multi-tab refresh; saved-to-Compare time zone, entry intent, restoration and server validation |
-| P075 09 | Calendar export and leave-request copy | 07, 08 | Independent ICS parse, exclusive end, cross-year/DST/Unicode/escaping, zero leave, ineligible warnings, exact grouped dates, live/save/reload/rename UID stability, stale-preview invalidation and clipboard fallback; integrated actions |
-| P075 10 | Full acceptance, accessibility, performance, and operational documentation | 03, 06, 08, 09 | All acceptance rows below, real Docker/PostgreSQL journey, 1,440 px visual evidence, keyboard review, representative browser imports, regression CI, measured scan timings, runbook and acceptance record |
+| P075 09 | Leave-request preview and copy | 07, 08 | Inclusive dates, zero leave, ineligible warnings, exact grouped dates, saved identity across reload/rename, stale-preview invalidation and clipboard fallback; integrated actions |
+| P075 10 | Full acceptance, accessibility, performance, and operational documentation | 03, 06, 08, 09 | All acceptance rows below, real Docker/PostgreSQL journey, 1,440 px visual evidence, keyboard review, regression CI, measured scan timings, runbook and acceptance record |
 
-PR 02 updates the existing comparison renderer to use new effective day details and reason codes before PR 03 exposes rule entry. PR 07 completes portable action data across every returned Search date and workflow; it does not introduce a second accounting implementation. Feature visibility follows completed slices: calendar controls after 03, opportunities after 06, saved actions after 08, export/copy after 09. The UI begins sending `include_opportunities = true` in PR 06 and `include_action_details = true` in PR 07, only after each corresponding backend contract exists.
+PR 02 updates the existing comparison renderer to use new effective day details and reason codes before PR 03 exposes rule entry. PR 07 completes portable action data across every returned Search date and workflow; it does not introduce a second accounting implementation. Feature visibility follows completed slices: calendar controls after 03, opportunities after 06, saved actions after 08, leave-request copying after 09. The UI begins sending `include_opportunities = true` in PR 06 and `include_action_details = true` in PR 07, only after each corresponding backend contract exists.
 
 ### Test-first delivery and review
 
-Carry forward Phase 0.5's one-behavior red/green loop. For implementation, the proposed public test seams are the prepared-calendar/window-assessment interface, existing Search/Compare workflows, opportunity detector, authenticated HTTP routes, session/search/comparison repositories, saved-options module, action-snapshot/export module, and rendered journeys. These seams are part of this plan's review; no tests or implementation are being written now. Migration tests may inspect schema directly; normal behavior tests should use the public interface and independently worked expectations.
+Carry forward Phase 0.5's one-behavior red/green loop. For implementation, the proposed public test seams are the prepared-calendar/window-assessment interface, existing Search/Compare workflows, opportunity detector, authenticated HTTP routes, session/search/comparison repositories, saved-options module, action-snapshot/leave-request module, and rendered journeys. These seams are part of this plan's review; no tests or implementation are being written now. Migration tests may inspect schema directly; normal behavior tests should use the public interface and independently worked expectations.
 
 Each behavior PR includes its applicable backend/frontend tests and existing formatting, lint, typing, and build checks. Use a fixed clock, real test PostgreSQL for repository/HTTP integration, fake calendars for known dates, and fake/disabled interpretation providers. Start integrated journey coverage in PR 03 and extend it in 06/08/09; PR 10 is not the first end-to-end check.
 
@@ -260,19 +256,19 @@ Each behavior PR includes its applicable backend/frontend tests and existing for
 | Area | Required evidence |
 | --- | --- |
 | Existing users | Empty personal rules preserve current Search ranking/grouping and exact-date comparison counts; old requests omit new fields successfully |
-| Day accounting | Extra working weekend/holiday consumes leave; personal day off does not; no date is double charged; UI, saved details, and export agree |
+| Day accounting | Extra working weekend/holiday consumes leave; personal day off does not; no date is double charged; UI, saved details, and leave-request text agree |
 | Hard constraints | Blocks on nonworking dates still exclude suggestions; notice boundary is inclusive; Compare preserves the baseline and lists every reason |
 | State integrity | Interpret preserves new fields; edits never search; stale actions cannot capture mixed contexts; late responses and Back navigation preserve the correct draft/result |
 | Opportunities | Separate full scan; explicit criteria and rank untouched; zero-result Search may show opportunities; errors/caps never return partial opportunity rankings |
 | Complete snapshots | Context, provider facts, coverage, versions, local date, policy, and output persist atomically; response and stored facts agree |
 | Saved options | All visible dates save correctly; reload works after server expiry; no token is stored; no leave is deducted; malformed/unsupported/quota states are recoverable |
-| Export/copy | Parser tests and real Google Calendar desktop plus one other supported calendar import verify all-day end dates and readable text; clipboard fallback works |
+| Leave-request copy | Exact inclusive break dates, charged dates, cost and warnings agree with the snapshot; private data is omitted and clipboard fallback works |
 | Accessibility | All controls/actions work with keyboard; focus return and live announcements work; rules and effective day types are clear without color |
-| Visual quality | Review Find dates, rule editor, stale Search, blocked/notice Compare, populated/empty/unavailable opportunities, saved detail/empty/corrupt state, and export preview at 1,440 px |
+| Visual quality | Review Find dates, rule editor, stale Search, blocked/notice Compare, populated/empty/unavailable opportunities, saved detail/empty/corrupt state, and leave-request preview at 1,440 px |
 | Performance | Record candidate counts and wall times for all three calendars and a worst-bound default scan; target p95 <= 2 seconds for Search with opportunities in a warm local Docker app over at least 20 measured runs per fixture; record hardware and failures |
 | CI and handoff | Existing backend/frontend CI passes; add a Phase 0.75 acceptance record with actual evidence and remaining limitations; tracker marks Done only after merge |
 
-The performance target is a release target to measure, not a claim about current runtime. If missed, optimize the shared accounting and bounded enumeration or revise policy bounds with documented result effects; never silently return partial best results. Desktop calendar import checks must distinguish parser compliance from client-specific rendering.
+The performance target is a release target to measure, not a claim about current runtime. If missed, optimize the shared accounting and bounded enumeration or revise policy bounds with documented result effects; never silently return partial best results.
 
 ## Relationship to Phase 1
 

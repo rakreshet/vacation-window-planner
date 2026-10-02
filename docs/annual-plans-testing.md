@@ -1,6 +1,6 @@
 # Annual planning test strategy
 
-**Scope update — October 2, 2026:** the [calendar-export cancellation](open-decisions.md#calendar-export-canceled) supersedes `.ics` generation and client-import requirements below. Copy/privacy behavior, saved records and the approved rendered-journey seams remain in scope.
+**Scope update — October 2, 2026:** this strategy reflects the [current scope decision](open-decisions.md#calendar-export-canceled). Copy/privacy behavior, saved records and the approved rendered-journey seams remain in scope.
 
 **Status:** Public seams and acceptance criteria approved through the merged [AP 00](annual-plans-plan.md) and the user’s subsequent instruction to implement strictly to the plan using TDD. The [UX walkthrough](annual-plans-ux.md) supplies inspectable states; the [progress table](progress.md#annual-planning--several-vacations-one-budget) records delivery.
 
@@ -20,7 +20,7 @@ Each behavior slice is one observable failing test → verify the intended failu
 | Annual-run repository interface | Immutable complete snapshot round trip, rollback on flush/commit, session linkage | Disposable PostgreSQL; repository read interface, not raw tables for ordinary behavior |
 | Annual interpreter proposal interface | Presence-aware editable patch, strict model output, unresolved references, safe provider failure | Fake model/provider at external seam; no paid/live calls in CI |
 | Browser saved-annual-plan module | Full record validation, identity, limits, read/write/remove/restore and cross-tab behavior | In-memory storage adapter plus browser localStorage journey tests |
-| Plan action/export interface | Selected immutable snapshot, aggregate copy, multi-event calendar serialization, privacy defaults | Independent ICS parser and clipboard/download system adapters |
+| Plan action/copy interface | Selected immutable snapshot, exact break/charged dates, aggregate cost, omissions and privacy defaults | Literal expectations and clipboard system adapter |
 | Rendered annual/Saved/App journeys | Visible form, interpretation review, plan choice, lock/recalculate, errors, stale/late response, task restoration and keyboard actions | React Testing Library with HTTP adapter responses; live Docker journey at integrated milestones |
 | Migration contract | Fresh upgrade/downgrade and schema/index/constraint correctness | Dedicated disposable `vacation_test` database; direct schema inspection allowed here |
 
@@ -84,11 +84,11 @@ The full-mix optimum is B+C. Production Search ranking is irrelevant. With avail
 | Interpretation | Missing reserve leaves it unchanged; explicit zero applies; unknown fields/invalid dates rejected; model cannot trigger generation or select saved records |
 | Ambiguity | “My August trip” remains unresolved until local explicit selection and slot mapping; proposed mix cannot silently drop existing locks |
 | Stale proposal | Edit while provider is pending; old proposal cannot overwrite current fields without fresh review |
-| Privacy | Tokens and interpretation text absent from browser records/export/logs; unrelated saved entries never sent to interpretation or optimizer |
+| Privacy | Tokens and interpretation text absent from browser records/copy previews/logs; unrelated saved entries never sent to interpretation or optimizer |
 
 ## Frontend and browser journeys
 
-Use fixed wire fixtures derived from independent examples and runtime-schema checks for all outcome variants. Preserve existing `App.test.tsx`, `SavedJourney.test.tsx`, saved-options/export tests, and backend Phase 0/0.5/0.75 acceptance suites. Add annual tests in focused files without copying existing tests wholesale.
+Use fixed wire fixtures derived from independent examples and runtime-schema checks for all outcome variants. Preserve existing `App.test.tsx`, `SavedJourney.test.tsx`, saved-options/leave-request tests, and backend Phase 0/0.5/0.75 acceptance suites. Add annual tests in focused files without copying existing tests wholesale.
 
 Required journeys:
 
@@ -105,11 +105,11 @@ Required journeys:
 
 Inspect live Docker journeys beginning in AP 05, with a real backend and PostgreSQL, and extend at AP 06/08/09. Test keyboard-only operation at 1,440 and 1,024 px, focus placement/return, error summaries, announcements, contrast and text equivalents for the year view. Capture named screenshots in the later acceptance record, distinguishing live evidence from automated or designed states.
 
-## Export acceptance
+## Leave-request copy acceptance
 
-Independently parse the multi-event `.ics` with existing `ical.js` support. Assert one event per selected break, all-day starts and exclusive next-day ends, stable distinct UIDs across reload/rename, tentative/transparent flags, CRLF, UTF-8 folding/escaping, correct year/leap/DST behavior and no credentials/balance by default. The frontend must never include an omitted break or use another plan's dates. Whole-plan copy contains unique charged dates and the exact aggregate cost, with reduced-plan disclosures and selectable fallback.
+Whole-plan copy lists every included break with inclusive dates, exact charged dates and aggregate leave used from the selected snapshot. Reduced plans disclose omitted breaks. Budget and reserve appear only when explicitly requested; credentials, raw interpretation text and unrelated unavailable dates are excluded. Reopening a saved plan preserves its captured accounting.
 
-Real browser file delivery and import into Google Calendar desktop plus another client remain acceptance checks, not substitutes for parser tests. Existing Phase 0.75 client checks are still pending; do not claim they passed. If a client is unavailable during later implementation, document the exact unverified portion and keep release acceptance conditional rather than silently broadening claims. No calendar invitations or external messages are sent by this task.
+Rendered tests cover selectable-text fallback on clipboard denial, truthful completion messages, stale-preview invalidation on edits/recalculation and privacy changes during pending copies. Saving failures leave direct copying available. No external messages are sent by the app.
 
 ## Performance and completeness gate
 
@@ -125,4 +125,4 @@ For AP 00: review content against the handoff and confirmed decisions, check loc
 
 For each authorized behavior PR: use focused red/green checks while developing, then the repository's applicable required checks once ready. [README commands](../README.md#tests-and-checks) and [CI](../.github/workflows/ci.yml) are authoritative: backend pytest/PostgreSQL/migrations, Ruff format/lint and strict mypy; frontend Vitest, ESLint, Prettier, TypeScript and Vite build. Keep earlier phase regressions green. Do not repeatedly rerun unchanged passing suites without a new concern.
 
-AP 10 records fresh results in `docs/annual-plans-acceptance.md` only when that work occurs: actual commands/commit, automated outcomes, browser screenshots/journeys, performance table, client-download/import evidence, and remaining limitations. The tracker uses In review for open implementation PRs and Done only for merged work with its definition of done satisfied. Historical test counts are never presented as new verification.
+AP 10 records fresh results in `docs/annual-plans-acceptance.md` only when that work occurs: actual commands/commit, automated outcomes, browser screenshots/journeys, performance table, leave-request copy/privacy evidence, and remaining limitations. The tracker uses In review for open implementation PRs and Done only for merged work with its definition of done satisfied. Historical test counts are never presented as new verification.

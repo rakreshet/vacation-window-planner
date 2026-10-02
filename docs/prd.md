@@ -2,19 +2,19 @@
 
 Phase 0 validates date window recommendations before travel enrichment
 
-This document defines the first product release, the decisions already made, and the acceptance criteria for a reliable vacation window recommendation experience. Phase 0 recommends when to take vacation. The delivered Phase 0.5 adds exact-date comparison and nearby improvements. The proposed Phase 0.75 adds personal calendars, proactive opportunities, and same-browser saved options with export/copy. Phase 1 retains destinations and live flights.
+This document defines the first product release, the decisions already made, and the acceptance criteria for a reliable vacation window recommendation experience. Phase 0 recommends when to take vacation. The delivered Phase 0.5 adds exact-date comparison and nearby improvements. Phase 0.75 adds personal calendars, proactive opportunities, and same-browser saved options with leave-request copying. Annual planning coordinates several breaks under one budget and reserve. Phase 1 retains destinations and live flights.
 
 | Field | Value |
 | --- | --- |
-| **Status** | Phase 0/0.5 delivered; Phase 0.75 implemented in review with client acceptance pending; annual planning proposed; Phase 1 planned |
+| **Status** | Phase 0/0.5/0.75 and annual planning delivered through #72; Phase 1 planned |
 | **Prepared for** | POC product and engineering implementation |
 | **Version date** | 2026-09-26 |
 
 Delivery and original PR links are recorded in the [progress tracker](progress.md). Phase 0.5 requirements and task details are maintained in the [comparison plan](phase-0.5-plan.md), with completed validation in the [acceptance record](phase-0.5-acceptance.md).
 
-The [Phase 0.75 plan](phase-0.75-plan.md) and [UX walkthrough](phase-0.75-ux.md) define its rules, contracts, scoring, PR sequence, and acceptance gates. They supersede the placement of proactive opportunities in Phase 1. Its implementation is in the open #51–#60 stack; see [acceptance](phase-0.75-acceptance.md) for remaining client checks.
+The [Phase 0.75 plan](phase-0.75-plan.md) and [UX walkthrough](phase-0.75-ux.md) define its rules, contracts, scoring, PR sequence, and acceptance gates. They supersede the placement of proactive opportunities in Phase 1. Its implementation was incorporated into `main` through [#72](https://github.com/rakreshet/vacation-window-planner/pull/72); see [acceptance](phase-0.75-acceptance.md) for the recorded planning, save and copy evidence.
 
-The [annual planning plan](annual-plans-plan.md) and [UX walkthrough](annual-plans-ux.md) are the next documentation-only proposal: several vacations within one year, one leave budget, a protected reserve, and exact locked dates. Locks count toward the requested mix; the pool covers included future trips, excluding past-trip accounting, accrual, and carryover. Infeasible mixes receive an explanation and clearly labeled reduced plans when possible. Its defaults and [TDD seams](annual-plans-testing.md) are for review; implementation needs a later explicit user instruction. Annual planning uses AP task IDs and does not replace Phase 1.
+The [annual planning plan](annual-plans-plan.md) and [UX walkthrough](annual-plans-ux.md) describe the annual implementation delivered through #72: several vacations within one year, one leave budget, a protected reserve, and exact locked dates. Locks count toward the requested mix; the pool covers included future trips, excluding past-trip accounting, accrual, and carryover. Infeasible mixes receive an explanation and clearly labeled reduced plans when possible. Its approved [TDD seams](annual-plans-testing.md) guide subsequent behavior changes. Annual planning uses AP task IDs and does not replace Phase 1.
 
 ## Product decision
 
@@ -38,8 +38,8 @@ Employees can see balances and calendars in HR tools, but they still have to dis
 | --- | --- | --- |
 | Phase 0 | Vacation window generation, ranking, explanations, anonymous session state, persisted search snapshots, simple feedback | Destinations, flight search, booking, user accounts, accrual forecasting |
 | Phase 0.5 | Exact-date comparison from manual dates or Search, nearby savings and longer breaks, local-date context, immutable comparison snapshots | Broad proactive scans, destinations, flights, mobile certification |
-| Phase 0.75 (implementation in review) | Manual personal calendars, separate opportunities after explicit Search, same-browser saved options, ICS export, copyable leave-request details | Accounts, cross-device recovery, connected calendars, notifications, annual allocation, accrual, travel enrichment |
-| Annual planning (AP, proposed) | One-year coordinated plans, shared budget/reserve, locks included in the mix, structured/optional interpreted input, reduced alternatives, year view and browser saves/export | Past-trip ledger, accrual/carryover, accounts, connected calendars, notifications, household budgets, travel enrichment |
+| Phase 0.75 | Manual personal calendars, separate opportunities after explicit Search, same-browser saved options, copyable leave-request details | Accounts, cross-device recovery, connected calendars, notifications, annual allocation, accrual, travel enrichment |
+| Annual planning (AP) | One-year coordinated plans, shared budget/reserve, locks included in the mix, structured/optional interpreted input, reduced alternatives, year view, browser saves and leave-request copying | Past-trip ledger, accrual/carryover, accounts, connected calendars, notifications, household budgets, travel enrichment |
 | Phase 1 | Destination matching and live flight enrichment (multi passenger, one origin, economy default); preserve opportunity independence | Flight booking and payment; LLM based opportunity decisions |
 
 ## Phase 0 user experience
@@ -159,7 +159,7 @@ This planned additive experience now belongs to Phase 0.75. A bounded future sea
 | Grounded explanation | Each item names a true reason such as high PTO leverage or a long break for few PTO days and states any relevant departure from the explicit search |
 | Provider independence | The same opportunities qualify with fake, unavailable, or absent flight adapters; optional travel enrichment cannot gate detection |
 
-Phase 0.75 proves operation with no travel provider or interpretation calls; P1 14 later checks fake/failing flight adapters when that seam exists. Personal-calendar correctness, save/export, state integrity, and UX acceptance are defined in the [Phase 0.75 completion gate](phase-0.75-plan.md#acceptance-and-completion-gate).
+Phase 0.75 proves operation with no travel provider or interpretation calls; P1 14 later checks fake/failing flight adapters when that seam exists. Personal-calendar correctness, saving/copying, state integrity, and UX acceptance are defined in the [Phase 0.75 completion gate](phase-0.75-plan.md#acceptance-and-completion-gate).
 
 ## Decision record and superseded assumptions
 
