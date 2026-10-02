@@ -1,5 +1,7 @@
 # Phase 0.75 acceptance record
 
+**Scope update — October 2, 2026:** calendar downloads and client imports were [canceled](open-decisions.md#calendar-export-canceled). The export/import gates below are historical and no longer required. Saved options and leave-request copying remain supported.
+
 Recorded 2026-09-26. The implementation is in an unmerged stack, #51–#59 plus [#60](https://github.com/rakreshet/vacation-window-planner/pull/60), the final acceptance PR. The local app is available at http://localhost:15173/. Features are implemented; release acceptance remains conditional on real Google Calendar and a second calendar-client import. Those checks are not replaced by parser tests.
 
 ## Automated evidence

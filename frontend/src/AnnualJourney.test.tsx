@@ -1,4 +1,4 @@
-import { cleanup, fireEvent, render, screen, within } from '@testing-library/react'
+import { cleanup, fireEvent, render, screen, waitFor, within } from '@testing-library/react'
 import { afterEach, beforeEach, expect, test, vi } from 'vitest'
 import App from './App'
 
@@ -88,7 +88,10 @@ test('explicit generation shows aggregate leave and chronological charged dates'
     reserve_days: 3,
     minimum_gap_days: 7,
   })
-  expect(result.getByRole('button', { name: 'Download annual calendar' })).toBeInTheDocument()
+  expect(result.queryByRole('button', { name: 'Download annual calendar' })).not.toBeInTheDocument()
+  await waitFor(() =>
+    expect(result.getByRole('button', { name: 'Copy annual leave request' })).toBeEnabled(),
+  )
 })
 
 test('year, months, spacing and ordered slots are explicit draft edits', async () => {

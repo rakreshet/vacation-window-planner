@@ -1,17 +1,15 @@
 import { useEffect, useRef, useState } from 'react'
 import { createAnnualSnapshot, type AnnualResult, type AnnualSnapshot } from './savedAnnualPlans'
-import { annualCalendarFile, annualLeaveRequestText } from './annualCalendarExport'
+import { annualLeaveRequestText } from './annualLeaveRequest'
 
-export default function AnnualExportActions({
+export default function AnnualLeaveRequestActions({
   result,
   planId,
   disabled = false,
-  title,
 }: {
   result: AnnualResult
   planId: string
   disabled?: boolean
-  title?: string
 }) {
   const [capture, setCapture] = useState<{
     result: AnnualResult
@@ -29,7 +27,7 @@ export default function AnnualExportActions({
         if (!cancelled) setCapture({ result, planId, snapshot })
       })
       .catch(() => {
-        if (!cancelled) setError('This annual snapshot could not be prepared for export.')
+        if (!cancelled) setError('This annual snapshot could not be prepared for copying.')
       })
     return () => {
       cancelled = true
@@ -37,26 +35,6 @@ export default function AnnualExportActions({
   }, [result, planId])
   const snapshot = capture?.result === result && capture.planId === planId ? capture.snapshot : null
   const unavailable = disabled || !snapshot
-  function download() {
-    if (unavailable || !snapshot) return
-    try {
-      const url = URL.createObjectURL(
-        new Blob([annualCalendarFile(snapshot, title, includeBudget)], {
-          type: 'text/calendar;charset=utf-8',
-        }),
-      )
-      const link = document.createElement('a')
-      link.href = url
-      link.download = `annual-vacations-${result.input.year}.ics`
-      document.body.append(link)
-      link.click()
-      link.remove()
-      setTimeout(() => URL.revokeObjectURL(url), 1000)
-      setError('')
-    } catch (caught) {
-      setError(caught instanceof Error ? caught.message : 'Calendar download failed')
-    }
-  }
   return (
     <div className="window-actions">
       <label>
@@ -68,14 +46,6 @@ export default function AnnualExportActions({
         />
         Include budget and reserve
       </label>
-      <button
-        className="button button--secondary"
-        type="button"
-        disabled={unavailable}
-        onClick={download}
-      >
-        Download annual calendar
-      </button>
       <button
         className="button button--secondary"
         type="button"

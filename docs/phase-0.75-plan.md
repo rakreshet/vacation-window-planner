@@ -1,5 +1,7 @@
 # Phase 0.75: personal calendars, opportunities, and saved options
 
+**Scope update — October 2, 2026:** the [calendar-export cancellation](open-decisions.md#calendar-export-canceled) supersedes download/serializer/client-import requirements in this original plan. Personal calendar rules, saved options and leave-request copying remain supported.
+
 **Status:** Design prepared for review; implementation has not started. This documentation PR does not authorize implementation. Start behavior work only after the user explicitly says the plan is ready.
 
 **Baseline:** Phase 0 and Phase 0.5 delivered on `main`, including the documentation refresh in #49 (`b203ea6`). **Supported surface:** desktop, 1,024 px and wider; visual acceptance at 1,440 px. Mobile certification remains future scope.

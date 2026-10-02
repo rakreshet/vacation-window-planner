@@ -4,7 +4,7 @@ import { createActionSnapshot } from './actionSnapshots'
 import type { ActionMetadata, ActionSnapshot, ActionSource } from './actionSnapshots'
 import { browserSavedOptions, notifySavedOptionsChanged } from './browserSavedOptions'
 import type { SavedOptionsStore } from './savedOptions'
-import { CopyPreview, downloadCalendar } from './ExportActions'
+import { CopyPreview } from './LeaveRequestActions'
 
 type WindowActionsProps = {
   source: ActionSource
@@ -17,7 +17,6 @@ type WindowActionsProps = {
 }
 const actionLabels = {
   save: 'Save option',
-  download: 'Download calendar',
   copy: 'Copy leave request',
 }
 type Action = keyof typeof actionLabels
@@ -66,7 +65,6 @@ function CurrentWindowActions({
       const snapshot = await createActionSnapshot(source, window, assessment, context, metadata)
       if (!alive.current) return
       if (action === 'copy') setPreview(snapshot)
-      else if (action === 'download') downloadCalendar(snapshot)
       else {
         const result = (store ?? browserSavedOptions()).save(snapshot)
         setMessage(result.status === 'saved' ? 'Option saved' : 'Already saved')

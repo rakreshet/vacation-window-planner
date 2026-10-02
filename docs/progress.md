@@ -2,6 +2,12 @@
 
 This is the versioned record of what has been merged and which pull request delivered each task. The [Phase 0 and Phase 1 implementation task plan](implementation-plan.md), [Phase 0.5 comparison plan](phase-0.5-plan.md), [Phase 0.75 plan](phase-0.75-plan.md), and [annual planning plan](annual-plans-plan.md) define each task's scope, tests, and definition of done; this file tracks delivery, not a second copy of the plans.
 
+## Current scope — October 2, 2026
+
+[#72](https://github.com/rakreshet/vacation-window-planner/pull/72) incorporated Phase 0.75 and annual planning into `main` (`6029f25`). The original stack status and acceptance sections below preserve their September 26 review history.
+
+The user canceled calendar downloads and client imports. Follow-up acceptance PRs [#76](https://github.com/rakreshet/vacation-window-planner/pull/76), [#77](https://github.com/rakreshet/vacation-window-planner/pull/77), and [#78](https://github.com/rakreshet/vacation-window-planner/pull/78) are closed and their local/remote branches deleted. Removal PR [#79](https://github.com/rakreshet/vacation-window-planner/pull/79) is in review, based on `main`, and removes the export logic already merged while retaining date planning, browser saves and leave-request copying. See the [scope decision](open-decisions.md#calendar-export-canceled).
+
 ## How to use this tracker
 
 - Use one task ID per pull request by default, with its tests in the same PR. Start new work from current `main`. If work needs a stack, base each PR on its predecessor and agree how to land it; a merge commit from the verified stack tip into `main` can preserve all commits without rebasing each PR.

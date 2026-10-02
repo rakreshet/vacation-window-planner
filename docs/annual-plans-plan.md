@@ -1,5 +1,7 @@
 # Annual planning: several vacations, one leave budget
 
+**Scope update — October 2, 2026:** the [calendar-export cancellation](open-decisions.md#calendar-export-canceled) supersedes download/serializer/client-import requirements in this original plan. Annual year views, saved plans and leave-request copying remain supported.
+
 **Status:** AP 00 was merged in PR #61 into the prerequisite stack on September 26, 2026. The user subsequently authorized AP 01–10, explicitly requiring this plan, TDD, meaningful typed functions and variables, and no code comments. Implementation proceeds through dependent PRs; do not auto-merge. The original design and review rationale below are retained.
 
 **Phase name:** Annual planning, task prefix **AP**. It follows the Phase 0.75 foundation and precedes travel enrichment. Phase 1 keeps its existing flight scope and identifiers.

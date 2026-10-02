@@ -1,5 +1,5 @@
 import { FieldLink } from './FieldValidation'
-import AnnualExportActions from './AnnualExportActions'
+import AnnualLeaveRequestActions from './AnnualLeaveRequestActions'
 import type { AnnualResult } from './savedAnnualPlans'
 import { useId } from 'react'
 import AnnualPlanComparison from './AnnualPlanComparison'
@@ -126,7 +126,7 @@ export default function AnnualPlanResults({
               Save this plan
             </button>
           )}
-          <AnnualExportActions
+          <AnnualLeaveRequestActions
             key={`${plan.plan_id}-${result.calculation_context.calculated_at}`}
             result={result}
             planId={plan.plan_id}

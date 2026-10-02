@@ -13,7 +13,6 @@ test('the same exact accounting has one identity across surfaces and calculation
     calculated_at: '2026-09-26T13:00:00Z',
   })
   expect(first.capture_id).toBe(second.capture_id)
-  expect(first.export_uid).toBe(second.export_uid)
   expect(first.assessment.charged_dates).toEqual([])
   expect(first.context.planning.time_zone).toBe('Asia/Jerusalem')
 })

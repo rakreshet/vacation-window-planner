@@ -1,5 +1,7 @@
 # Annual planning test strategy
 
+**Scope update — October 2, 2026:** the [calendar-export cancellation](open-decisions.md#calendar-export-canceled) supersedes `.ics` generation and client-import requirements below. Copy/privacy behavior, saved records and the approved rendered-journey seams remain in scope.
+
 **Status:** Public seams and acceptance criteria approved through the merged [AP 00](annual-plans-plan.md) and the user’s subsequent instruction to implement strictly to the plan using TDD. The [UX walkthrough](annual-plans-ux.md) supplies inspectable states; the [progress table](progress.md#annual-planning--several-vacations-one-budget) records delivery.
 
 ## TDD agreement and cycle

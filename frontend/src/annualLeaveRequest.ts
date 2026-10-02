@@ -1,5 +1,4 @@
 import { annualSnapshotSchema, type AnnualSnapshot } from './savedAnnualPlans'
-import { escapeText, foldLine } from './calendarExport'
 
 export function annualLeaveRequestText(snapshot: AnnualSnapshot, includeBudget = false): string {
   const { result } = annualSnapshotSchema.parse(snapshot)
@@ -30,45 +29,6 @@ export function annualLeaveRequestText(snapshot: AnnualSnapshot, includeBudget =
         ]
       : []),
     `Calculated: ${result.calculation_context.calculated_at}`,
-    'Planning snapshot; not an approval or a synchronized calendar.',
+    'Planning snapshot; not an approval.',
   ].join('\n')
-}
-
-export function annualCalendarFile(
-  snapshot: AnnualSnapshot,
-  title = 'Proposed annual vacation',
-  includeBudget = false,
-  timestamp = new Date(),
-): string {
-  const { result } = annualSnapshotSchema.parse(snapshot)
-  return [
-    'BEGIN:VCALENDAR',
-    'VERSION:2.0',
-    'PRODID:-//Vacation Window Planner//EN',
-    ...result.plans[0].breaks.flatMap((item) => {
-      const end = new Date(`${item.window.end_date}T00:00:00Z`)
-      end.setUTCDate(end.getUTCDate() + 1)
-      if (end.getUTCFullYear() > 9999)
-        throw new Error('Calendar end cannot be represented. Copy the request instead.')
-      return [
-        'BEGIN:VEVENT',
-        `UID:${snapshot.capture_id}-${item.window.start_date}-${item.window.end_date}@vacation-window-planner`,
-        `DTSTAMP:${timestamp
-          .toISOString()
-          .replace(/[-:]/g, '')
-          .replace(/\.\d{3}/, '')}`,
-        `DTSTART;VALUE=DATE:${item.window.start_date.replaceAll('-', '')}`,
-        `DTEND;VALUE=DATE:${end.toISOString().slice(0, 10).replaceAll('-', '')}`,
-        `SUMMARY:${escapeText(title)}`,
-        `DESCRIPTION:${escapeText(annualLeaveRequestText(snapshot, includeBudget))}`,
-        'STATUS:TENTATIVE',
-        'TRANSP:TRANSPARENT',
-        'END:VEVENT',
-      ]
-    }),
-    'END:VCALENDAR',
-    '',
-  ]
-    .map(foldLine)
-    .join('\r\n')
 }
