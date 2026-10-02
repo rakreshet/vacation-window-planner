@@ -79,6 +79,21 @@ docker compose --profile test run --no-deps --rm frontend-test npm run build
 
 The backend test uses a separate disposable `vacation_test` PostgreSQL database; the migration test refuses another database target. GitHub Actions runs the same checks on pushes and pull requests.
 
+### Browser calendar-download checks
+
+The `calendar-downloads` CI job builds the production frontend and exercises its visible Download action in Chromium and WebKit. It reads the delivered `.ics` file with an independent parser. HTTP fixtures and a fixed clock keep these checks repeatable without provider keys or calendar accounts.
+
+To run these checks locally, use Node.js 22.12 or newer:
+
+```sh
+cd frontend
+npm ci --no-audit --no-fund
+npx playwright install chromium webkit
+npm run test:browser
+```
+
+The runner starts its own production preview at `http://127.0.0.1:4173` and stops it afterward. Test traces and screenshots are retained on failure. Real Google Calendar and second-client imports remain separate acceptance checks.
+
 ## Local-run skill
 
 Codex can use the versioned [run-vacation-window-planner skill](.agents/skills/run-vacation-window-planner/SKILL.md) when you ask it to start or check this app locally. The skill follows this README and preserves existing local configuration and database data.

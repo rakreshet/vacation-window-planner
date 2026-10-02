@@ -6,6 +6,32 @@ on:
   pull_request:
 
 jobs:
+  calendar-downloads:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: frontend/package-lock.json
+      - name: Install frontend dependencies
+        working-directory: frontend
+        run: npm ci --no-audit --no-fund
+      - name: Install browser test engines
+        working-directory: frontend
+        run: npx playwright install --with-deps chromium webkit
+      - name: Verify calendar file delivery
+        working-directory: frontend
+        run: npm run test:browser
+      - name: Keep browser failure evidence
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: calendar-download-failures
+          path: frontend/test-results
+          retention-days: 7
+
   backend:
     runs-on: ubuntu-latest
     steps:
