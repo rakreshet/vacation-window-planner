@@ -1,9 +1,11 @@
+import { localCalendarDate } from './calendarDays'
+import DateRangeFields from './DateRangeFields'
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { compareDates, ComparisonError, createSession } from './api'
 import type { ComparisonResponse, DateRange, SessionInput } from './api'
 import PlanningFields from './PlanningFields'
 import ComparisonResults from './ComparisonResults'
-import { planningSession } from './planning'
+import { planningSession, planningFromSession } from './planning'
 import type { PlanningDraft } from './planning'
 
 export type ComparisonDraft = { dates: DateRange; planning: PlanningDraft }
@@ -14,10 +16,12 @@ export default function ComparisonWorkspace({
   onDraftChange,
   origin,
   onClose,
+  idPrefix = 'compare-',
 }: {
   draft: ComparisonDraft
   onDraftChange: (value: ComparisonDraft) => void
   origin?: ComparisonOrigin
+  idPrefix?: string
   onClose: () => void
 }) {
   const [result, setResult] = useState<ComparisonResponse | null>(null)
@@ -49,11 +53,15 @@ export default function ComparisonWorkspace({
         ) {
           throw new Error('Choose a start date and an end date on or after it')
         }
+        if (value.dates.start_date < localCalendarDate(value.planning.timeZone)) {
+          throw new Error('Start date is in the past. Choose today or a future date.')
+        }
         const context = planningSession(value.planning)
         const reuse =
           originUsable.current &&
           origin &&
-          JSON.stringify(context) === JSON.stringify(origin.context)
+          JSON.stringify(context) ===
+            JSON.stringify(planningSession(planningFromSession(origin.context)))
         const token = reuse ? origin.token : await createSession(context)
         const response = await compareDates(token, value.dates, reuse ? origin.searchId : undefined)
         if (alive.current) {
@@ -80,7 +88,7 @@ export default function ComparisonWorkspace({
 
   useEffect(() => {
     alive.current = true
-    const heading = document.getElementById('comparison-heading')
+    const heading = document.getElementById(`${idPrefix}heading`)
     heading?.focus({ preventScroll: true })
     heading?.scrollIntoView?.({ block: 'start' })
     if (origin && !started.current) {
@@ -90,7 +98,7 @@ export default function ComparisonWorkspace({
     return () => {
       alive.current = false
     }
-  }, [origin, run])
+  }, [origin, run, idPrefix])
 
   function edit(next: ComparisonDraft) {
     onDraftChange(next)
@@ -110,14 +118,14 @@ export default function ComparisonWorkspace({
   }
 
   return (
-    <section className="comparison-workspace planner-card" aria-labelledby="comparison-heading">
+    <section className="comparison-workspace planner-card" aria-labelledby={`${idPrefix}heading`}>
       <button className="button button--secondary" type="button" onClick={onClose}>
         ← Back to my results
       </button>
       <header className="planner-heading">
         <div>
           <p className="section-kicker">A little flexibility, more possibility</p>
-          <h1 id="comparison-heading" tabIndex={-1}>
+          <h1 id={`${idPrefix}heading`} tabIndex={-1}>
             Could nearby dates work better?
           </h1>
         </div>
@@ -133,46 +141,23 @@ export default function ComparisonWorkspace({
         }}
       >
         <fieldset disabled={busy} className="comparison-fields">
-          <div className="field-grid">
-            <div className="field">
-              <label htmlFor="compare-start">Start date</label>
-              <input
-                id="compare-start"
-                type="date"
-                required
-                value={draft.dates.start_date}
-                onChange={(e) =>
-                  edit({ ...draft, dates: { ...draft.dates, start_date: e.target.value } })
-                }
-              />
-            </div>
-            <div className="field">
-              <label htmlFor="compare-end">End date</label>
-              <input
-                id="compare-end"
-                type="date"
-                min={draft.dates.start_date || undefined}
-                aria-invalid={endBeforeStart || undefined}
-                aria-describedby={endBeforeStart ? 'compare-end-error' : undefined}
-                required
-                value={draft.dates.end_date}
-                onChange={(e) =>
-                  edit({ ...draft, dates: { ...draft.dates, end_date: e.target.value } })
-                }
-              />
-            </div>
-          </div>
-          {endBeforeStart && (
-            <p id="compare-end-error" role="alert" className="form-notice form-notice--error">
-              Choose an end date on or after the start date.
-            </p>
-          )}
+          <DateRangeFields
+            value={draft.dates}
+            minimum={localCalendarDate(draft.planning.timeZone)}
+            onChange={(dates) => edit({ ...draft, dates })}
+            required
+          />
           <div className="date-shifts">
             <span>Move the whole break · same length</span>
             <button
               className="button button--secondary"
               type="button"
-              disabled={!draft.dates.start_date || !draft.dates.end_date || endBeforeStart}
+              disabled={
+                !draft.dates.start_date ||
+                !draft.dates.end_date ||
+                endBeforeStart ||
+                draft.dates.start_date <= localCalendarDate(draft.planning.timeZone)
+              }
               onClick={() => shift(-1)}
             >
               Move 1 day earlier
@@ -208,14 +193,22 @@ export default function ComparisonWorkspace({
             </summary>
             <div className="field-grid">
               <PlanningFields
-                prefix="compare-"
+                prefix={idPrefix}
                 value={draft.planning}
                 onChange={(planning) => edit({ ...draft, planning })}
               />
             </div>
           </details>
         </fieldset>
-        <button className="button button--primary" type="submit" disabled={busy || endBeforeStart}>
+        <button
+          className="button button--primary"
+          type="submit"
+          disabled={
+            busy ||
+            endBeforeStart ||
+            Boolean(draft.planning.calendarEditor || draft.planning.pendingCountry)
+          }
+        >
           {busy ? 'Comparing dates…' : result ? 'Update comparison' : 'Compare dates'}
         </button>
       </form>

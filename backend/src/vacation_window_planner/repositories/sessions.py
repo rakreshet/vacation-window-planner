@@ -3,7 +3,7 @@
 import hashlib
 import secrets
 from collections.abc import Callable
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from datetime import datetime
 from uuid import UUID, uuid4
 
@@ -12,6 +12,7 @@ from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
 
 from vacation_window_planner.domain.local_dates import DEFAULT_TIME_ZONE, validate_time_zone
+from vacation_window_planner.domain.personal_calendar import PersonalCalendar
 from vacation_window_planner.models import AnonymousSession
 
 
@@ -35,6 +36,7 @@ class AnonymousSessionState:
     created_at: datetime
     expires_at: datetime
     time_zone: str = DEFAULT_TIME_ZONE
+    personal_calendar: PersonalCalendar = field(default_factory=PersonalCalendar)
 
 
 def _token_hash(token: str) -> str:
@@ -60,6 +62,7 @@ class AnonymousSessionRepository:
         now: datetime,
         expires_at: datetime,
         time_zone: str = DEFAULT_TIME_ZONE,
+        personal_calendar: PersonalCalendar | None = None,
     ) -> CreatedAnonymousSession:
         if expires_at <= now:
             raise ValueError("session expiry must be after creation")
@@ -74,6 +77,7 @@ class AnonymousSessionRepository:
             country_code=country_code,
             weekend_days=sorted(weekend_days),
             time_zone=validate_time_zone(time_zone),
+            personal_calendar=(personal_calendar or PersonalCalendar()).model_dump(mode="json"),
         )
         self._session.add(record)
         try:
@@ -101,4 +105,5 @@ class AnonymousSessionRepository:
             created_at=record.created_at,
             expires_at=record.expires_at,
             time_zone=record.time_zone,
+            personal_calendar=PersonalCalendar.model_validate(record.personal_calendar),
         )

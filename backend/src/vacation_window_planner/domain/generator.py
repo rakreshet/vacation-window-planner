@@ -2,6 +2,7 @@
 
 from datetime import date, timedelta
 
+from vacation_window_planner.domain.assessment import assess_window, prepare_calendar
 from vacation_window_planner.domain.contracts import (
     HolidayCalendar,
     SearchConstraints,
@@ -9,7 +10,6 @@ from vacation_window_planner.domain.contracts import (
     VacationWindow,
 )
 from vacation_window_planner.domain.date_ranges import StartDateRange
-from vacation_window_planner.domain.evaluation import evaluate_window
 
 
 class SearchTooBroadError(ValueError):
@@ -35,6 +35,7 @@ def generate_vacation_windows(
     calendar: HolidayCalendar,
     generation_cap: int,
     length_tolerance_days: int = 2,
+    today: date | None = None,
 ) -> tuple[VacationWindow, ...]:
     """Enumerate the complete feasible candidate set or fail without partial output."""
     if generation_cap < 1:
@@ -47,6 +48,13 @@ def generate_vacation_windows(
     lengths = range(
         max(1, constraints.preferred_length_days - length_tolerance_days),
         constraints.preferred_length_days + length_tolerance_days + 1,
+    )
+    if not start_dates:
+        return ()
+    coverage_start = min(item.start_date for item in start_dates)
+    coverage_end = max(item.end_date for item in start_dates) + timedelta(days=lengths.stop - 2)
+    prepared = prepare_calendar(
+        calendar, context, (coverage_start, coverage_end), today or coverage_start
     )
     considered = 0
     windows: list[VacationWindow] = []
@@ -64,10 +72,8 @@ def generate_vacation_windows(
                 if identity in seen:
                     continue
                 seen.add(identity)
-                evaluation = evaluate_window(
-                    start_date, end_date, calendar, balance_days=context.balance_days
-                )
-                if evaluation.remaining_balance < -context.allowed_negative_days:
+                evaluation = assess_window(start_date, end_date, prepared, detail="summary")
+                if not evaluation.eligible:
                     continue
                 windows.append(evaluation.window)
 

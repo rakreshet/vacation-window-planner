@@ -39,6 +39,7 @@ class SearchSnapshot:
     source_text: str | None
     created_at: datetime
     recommendations: tuple[RecommendationSnapshot, ...]
+    opportunities: dict[str, object] | None = None
 
 
 class SearchSnapshotRepository:
@@ -63,6 +64,7 @@ class SearchSnapshotRepository:
                     session_id=session_id,
                     engine_version=engine_version,
                     structured_input=structured_input,
+                    opportunities=opportunity_snapshot(structured_input),
                     source_text=source_text,
                     created_at=created_at,
                 )
@@ -108,6 +110,7 @@ class SearchSnapshotRepository:
             session_id=search.session_id,
             engine_version=search.engine_version,
             structured_input=dict(search.structured_input),
+            opportunities=search.opportunities,
             source_text=search.source_text,
             created_at=search.created_at,
             recommendations=tuple(
@@ -141,3 +144,12 @@ class SearchSnapshotRepository:
             record.source_text = None
         self._session.flush()
         return len(records)
+
+
+def opportunity_snapshot(structured_input: dict[str, object]) -> dict[str, object] | None:
+    value = structured_input.get("opportunities")
+    if value is None:
+        return None
+    if not isinstance(value, dict) or any(not isinstance(key, str) for key in value):
+        raise ValueError("opportunity snapshot must be an object")
+    return dict(value)

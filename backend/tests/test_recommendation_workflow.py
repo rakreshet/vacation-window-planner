@@ -236,3 +236,129 @@ def test_future_date_clipping_uses_the_effective_local_date() -> None:
     ).recommend(request())
     assert result.notice == "Past start dates were excluded; search begins on 2026-09-26."
     assert all(item.window.start_date >= date(2026, 9, 26) for item in result.recommendations)
+
+
+def test_search_respects_unavailable_dates_in_saved_personal_context() -> None:
+    from dataclasses import replace
+
+    from vacation_window_planner.domain.personal_calendar import PersonalCalendar
+
+    original = request()
+    rules = PersonalCalendar.model_validate(
+        {
+            "unavailable_ranges": [
+                {"start_date": "2026-09-25", "end_date": "2026-10-31"},
+            ]
+        }
+    )
+    personalized = replace(
+        original, context=original.context.model_copy(update={"personal_calendar": rules})
+    )
+    result = workflow(FakeSnapshotWriter()).recommend(personalized)
+    assert result.recommendations == ()
+
+
+def test_search_returns_reproducible_sanitized_calculation_context() -> None:
+    writer = FakeSnapshotWriter()
+    result = workflow(writer).recommend(request())
+    captured = result.calculation_context.model_dump(mode="json")
+    assert captured["accounting_version"] == "phase075-v1"
+    assert captured["local_today"] == "2026-09-25"
+    assert captured["calculated_at"] == "2026-09-25T12:00:00Z"
+    assert "session_id" not in captured["planning"]
+    assert captured["planning"]["personal_calendar"]["minimum_notice_days"] == 0
+    assert writer.calls[0]["structured_input"]["calculation_context"] == captured
+
+
+def test_calendar_limit_is_a_typed_input_error() -> None:
+    from vacation_window_planner.domain.assessment import CalendarCoverageError
+
+    with pytest.raises(CalendarCoverageError):
+        workflow(FakeSnapshotWriter()).recommend(request(month=YearMonth(year=9999, month=12)))
+
+
+def test_requested_opportunities_preserve_explicit_results_and_are_snapshotted() -> None:
+    from dataclasses import replace
+
+    original = request()
+    baseline = workflow(FakeSnapshotWriter()).recommend(original)
+    writer = FakeSnapshotWriter()
+    result = workflow(writer).recommend(replace(original, include_opportunities=True))
+    assert result.recommendations == baseline.recommendations
+    assert result.opportunities.status == "complete"
+    assert result.opportunities.evaluated_pair_count == 9125
+    assert writer.calls[0]["structured_input"]["opportunities"] == result.opportunities.model_dump(
+        mode="json"
+    )
+    assert writer.calls[0]["structured_input"]["opportunity_calendar"] is not None
+
+
+def test_supported_opportunity_calendar_failure_preserves_search_and_records_null_facts() -> None:
+    from dataclasses import replace
+
+    from vacation_window_planner.domain.calendar import CalendarResolutionUnavailable
+    from vacation_window_planner.domain.contracts import HolidayCalendar
+
+    class UnavailableOpportunityCalendar(FakeCalendarProvider):
+        def resolve(
+            self,
+            country_code: str,
+            start_date: date,
+            end_date: date,
+            weekend_override: frozenset[int] | None = None,
+        ) -> HolidayCalendar:
+            if end_date > date(2027, 1, 1):
+                raise CalendarResolutionUnavailable("calendar unavailable")
+            return super().resolve(country_code, start_date, end_date, weekend_override)
+
+    writer = FakeSnapshotWriter()
+    service = RecommendationWorkflow(
+        calendar_provider=UnavailableOpportunityCalendar(),
+        snapshot_writer=writer,
+        policy=RecommendationPolicy(),
+        clock=lambda: NOW,
+    )
+    result = service.recommend(replace(request(), include_opportunities=True))
+    assert result.recommendations
+    assert result.opportunities.status == "unavailable"
+    assert result.opportunities.items == ()
+    assert writer.calls[0]["structured_input"]["opportunity_calendar"] is None
+
+
+def test_opportunity_cap_preserves_explicit_results_and_resolved_facts() -> None:
+    from dataclasses import replace
+
+    from vacation_window_planner.domain.opportunities import OpportunityPolicy
+
+    writer = FakeSnapshotWriter()
+    service = RecommendationWorkflow(
+        calendar_provider=FakeCalendarProvider(),
+        snapshot_writer=writer,
+        policy=RecommendationPolicy(),
+        clock=lambda: NOW,
+        opportunity_policy=OpportunityPolicy(generation_cap=1),
+    )
+    result = service.recommend(replace(request(), include_opportunities=True))
+    assert result.recommendations
+    assert result.opportunities.status == "too_broad"
+    assert not result.opportunities.items
+    assert writer.calls[0]["structured_input"]["opportunity_calendar"] is not None
+
+
+def test_action_details_cover_every_visible_exact_window() -> None:
+    from dataclasses import replace
+
+    result = workflow(FakeSnapshotWriter()).recommend(
+        replace(request(), include_action_details=True)
+    )
+    for recommendation in result.recommendations:
+        assert recommendation.assessment.window == recommendation.window
+        assert recommendation.assessment.remaining_balance == recommendation.remaining_balance
+        assert (
+            tuple(detail.window for detail in recommendation.alternative_assessments)
+            == recommendation.alternative_windows
+        )
+        assert all(
+            len(detail.charged_dates) == detail.window.vacation_days_used
+            for detail in recommendation.alternative_assessments
+        )

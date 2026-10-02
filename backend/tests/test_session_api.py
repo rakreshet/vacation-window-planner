@@ -55,3 +55,19 @@ def test_invalid_time_zone_is_rejected_before_session_creation() -> None:
     )
     assert response.status_code == 422
     assert "body.time_zone" in response.json()["error"]["fields"]
+
+
+def test_invalid_personal_calendar_has_a_specific_error() -> None:
+    client = TestClient(create_app(database_probe=lambda: True))
+    response = client.post(
+        "/sessions",
+        json={
+            "balance_days": 8,
+            "country_code": "IL",
+            "weekend_days": [4, 5],
+            "personal_calendar": {"minimum_notice_days": True},
+        },
+    )
+    assert response.status_code == 422
+    assert response.json()["error"]["code"] == "INVALID_PERSONAL_CALENDAR"
+    assert "body.personal_calendar.minimum_notice_days" in response.json()["error"]["fields"]

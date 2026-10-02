@@ -1,0 +1,235 @@
+import { formatSavedDate, formatSavedWindow } from './displayDates'
+import { Icon } from './InterfaceArtwork'
+import ExportActions from './ExportActions'
+import { useCallback, useEffect, useState } from 'react'
+import type { ActionSnapshot } from './actionSnapshots'
+import {
+  browserSavedOptions,
+  notifySavedOptionsChanged,
+  savedOptionsChanged,
+} from './browserSavedOptions'
+import type { SavedOption, SavedOptionsList, SavedOptionsStore } from './savedOptions'
+import { WindowSummary } from './ComparisonResults'
+
+export function snapshotEvaluation(snapshot: ActionSnapshot) {
+  return {
+    ...snapshot.assessment,
+    feasible: snapshot.assessment.eligible,
+    assessment: snapshot.assessment,
+    weekend_dates: snapshot.assessment.day_details
+      .filter((day) => day.is_weekend)
+      .map((day) => day.date),
+  }
+}
+
+export default function SavedOptionsView({
+  onCheck,
+  store,
+  onExplore,
+}: {
+  onCheck: (snapshot: ActionSnapshot) => void
+  store?: SavedOptionsStore
+  onExplore?: () => void
+}) {
+  const [records, setRecords] = useState<SavedOptionsList>({ items: [], invalid: [] })
+  const [error, setError] = useState('')
+  const [removed, setRemoved] = useState<{ key: string; raw: string | null } | null>(null)
+  function access() {
+    return store ?? browserSavedOptions()
+  }
+  const refresh = useCallback(() => {
+    try {
+      setRecords((store ?? browserSavedOptions()).list())
+      setError('')
+    } catch {
+      setError('Browser storage is unavailable. Existing saved data has not been cleared.')
+    }
+  }, [store])
+  useEffect(() => {
+    refresh()
+    window.addEventListener('storage', refresh)
+    window.addEventListener(savedOptionsChanged, refresh)
+    return () => {
+      window.removeEventListener('storage', refresh)
+      window.removeEventListener(savedOptionsChanged, refresh)
+    }
+  }, [refresh])
+  function change(action: () => void) {
+    try {
+      action()
+      refresh()
+      notifySavedOptionsChanged()
+      return true
+    } catch (caught) {
+      setError(caught instanceof Error ? caught.message : 'Could not update saved options')
+      return false
+    }
+  }
+  function remove(id: string) {
+    change(() => setRemoved(access().remove(id)))
+  }
+  return (
+    <section className="planner-card saved-options" aria-labelledby="saved-heading">
+      <h1 id="saved-heading">Saved options</h1>
+      <p>
+        Stored only in this browser. Clearing browser data removes these options; private browsing
+        may not retain them. Saving does not deduct or approve leave.
+      </p>
+      {error && <p role="alert">{error}</p>}
+      {removed && (
+        <div role="status">
+          Option removed.{' '}
+          <button
+            type="button"
+            onClick={() =>
+              change(() => {
+                access().restore(removed)
+                setRemoved(null)
+              })
+            }
+          >
+            Undo remove
+          </button>
+        </div>
+      )}
+      {!records.items.length && !records.invalid.length && !error && (
+        <div className="empty-results">
+          <Icon name="bookmark" />
+          <h3>A little space for your next escape.</h3>
+          <p>No saved options yet.</p>
+          <p>
+            Find a break you love and save it here. Compare it later, or add it to your calendar.
+          </p>
+          {onExplore && (
+            <button className="button button--primary" type="button" onClick={onExplore}>
+              Explore vacation dates <Icon name="arrow" />
+            </button>
+          )}
+        </div>
+      )}
+      {records.invalid.map((key) => (
+        <article key={key} className="form-notice">
+          <p>
+            This saved option is damaged or uses an unsupported version. Other options are
+            unaffected.
+          </p>
+          <button type="button" onClick={() => remove(key)}>
+            Remove unavailable option
+          </button>
+        </article>
+      ))}
+      {records.items.map((item) => (
+        <SavedOptionCard
+          key={item.snapshot.capture_id}
+          item={item}
+          onCheck={onCheck}
+          onRemove={() => remove(item.snapshot.capture_id)}
+          onRename={(name) => change(() => access().rename(item.snapshot.capture_id, name))}
+        />
+      ))}
+    </section>
+  )
+}
+
+function SavedOptionCard({
+  item,
+  onCheck,
+  onRemove,
+  onRename,
+}: {
+  item: SavedOption
+  onCheck: (snapshot: ActionSnapshot) => void
+  onRemove: () => void
+  onRename: (name: string) => boolean
+}) {
+  const [renaming, setRenaming] = useState(false)
+  const [name, setName] = useState(item.name)
+  return (
+    <article className="recommendation-card">
+      <h2>
+        {item.name === `${item.snapshot.window.start_date} – ${item.snapshot.window.end_date}`
+          ? formatSavedWindow(item.snapshot.window)
+          : item.name}
+      </h2>
+      <ExportActions snapshot={item.snapshot} title={item.name} />
+      <p>
+        Historical calculation ·{' '}
+        {formatSavedDate(
+          item.snapshot.context.calculated_at,
+          item.snapshot.context.planning.time_zone,
+        )}{' '}
+        · {item.snapshot.context.planning.time_zone}
+      </p>
+      {renaming ? (
+        <form
+          onSubmit={(event) => {
+            event.preventDefault()
+            if (onRename(name)) setRenaming(false)
+          }}
+        >
+          <label>
+            Option name
+            <input
+              value={name}
+              onKeyDown={(event) => {
+                if (event.key === 'Escape') {
+                  event.preventDefault()
+                  setRenaming(false)
+                }
+              }}
+              maxLength={80}
+              required
+              onChange={(event) => setName(event.target.value)}
+            />
+          </label>
+          <button type="submit">Save name</button>
+          <button type="button" onClick={() => setRenaming(false)}>
+            Cancel
+          </button>
+        </form>
+      ) : (
+        <button
+          type="button"
+          onClick={() => {
+            setName(item.name)
+            setRenaming(true)
+          }}
+        >
+          Rename
+        </button>
+      )}
+      <button type="button" onClick={onRemove}>
+        Remove
+      </button>
+      <details>
+        <summary>View saved calculation and rules</summary>
+        <WindowSummary value={snapshotEvaluation(item.snapshot)} label="Saved dates" />
+        <p>
+          Calendar: {item.snapshot.context.planning.country_code} · Minimum notice:{' '}
+          {item.snapshot.context.planning.personal_calendar.minimum_notice_days} days
+        </p>
+        <ul>
+          {item.snapshot.context.planning.personal_calendar.date_overrides.map((rule) => (
+            <li key={`${rule.kind}-${rule.start_date}`}>
+              {rule.kind.replaceAll('_', ' ')}: {rule.start_date} – {rule.end_date}
+            </li>
+          ))}
+        </ul>
+        <ul>
+          {item.snapshot.context.planning.personal_calendar.unavailable_ranges.map((rule) => (
+            <li key={rule.start_date}>
+              Unavailable: {rule.start_date} – {rule.end_date}
+            </li>
+          ))}
+        </ul>
+      </details>
+      <button
+        className="button button--secondary"
+        type="button"
+        onClick={() => onCheck(item.snapshot)}
+      >
+        Check these dates
+      </button>
+    </article>
+  )
+}

@@ -5,6 +5,8 @@ from uuid import UUID
 
 from sqlalchemy.exc import SQLAlchemyError
 
+from vacation_window_planner.annual_interpreter import build_annual_interpreter
+from vacation_window_planner.annual_workflow import AnnualPlanningRequest, AnnualRun, AnnualWorkflow
 from vacation_window_planner.api import SessionHttpRequest, create_app
 from vacation_window_planner.comparison_workflow import ComparisonRequest, ComparisonWorkflow
 from vacation_window_planner.database import (
@@ -18,12 +20,16 @@ from vacation_window_planner.domain.contracts import FeedbackValue
 from vacation_window_planner.domain.policy import RecommendationPolicy
 from vacation_window_planner.interpreter import build_interpreter
 from vacation_window_planner.logging_config import configure_json_logging
+from vacation_window_planner.repositories.annual_plans import AnnualRunRepository
 from vacation_window_planner.repositories.comparisons import (
     ComparisonPersistenceError,
     ComparisonSnapshotRepository,
 )
 from vacation_window_planner.repositories.feedback import FeedbackRepository
-from vacation_window_planner.repositories.searches import SearchSnapshotRepository
+from vacation_window_planner.repositories.searches import (
+    SearchSnapshotPersistenceError,
+    SearchSnapshotRepository,
+)
 from vacation_window_planner.repositories.sessions import (
     AnonymousSessionRepository,
     AnonymousSessionState,
@@ -44,6 +50,7 @@ policy = RecommendationPolicy()
 comparison_policy = ComparisonPolicy()
 calendar_provider = PythonHolidaysCalendarProvider()
 interpreter = build_interpreter(settings)
+annual_interpreter = build_annual_interpreter(settings)
 
 
 def utc_now() -> datetime:
@@ -63,6 +70,7 @@ def create_session(request: SessionHttpRequest, now: datetime) -> CreatedAnonymo
             country_code=request.country_code,
             weekend_days=request.weekend_days,
             time_zone=request.time_zone,
+            personal_calendar=request.personal_calendar,
             now=now,
             expires_at=now + timedelta(days=settings.session_expiry_days),
         )
@@ -86,6 +94,9 @@ def recommend(request: RecommendationRequest) -> RecommendationResult:
             result = workflow.recommend(request)
             session.commit()
             return result
+        except SQLAlchemyError as error:
+            session.rollback()
+            raise SearchSnapshotPersistenceError("Search could not be saved") from error
         except Exception:
             session.rollback()
             raise
@@ -109,6 +120,16 @@ def compare(request: ComparisonRequest) -> ComparisonResult:
         return result
 
 
+def plan_annual(request: AnnualPlanningRequest) -> AnnualRun:
+    with sessions() as session:
+        return AnnualWorkflow(
+            calendar_provider=calendar_provider,
+            policy=settings.annual_policy,
+            clock=utc_now,
+            snapshot_writer=AnnualRunRepository(session),
+        ).plan(request)
+
+
 def save_feedback(search_id: UUID, rank: int, session_id: UUID, value: FeedbackValue) -> None:
     with sessions() as session:
         FeedbackRepository(session).set_for_rank(
@@ -126,7 +147,11 @@ app = create_app(
     session_lookup=find_session,
     recommendation_service=recommend,
     comparison_service=compare,
+    annual_service=plan_annual,
     interpretation_service=interpreter.interpret if interpreter is not None else None,
+    annual_interpretation_service=annual_interpreter.interpret
+    if annual_interpreter is not None
+    else None,
     feedback_service=save_feedback,
     session_creator=create_session,
     clock=utc_now,

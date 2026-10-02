@@ -16,7 +16,15 @@ export type InterpretationProposal = {
   missing_fields: string[]
 }
 
+export type CalculationContext = {
+  accounting_version: 'phase075-v1'
+  calculated_at: string
+  local_today: string
+  planning: Required<SessionInput>
+}
 export type Recommendation = {
+  assessment?: WindowAssessment
+  alternative_assessments?: WindowAssessment[]
   window: {
     start_date: string
     end_date: string
@@ -38,13 +46,48 @@ export type Recommendation = {
   } | null
 }
 
+export type Opportunity = {
+  opportunity_id: string
+  window: Recommendation['window']
+  assessment: WindowAssessment
+  score: number
+  raw_points: number
+  score_breakdown: Record<
+    'efficiency' | 'length' | 'low_leave_use',
+    { points: number; max_points: number }
+  >
+  explanation: string
+  criteria_differences: (
+    | { code: 'start_month_outside_selection'; actual_month: YearMonth }
+    | {
+        code: 'length_outside_tolerance'
+        actual_days: number
+        minimum_days: number
+        maximum_days: number
+      }
+  )[]
+}
+export type OpportunityResponse = {
+  policy?: { version: string }
+  status: 'complete' | 'too_broad' | 'unavailable'
+  items: Opportunity[]
+}
 export type RecommendationResponse = {
+  calculation_context?: CalculationContext
+  opportunities?: OpportunityResponse
   search_id: string
   recommendations: Recommendation[]
   notice?: string | null
 }
 
+export type PersonalCalendar = {
+  schema_version: 1
+  date_overrides: (DateRange & { kind: 'personal_day_off' | 'extra_working_day' })[]
+  unavailable_ranges: DateRange[]
+  minimum_notice_days: number
+}
 export type SessionInput = {
+  personal_calendar?: PersonalCalendar
   time_zone?: string
   balance_days: number
   allowed_negative_days: number
@@ -53,6 +96,8 @@ export type SessionInput = {
 }
 
 export type SearchInput = {
+  include_opportunities?: boolean
+  include_action_details?: boolean
   months: YearMonth[]
   preferred_length_days: number
   result_limit: number
@@ -93,11 +138,17 @@ export async function getHealth(signal: AbortSignal): Promise<HealthResponse> {
   return body
 }
 
-export async function interpretText(text: string): Promise<InterpretationProposal> {
+export async function interpretText(
+  text: string,
+  timeZone?: string,
+): Promise<InterpretationProposal> {
   const response = await fetch(`${baseUrl()}/interpret`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ text }),
+    body: JSON.stringify({
+      text,
+      time_zone: timeZone ?? Intl.DateTimeFormat().resolvedOptions().timeZone,
+    }),
   })
   const body: unknown = await response.json()
   if (!response.ok || !isObject(body) || !Array.isArray(body.months)) {
@@ -156,7 +207,29 @@ export async function submitFeedback(
 }
 
 export type DateRange = { start_date: string; end_date: string }
+export type EligibilityReason =
+  | { code: 'unavailable_dates'; dates: string[] }
+  | { code: 'insufficient_notice'; earliest_start_date: string }
+  | { code: 'over_budget'; required_days: number; permitted_days: number }
+export type WindowAssessment = {
+  window: Recommendation['window']
+  charged_dates: string[]
+  remaining_balance: number
+  eligible: boolean
+  eligibility_reasons: EligibilityReason[]
+  warnings: ('full_balance' | 'negative_balance')[]
+  day_details: {
+    date: string
+    charged: boolean
+    kind:
+      'extra_working_day' | 'personal_day_off' | 'public_holiday' | 'weekend' | 'ordinary_working'
+    is_public_holiday: boolean
+    is_weekend: boolean
+    unavailable: boolean
+  }[]
+}
 export type ComparedWindow = {
+  assessment?: WindowAssessment | null
   window: Recommendation['window']
   charged_dates: string[]
   weekend_dates: string[]
@@ -175,6 +248,7 @@ export type ComparisonAlternative = {
   explanation: string
 }
 export type ComparisonResponse = {
+  calculation_context?: CalculationContext
   comparison_id: string
   baseline: ComparedWindow
   save_leave: ComparisonAlternative[]

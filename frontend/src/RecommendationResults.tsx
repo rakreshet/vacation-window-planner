@@ -1,8 +1,10 @@
+import WindowActions from './WindowActions'
 import { useState } from 'react'
 
 import type { FeedbackValue, Recommendation, RecommendationResponse } from './api'
 
 type RecommendationResultsProps = {
+  stale?: boolean
   result: RecommendationResponse
   onCompare?: (window: Recommendation['window']) => void
   onFeedback?: (rank: number, value: FeedbackValue) => Promise<void>
@@ -43,6 +45,7 @@ function warningText(warning: string, remainingBalance: number): string {
 
 export default function RecommendationResults({
   result,
+  stale = false,
   onFeedback,
   onCompare,
 }: RecommendationResultsProps) {
@@ -67,6 +70,11 @@ export default function RecommendationResults({
 
   return (
     <section className="results-section" aria-labelledby="results-heading">
+      {stale && (
+        <p role="status" className="form-notice">
+          Your inputs changed. Search again to use these results.
+        </p>
+      )}
       <header className="results-heading">
         <div>
           <p className="section-kicker">Your shortlist</p>
@@ -176,7 +184,7 @@ export default function RecommendationResults({
                     <div>
                       <SparkIcon />
                       <p>{balanceFreeDays} balance-free days</p>
-                      <span>Weekends and holidays</span>
+                      <span>Under your calendar rules</span>
                     </div>
                   </div>
 
@@ -186,13 +194,25 @@ export default function RecommendationResults({
                         {matchingCount} matching date options · same score and vacation-day cost
                       </summary>
                       <ul>
-                        {alternatives.map((window) => (
+                        {alternatives.map((window, index) => (
                           <li key={`${window.start_date}-${window.end_date}`}>
                             {dateWindow(window)}
+                            {result.calculation_context &&
+                              recommendation.alternative_assessments?.[index] && (
+                                <WindowActions
+                                  source="search"
+                                  window={window}
+                                  assessment={recommendation.alternative_assessments[index]}
+                                  context={result.calculation_context}
+                                  stale={stale}
+                                  metadata={{ explanation: recommendation.explanation }}
+                                />
+                              )}
                             {onCompare && (
                               <button
                                 className="button button--secondary"
                                 type="button"
+                                disabled={stale}
                                 onClick={() => onCompare(window)}
                                 aria-label={`Compare ${dateWindow(window)}`}
                               >
@@ -236,11 +256,22 @@ export default function RecommendationResults({
                     <button
                       className="button button--secondary compare-result-action"
                       type="button"
+                      disabled={stale}
                       onClick={() => onCompare(recommendation.window)}
                       aria-label={`Compare nearby dates for recommendation ${recommendation.rank}`}
                     >
                       Compare nearby dates →
                     </button>
+                  )}
+                  {result.calculation_context && recommendation.assessment && (
+                    <WindowActions
+                      source="search"
+                      window={recommendation.window}
+                      assessment={recommendation.assessment}
+                      context={result.calculation_context}
+                      stale={stale}
+                      metadata={{ explanation: recommendation.explanation }}
+                    />
                   )}
                   {onFeedback && (
                     <div

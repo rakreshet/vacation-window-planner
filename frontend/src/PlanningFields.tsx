@@ -1,4 +1,7 @@
-import { changePlanningCountry, type PlanningDraft } from './planning'
+import type { ReactNode } from 'react'
+import { FieldError, useFieldValidation } from './FieldValidation'
+import PersonalCalendarFields from './PersonalCalendarFields'
+import { changePlanningCountry, resolveCalendarCountry, type PlanningDraft } from './planning'
 
 const weekdays = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday']
 
@@ -6,21 +9,28 @@ export default function PlanningFields({
   value,
   onChange,
   prefix = '',
+  annual = false,
+  children,
 }: {
   value: PlanningDraft
   onChange: (value: PlanningDraft) => void
   prefix?: string
+  annual?: boolean
+  children?: ReactNode
 }) {
+  const field = useFieldValidation()
+  const balanceId = annual ? field('context.balance_days').id : `${prefix}balance`
   return (
     <>
-      <div className="field">
-        <label htmlFor={`${prefix}balance`}>
-          Vacation balance <span>Required</span>
+      <div className="field planning-balance">
+        <label htmlFor={balanceId}>
+          {annual ? 'Available leave for included trips' : 'Vacation balance'} <span>Required</span>
         </label>
         <div className="input-with-suffix">
           <input
-            id={`${prefix}balance`}
-            aria-label="Vacation balance"
+            {...(annual ? field('context.balance_days') : {})}
+            id={balanceId}
+            aria-label={annual ? 'Available leave for included trips' : 'Vacation balance'}
             type="number"
             min="0"
             step="1"
@@ -30,25 +40,17 @@ export default function PlanningFields({
           />
           <span>days</span>
         </div>
-        <small>Available before this break</small>
-      </div>
-      <div className="field">
-        <label htmlFor={`${prefix}allowed-negative`}>Allowed negative days</label>
-        <div className="input-with-suffix">
-          <input
-            id={`${prefix}allowed-negative`}
-            type="number"
-            min="0"
-            max="5"
-            step="1"
-            value={value.allowedNegative}
-            onChange={(e) => onChange({ ...value, allowedNegative: e.target.value })}
-          />
-          <span>days</span>
+        <div>
+          {annual && <FieldError field="context.balance_days" />}
+          <small>
+            {annual
+              ? 'Includes leave allocated to your locked trips. Excludes past trips and future accrual.'
+              : 'Available before this break'}
+          </small>
         </div>
-        <small>How far below zero you will accept</small>
       </div>
-      <div className="field">
+      {children}
+      <div className="field planning-country">
         <label htmlFor={`${prefix}country`}>Public holiday calendar</label>
         <select
           id={`${prefix}country`}
@@ -69,12 +71,27 @@ export default function PlanningFields({
               : 'Observed public holidays'}
         </small>
       </div>
+      {value.pendingCountry && (
+        <div
+          className="field field--wide form-notice"
+          tabIndex={-1}
+          {...(annual ? field('context.country_code') : {})}
+        >
+          <p>Keep or clear your date overrides before changing the public holiday calendar.</p>
+          <button type="button" onClick={() => onChange(resolveCalendarCountry(value, true))}>
+            Keep date overrides
+          </button>
+          <button type="button" onClick={() => onChange(resolveCalendarCountry(value, false))}>
+            Clear date overrides
+          </button>
+          <button type="button" onClick={() => onChange({ ...value, pendingCountry: undefined })}>
+            Cancel calendar change
+          </button>
+        </div>
+      )}
       <fieldset className="field field--wide weekend-field">
         <legend>Weekend days</legend>
-        <small>
-          Choose the days that are normally free for you. Usual weekends follow the calendar; custom
-          selections are kept.
-        </small>
+        <small>Your usual days off. We’ll use these to stretch your break.</small>
         <div className="day-picker">
           {weekdays.map((day, index) => (
             <label key={day}>
@@ -96,6 +113,26 @@ export default function PlanningFields({
           ))}
         </div>
       </fieldset>
+      <PersonalCalendarFields value={value} onChange={onChange}>
+        {!annual && (
+          <div className="field planning-allowance">
+            <label htmlFor={`${prefix}allowed-negative`}>Allowed negative days</label>
+            <div className="input-with-suffix">
+              <input
+                id={`${prefix}allowed-negative`}
+                type="number"
+                min="0"
+                max="5"
+                step="1"
+                value={value.allowedNegative}
+                onChange={(e) => onChange({ ...value, allowedNegative: e.target.value })}
+              />
+              <span>days</span>
+            </div>
+            <small>How far below zero you will accept</small>
+          </div>
+        )}
+      </PersonalCalendarFields>
     </>
   )
 }

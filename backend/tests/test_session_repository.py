@@ -82,3 +82,31 @@ def test_token_hash_is_unique_in_database(session: Session) -> None:
 
     with pytest.raises(SessionTokenCollisionError):
         repository.create(**values)
+
+
+def test_personal_context_survives_a_new_session_round_trip(session: Session) -> None:
+    from vacation_window_planner.domain.personal_calendar import PersonalCalendar
+
+    now = datetime(2026, 9, 26, 12, tzinfo=UTC)
+    rules = PersonalCalendar.model_validate(
+        {
+            "minimum_notice_days": 7,
+            "date_overrides": [
+                {"start_date": "2027-01-07", "end_date": "2027-01-07", "kind": "personal_day_off"},
+            ],
+        }
+    )
+    repository = AnonymousSessionRepository(session)
+    created = repository.create(
+        balance_days=8,
+        allowed_negative_days=0,
+        country_code="IL",
+        weekend_days=frozenset({4, 5}),
+        now=now,
+        expires_at=now + timedelta(days=30),
+        personal_calendar=rules,
+    )
+    session.commit()
+    resumed = repository.find_active(created.token, now=now)
+    assert resumed is not None
+    assert resumed.personal_calendar == rules

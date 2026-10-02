@@ -1,3 +1,4 @@
+import WindowActions from './WindowActions'
 import { useEffect, useRef, useState } from 'react'
 import type { ComparedWindow, ComparisonAlternative, ComparisonResponse, DateRange } from './api'
 
@@ -80,11 +81,22 @@ export function WindowSummary({
           </p>
         </div>
       )}
-      {!value.feasible ? (
+      {value.assessment?.eligibility_reasons.map((reason) => (
+        <p key={reason.code} className="form-notice form-notice--error">
+          {reason.code === 'unavailable_dates'
+            ? `Includes unavailable dates: ${reason.dates.map(displayDate).join(', ')}.`
+            : reason.code === 'insufficient_notice'
+              ? `Minimum notice requires starting on or after ${displayDate(reason.earliest_start_date)}.`
+              : 'These dates exceed your vacation-day allowance.'}
+        </p>
+      ))}
+      {!value.assessment && !value.feasible ? (
         <p className="form-notice form-notice--error">
           These dates exceed your vacation-day allowance.
         </p>
-      ) : value.remaining_balance < 0 ? (
+      ) : value.remaining_balance < 0 &&
+        !value.warnings.includes('over_budget') &&
+        !value.assessment?.eligibility_reasons.some((reason) => reason.code === 'over_budget') ? (
         <p className="comparison-warning">
           Uses {Math.abs(value.remaining_balance)} vacation days beyond your balance, within your
           allowed negative balance.
@@ -102,14 +114,24 @@ export function WindowSummary({
             const date = day.toISOString().slice(0, 10)
             const holiday = value.window.holiday_dates.includes(date)
             const weekend = value.weekend_dates.includes(date)
-            const charged = value.charged_dates.includes(date)
-            const label = holiday
-              ? `Public holiday${weekend ? ' · Weekend' : ''}`
-              : weekend
-                ? 'Weekend'
-                : charged
-                  ? 'Vacation day'
-                  : 'Day off'
+            const detail = value.assessment?.day_details.find((item) => item.date === date)
+            const charged = detail?.charged ?? value.charged_dates.includes(date)
+            const effectiveLabels = {
+              extra_working_day: 'Extra working day · Vacation day',
+              personal_day_off: 'Personal day off',
+              public_holiday: 'Public holiday',
+              weekend: 'Weekend',
+              ordinary_working: 'Vacation day',
+            }
+            const label = detail
+              ? `${effectiveLabels[detail.kind]}${detail.unavailable ? ' · Unavailable' : ''}`
+              : holiday
+                ? `Public holiday${weekend ? ' · Weekend' : ''}`
+                : weekend
+                  ? 'Weekend'
+                  : charged
+                    ? 'Vacation day'
+                    : 'Day off'
             return (
               <li
                 key={date}
@@ -155,7 +177,18 @@ export default function ComparisonResults({
   return (
     <div className="comparison-layout">
       <div className="comparison-anchor">
-        <WindowSummary value={result.baseline} label="Your dates" />
+        <WindowSummary value={result.baseline} label="Your dates">
+          {result.calculation_context && result.baseline.assessment && (
+            <WindowActions
+              source="comparison_baseline"
+              window={result.baseline.window}
+              assessment={result.baseline.assessment}
+              context={result.calculation_context}
+              stale={stale}
+              metadata={{ policy_version: result.policy.version }}
+            />
+          )}
+        </WindowSummary>
       </div>
       <div className="comparison-options">
         {stale ? (
@@ -177,6 +210,19 @@ export default function ComparisonResults({
                   label="Selected alternative"
                   compareTo={result.baseline}
                 >
+                  {result.calculation_context && selected.evaluation.assessment && (
+                    <WindowActions
+                      source="comparison_alternative"
+                      window={selected.evaluation.window}
+                      assessment={selected.evaluation.assessment}
+                      context={result.calculation_context}
+                      stale={stale}
+                      metadata={{
+                        explanation: selected.explanation,
+                        policy_version: result.policy.version,
+                      }}
+                    />
+                  )}
                   <p className="comparison-outcome">{outcome(selected)}</p>
                   <p>
                     Starts {movement(selected.delta.start_shift_days)} · Ends{' '}
@@ -246,8 +292,8 @@ export default function ComparisonResults({
             ))}
             <p className="comparison-scope">
               Starts within {result.policy.shift_days} days of your dates, with up to{' '}
-              {result.policy.extra_days} extra days off. Work and personal availability have not
-              been checked.
+              {result.policy.extra_days} extra days off. Suggestions respect the calendar rules
+              entered. Other commitments and employer approval have not been checked.
             </p>
             {result.notices.map((notice) => (
               <p key={notice}>{notice}</p>

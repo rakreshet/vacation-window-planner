@@ -15,12 +15,28 @@ from pydantic import BaseModel, ConfigDict, Field, StrictInt, field_validator
 from starlette.exceptions import HTTPException as StarletteHTTPException
 from starlette.middleware.base import RequestResponseEndpoint
 
+from vacation_window_planner.annual_interpreter import AnnualInterpretationInput, AnnualProposal
+from vacation_window_planner.annual_workflow import (
+    AnnualPlannerBusy,
+    AnnualPlanningRequest,
+    AnnualRun,
+)
 from vacation_window_planner.comparison_workflow import (
     ComparisonOriginError,
     ComparisonRequest,
     InvalidComparisonError,
 )
-from vacation_window_planner.domain.calendar import UnsupportedCalendarError
+from vacation_window_planner.domain.action_details import (
+    ActionableRecommendation,
+    ActionDetailsTooLarge,
+)
+from vacation_window_planner.domain.annual import AnnualInputError, AnnualRequest
+from vacation_window_planner.domain.assessment import CalendarCoverageError
+from vacation_window_planner.domain.calculation_context import CalculationContext
+from vacation_window_planner.domain.calendar import (
+    CalendarResolutionUnavailable,
+    UnsupportedCalendarError,
+)
 from vacation_window_planner.domain.comparison import ComparisonInput, ComparisonResult
 from vacation_window_planner.domain.comparison_engine import ComparisonTooBroadError
 from vacation_window_planner.domain.contracts import (
@@ -33,11 +49,14 @@ from vacation_window_planner.domain.contracts import (
 from vacation_window_planner.domain.date_ranges import PastSearchRangeError
 from vacation_window_planner.domain.generator import SearchTooBroadError
 from vacation_window_planner.domain.local_dates import DEFAULT_TIME_ZONE, validate_time_zone
+from vacation_window_planner.domain.opportunities import OpportunityResult
+from vacation_window_planner.domain.personal_calendar import PersonalCalendar
 from vacation_window_planner.interpreter import (
     ConstraintProposal,
     InterpretationError,
     InterpretationInput,
 )
+from vacation_window_planner.repositories.annual_plans import AnnualPersistenceError
 from vacation_window_planner.repositories.comparisons import ComparisonPersistenceError
 from vacation_window_planner.repositories.feedback import FeedbackAuthorizationError
 from vacation_window_planner.repositories.searches import SearchSnapshotPersistenceError
@@ -52,6 +71,8 @@ from vacation_window_planner.workflow import (
 
 
 class RecommendationHttpRequest(BaseModel):
+    include_opportunities: bool = False
+    include_action_details: bool = False
     model_config = ConfigDict(extra="forbid")
 
     months: tuple[YearMonth, ...] = Field(min_length=1)
@@ -61,8 +82,12 @@ class RecommendationHttpRequest(BaseModel):
 
 
 class RecommendationHttpResponse(BaseModel):
+    opportunities: OpportunityResult | None = Field(
+        default=None, exclude_if=lambda value: value is None
+    )
+    calculation_context: CalculationContext | None = None
     search_id: UUID
-    recommendations: tuple[Recommendation, ...]
+    recommendations: tuple[ActionableRecommendation | Recommendation, ...]
     notice: str | None = None
 
 
@@ -77,6 +102,7 @@ class FeedbackHttpResponse(BaseModel):
 
 
 class SessionHttpRequest(BaseModel):
+    personal_calendar: PersonalCalendar = Field(default_factory=PersonalCalendar)
     model_config = ConfigDict(extra="forbid")
 
     time_zone: str = DEFAULT_TIME_ZONE
@@ -113,8 +139,11 @@ def create_app(
     database_probe: Callable[[], bool],
     session_lookup: Callable[[str, datetime], AnonymousSessionState | None] | None = None,
     recommendation_service: Callable[[RecommendationRequest], RecommendationResult] | None = None,
+    annual_service: Callable[[AnnualPlanningRequest], AnnualRun] | None = None,
     comparison_service: Callable[[ComparisonRequest], ComparisonResult] | None = None,
-    interpretation_service: Callable[[str], ConstraintProposal] | None = None,
+    interpretation_service: Callable[[InterpretationInput], ConstraintProposal] | None = None,
+    annual_interpretation_service: Callable[[AnnualInterpretationInput], AnnualProposal]
+    | None = None,
     feedback_service: Callable[[UUID, int, UUID, FeedbackValue], None] | None = None,
     session_creator: Callable[[SessionHttpRequest, datetime], CreatedAnonymousSession]
     | None = None,
@@ -173,7 +202,14 @@ def create_app(
     @app.exception_handler(RequestValidationError)
     async def validation_error(_request: Request, error: RequestValidationError) -> JSONResponse:
         fields = [".".join(str(part) for part in item["loc"]) for item in error.errors()]
-        return _error(422, "VALIDATION_ERROR", "Request validation failed", fields)
+        code = (
+            "INVALID_PERSONAL_CALENDAR"
+            if any(field.startswith("body.personal_calendar") for field in fields)
+            else "VALIDATION_ERROR"
+        )
+        if _request.url.path == "/annual-plans":
+            code = "INVALID_ANNUAL_PLAN"
+        return _error(422, code, "Request validation failed", fields)
 
     @app.get("/health")
     def health(response: Response) -> dict[str, str]:
@@ -208,6 +244,7 @@ def create_app(
             context=UserVacationContext(
                 session_id=session.id,
                 time_zone=session.time_zone,
+                personal_calendar=session.personal_calendar,
                 balance_days=session.balance_days,
                 allowed_negative_days=session.allowed_negative_days,
                 country_code=session.country_code,
@@ -219,15 +256,38 @@ def create_app(
                 result_limit=body.result_limit,
             ),
             source_text=body.source_text,
+            include_opportunities=body.include_opportunities,
+            include_action_details=body.include_action_details,
         )
         try:
             return recommendation_service(request)
+        except ActionDetailsTooLarge as error:
+            return _error(422, "ACTION_DETAILS_TOO_LARGE", str(error))
         except SearchTooBroadError as error:
             return _error(422, error.code, str(error))
-        except (PastSearchRangeError, UnsupportedCalendarError) as error:
+        except (PastSearchRangeError, UnsupportedCalendarError, CalendarCoverageError) as error:
             return _error(422, "INVALID_SEARCH", str(error))
         except SearchSnapshotPersistenceError:
             return _error(503, "PERSISTENCE_ERROR", "Search could not be saved")
+
+    def authenticated_context(authorization: str | None) -> UserVacationContext | JSONResponse:
+        if session_lookup is None:
+            return _error(503, "SERVICE_UNAVAILABLE", "Session service is unavailable")
+        if authorization is None or not authorization.startswith("Bearer "):
+            return _error(401, "INVALID_SESSION", "A bearer session token is required")
+        token = authorization.removeprefix("Bearer ").strip()
+        session = session_lookup(token, clock()) if token else None
+        if session is None:
+            return _error(401, "SESSION_EXPIRED", "Session is expired or unknown")
+        return UserVacationContext(
+            session_id=session.id,
+            balance_days=session.balance_days,
+            allowed_negative_days=session.allowed_negative_days,
+            country_code=session.country_code,
+            weekend_days=session.weekend_days,
+            time_zone=session.time_zone,
+            personal_calendar=session.personal_calendar,
+        )
 
     @app.post("/comparisons", response_model=ComparisonResult)
     def comparisons(
@@ -236,20 +296,9 @@ def create_app(
     ) -> ComparisonResult | JSONResponse:
         if session_lookup is None or comparison_service is None:
             return _error(503, "SERVICE_UNAVAILABLE", "Comparison service is unavailable")
-        if authorization is None or not authorization.startswith("Bearer "):
-            return _error(401, "INVALID_SESSION", "A bearer session token is required")
-        token = authorization.removeprefix("Bearer ").strip()
-        session = session_lookup(token, clock()) if token else None
-        if session is None:
-            return _error(401, "SESSION_EXPIRED", "Session is expired or unknown")
-        context = UserVacationContext(
-            session_id=session.id,
-            balance_days=session.balance_days,
-            allowed_negative_days=session.allowed_negative_days,
-            country_code=session.country_code,
-            weekend_days=session.weekend_days,
-            time_zone=session.time_zone,
-        )
+        context = authenticated_context(authorization)
+        if isinstance(context, JSONResponse):
+            return context
         try:
             return comparison_service(ComparisonRequest(context=context, dates=body))
         except ComparisonTooBroadError as error:
@@ -258,8 +307,48 @@ def create_app(
             return _error(503, "PERSISTENCE_ERROR", "Comparison could not be saved")
         except ComparisonOriginError as error:
             return _error(404, "NOT_FOUND", str(error))
-        except (InvalidComparisonError, UnsupportedCalendarError) as error:
+        except (InvalidComparisonError, UnsupportedCalendarError, CalendarCoverageError) as error:
             return _error(422, "INVALID_COMPARISON", str(error))
+
+    @app.post("/annual-plans", response_model=AnnualRun)
+    def annual_plans(
+        body: AnnualRequest,
+        authorization: Annotated[str | None, Header()] = None,
+    ) -> AnnualRun | JSONResponse:
+        if session_lookup is None or annual_service is None:
+            return _error(503, "SERVICE_UNAVAILABLE", "Annual planning is unavailable")
+        context = authenticated_context(authorization)
+        if isinstance(context, JSONResponse):
+            return context
+        try:
+            return annual_service(AnnualPlanningRequest(context=context, input=body))
+        except AnnualPlannerBusy:
+            return _error(503, "ANNUAL_PLANNER_BUSY", "Annual planner is busy; try again")
+        except AnnualPersistenceError:
+            return _error(
+                503, "PERSISTENCE_ERROR", "Annual calculation could not be saved; try again"
+            )
+        except AnnualInputError as error:
+            return _error(422, "INVALID_ANNUAL_PLAN", str(error), [error.field])
+        except UnsupportedCalendarError as error:
+            return _error(422, "UNSUPPORTED_CALENDAR", str(error), ["context.country_code"])
+        except (CalendarResolutionUnavailable, CalendarCoverageError):
+            return _error(503, "CALENDAR_UNAVAILABLE", "Calendar data is unavailable; try again")
+
+    @app.post(
+        "/annual-plans/interpret", response_model=AnnualProposal, response_model_exclude_none=True
+    )
+    def interpret_annual(body: AnnualInterpretationInput) -> AnnualProposal | JSONResponse:
+        if annual_interpretation_service is None:
+            return _error(
+                503,
+                "INTERPRETATION_UNAVAILABLE",
+                "Use structured annual fields; interpretation is not configured",
+            )
+        try:
+            return annual_interpretation_service(body)
+        except InterpretationError:
+            return _error(502, "INTERPRETATION_ERROR", "Annual text interpretation failed")
 
     @app.post("/interpret", response_model=ConstraintProposal)
     def interpret(body: InterpretationInput) -> ConstraintProposal | JSONResponse:
@@ -270,7 +359,7 @@ def create_app(
                 "Text interpretation is not configured; use structured search fields",
             )
         try:
-            return interpretation_service(body.text)
+            return interpretation_service(body)
         except InterpretationError:
             return _error(502, "INTERPRETATION_ERROR", "Text interpretation failed")
 

@@ -5,17 +5,16 @@ from enum import StrEnum
 from typing import Self
 from uuid import UUID
 
-from pydantic import BaseModel, ConfigDict, Field, StrictInt, field_validator, model_validator
+from pydantic import Field, StrictInt, field_validator, model_validator
 
 from vacation_window_planner.domain.local_dates import DEFAULT_TIME_ZONE, validate_time_zone
-
-
-class DomainValue(BaseModel):
-    model_config = ConfigDict(frozen=True, extra="forbid")
+from vacation_window_planner.domain.personal_calendar import PersonalCalendar
+from vacation_window_planner.domain.values import DomainValue as DomainValue
 
 
 class UserVacationContext(DomainValue):
     session_id: UUID
+    personal_calendar: PersonalCalendar = Field(default_factory=PersonalCalendar)
     time_zone: str = DEFAULT_TIME_ZONE
 
     _validate_time_zone = field_validator("time_zone")(validate_time_zone)

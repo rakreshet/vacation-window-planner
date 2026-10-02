@@ -6,13 +6,15 @@ This design places the recommendation engine behind a small interface and keeps 
 
 | Field | Value |
 | --- | --- |
-| **Status** | Phase 0 and Phase 0.5 delivered; Phase 0.75 design in review; Phase 1 planned |
+| **Status** | Phase 0/0.5 delivered; Phase 0.75 implemented in review with client acceptance pending; annual planning proposed; Phase 1 planned |
 | **Prepared for** | POC product and engineering implementation |
 | **Version date** | 2026-09-26 |
 
 Delivery and original PR links are recorded in the [progress tracker](progress.md). Phase 0.5 requirements and task details are maintained in the [comparison plan](phase-0.5-plan.md), with completed validation in the [acceptance record](phase-0.5-acceptance.md).
 
-The [Phase 0.75 plan](phase-0.75-plan.md#backend-design) is the authoritative proposed backend/frontend contract for personal calendar rules, assessment detail, opportunity policy, snapshot migrations, and browser saving/export. Its [UX walkthrough](phase-0.75-ux.md) defines interactions. These capabilities are not implemented; the descriptions of existing Phase 0/0.5 flows below remain the delivered baseline.
+The [Phase 0.75 plan](phase-0.75-plan.md#backend-design) records the backend/frontend contract for personal calendar rules, assessment detail, opportunity policy, snapshot migrations, and browser saving/export. Its implementation is in the open #51–#60 stack, with limitations in the [acceptance record](phase-0.75-acceptance.md); Phase 0/0.5 remain the merged behavior baseline.
+
+The [annual planning backend design](annual-plans-plan.md#backend-design) proposes a pure whole-plan optimizer above the shared assessment rules, with one common calendar, exact locks, protected reserve, bounded complete combination search, and explicit infeasible-versus-incomplete outcomes. An authenticated workflow snapshots runs in PostgreSQL; browser saves retain selected historical plans separately from individual bookmarks. The [frontend design](annual-plans-plan.md#frontend-design), [UX walkthrough](annual-plans-ux.md), and [test seams](annual-plans-testing.md#proposed-public-test-seams) complete this documentation-only proposal. No annual code is implemented or authorized by this plan; Phase 1 retains its flight architecture.
 
 ## Architecture decision
 

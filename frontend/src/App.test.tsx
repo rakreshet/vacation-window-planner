@@ -35,7 +35,7 @@ test('presents the planner as a focused desktop workspace', async () => {
   render(<App />)
 
   expect(
-    screen.getByRole('heading', { name: 'Turn vacation days into longer breaks.' }),
+    screen.getByRole('heading', { name: 'Your next great break, hiding in your calendar.' }),
   ).toBeInTheDocument()
   expect(screen.getByRole('region', { name: 'Build your search' })).toBeInTheDocument()
   expect(screen.getByText('No account needed')).toBeInTheDocument()
@@ -120,9 +120,14 @@ test('interpretation only fills editable proposal fields and never searches', as
   fireEvent.click(screen.getByRole('checkbox', { name: 'Friday' }))
   fireEvent.click(screen.getByRole('checkbox', { name: 'Sunday' }))
   expect(screen.getByRole('checkbox', { name: 'Sunday' })).toBeChecked()
-  fireEvent.click(screen.getByRole('button', { name: 'Interpret' }))
+  fireEvent.click(screen.getByRole('button', { name: 'Add calendar rule' }))
+  fireEvent.change(screen.getByLabelText('Rule start date'), { target: { value: '2027-01-07' } })
+  fireEvent.change(screen.getByLabelText('Rule end date'), { target: { value: '2027-01-07' } })
+  fireEvent.click(screen.getByRole('button', { name: 'Apply rule' }))
+  fireEvent.click(screen.getByRole('button', { name: 'Fill in my details' }))
 
   expect(await screen.findByDisplayValue('8')).toBeInTheDocument()
+  expect(screen.getByText(/2027-01-07.*Personal day off/)).toBeInTheDocument()
   expect(screen.getByLabelText('Allowed negative days')).toHaveValue(1)
   expect(screen.getByLabelText('Selected month')).toHaveValue('2027-01')
   expect(screen.getByLabelText('Preferred length in days')).toHaveValue(7)
@@ -166,14 +171,14 @@ test('failed interpretation explains how to continue beside Interpret', async ()
   fireEvent.change(screen.getByLabelText('Describe your ideal break'), {
     target: { value: 'I want a break in January' },
   })
-  fireEvent.click(screen.getByRole('button', { name: 'Interpret' }))
+  fireEvent.click(screen.getByRole('button', { name: 'Fill in my details' }))
 
-  const description = screen.getByRole('region', { name: 'Describe the break you want' })
+  const description = screen.getByRole('region', { name: 'Start with a little daydream' })
   expect(await within(description).findByRole('alert')).toHaveTextContent(
-    'We could not interpret your description right now. Enter the details below and click Search, or try Interpret again later.',
+    'We could not interpret your description right now. Enter your planning details and select Find my dates, or try the assistant again later.',
   )
   fillRequiredSearchFields()
-  fireEvent.click(screen.getByRole('button', { name: 'Search' }))
+  fireEvent.click(screen.getByRole('button', { name: 'Find my dates' }))
   expect(await screen.findByText('Search complete')).toBeInTheDocument()
 })
 
@@ -189,7 +194,7 @@ test('makes the interpret-versus-search boundary and weekend choices explicit', 
   await screen.findByText('Service ready')
 
   expect(
-    screen.getByText('Interpret only fills the editable fields below. It never starts a search.'),
+    screen.getByText('AI only fills your planning details. Review them, then search.'),
   ).toBeInTheDocument()
   const weekendGroup = screen.getByRole('group', { name: 'Weekend days' })
   expect(weekendGroup).toBeInTheDocument()
@@ -221,7 +226,7 @@ test('proposal remains editable and search only uses confirmed local fields', as
   await screen.findByText('Service ready')
   fillRequiredSearchFields()
   fireEvent.change(screen.getByLabelText('Vacation balance'), { target: { value: '6' } })
-  fireEvent.click(screen.getByRole('button', { name: 'Search' }))
+  fireEvent.click(screen.getByRole('button', { name: 'Find my dates' }))
 
   expect(await screen.findByText('Search complete')).toBeInTheDocument()
   const sessionRequest = requests.find((item) => item.url.endsWith('/sessions'))
@@ -252,7 +257,7 @@ test('structured search works without using interpretation', async () => {
   render(<App />)
   await screen.findByText('Service ready')
   fillRequiredSearchFields()
-  fireEvent.click(screen.getByRole('button', { name: 'Search' }))
+  fireEvent.click(screen.getByRole('button', { name: 'Find my dates' }))
 
   expect(await screen.findByText('Search complete')).toBeInTheDocument()
   await waitFor(() =>
@@ -272,12 +277,12 @@ test('required fields and allowance bounds are validated accessibly', async () =
   render(<App />)
   await screen.findByText('Service ready')
 
-  fireEvent.click(screen.getByRole('button', { name: 'Search' }))
+  fireEvent.click(screen.getByRole('button', { name: 'Find my dates' }))
   expect(screen.getByRole('alert')).toHaveTextContent('Complete all required search fields')
 
   fillRequiredSearchFields()
   fireEvent.change(screen.getByLabelText('Allowed negative days'), { target: { value: '6' } })
-  fireEvent.click(screen.getByRole('button', { name: 'Search' }))
+  fireEvent.click(screen.getByRole('button', { name: 'Find my dates' }))
   await waitFor(() =>
     expect(screen.getByRole('alert')).toHaveTextContent(
       'Allowed negative days must be a whole number from 0 to 5',
@@ -312,7 +317,7 @@ test('shows the actionable narrow-search error without rendering partial results
   await screen.findByText('Service ready')
   fillRequiredSearchFields()
 
-  fireEvent.click(screen.getByRole('button', { name: 'Search' }))
+  fireEvent.click(screen.getByRole('button', { name: 'Find my dates' }))
 
   expect(await screen.findByRole('alert')).toHaveTextContent(
     'Search is too broad; narrow the selected months or length flexibility.',
@@ -320,4 +325,199 @@ test('shows the actionable narrow-search error without rendering partial results
   expect(
     screen.queryByRole('heading', { name: 'Your best vacation windows' }),
   ).not.toBeInTheDocument()
+})
+
+test('unfinished calendar rules block Search and applied rules are submitted with notice', async () => {
+  const sessions: unknown[] = []
+  vi.stubGlobal(
+    'fetch',
+    vi.fn(async (input: RequestInfo | URL, init?: RequestInit) => {
+      if (String(input).endsWith('/sessions')) {
+        sessions.push(JSON.parse(String(init?.body)))
+        return { ok: true, json: async () => ({ token: 'token' }) }
+      }
+      if (String(input).endsWith('/recommendations'))
+        return { ok: true, json: async () => ({ search_id: 'search', recommendations: [] }) }
+      return { ok: true, json: async () => ({ status: 'ok', database: 'connected' }) }
+    }),
+  )
+  render(<App />)
+  await screen.findByText('Service ready')
+  fillRequiredSearchFields()
+  fireEvent.click(screen.getByRole('button', { name: 'Add calendar rule' }))
+  fireEvent.click(screen.getByRole('button', { name: 'Find my dates' }))
+  expect(screen.getByText(/Apply or cancel this rule before calculating/)).toBeInTheDocument()
+  expect(sessions).toHaveLength(0)
+  fireEvent.change(screen.getByLabelText('Rule start date'), { target: { value: '2027-01-07' } })
+  fireEvent.change(screen.getByLabelText('Rule end date'), { target: { value: '2027-01-07' } })
+  fireEvent.click(screen.getByRole('button', { name: 'Apply rule' }))
+  fireEvent.change(screen.getByLabelText('Minimum notice days'), { target: { value: '7' } })
+  fireEvent.click(screen.getByRole('button', { name: 'Find my dates' }))
+  await screen.findByText('Search complete')
+  expect(sessions[0]).toMatchObject({
+    personal_calendar: {
+      schema_version: 1,
+      minimum_notice_days: 7,
+      unavailable_ranges: [],
+      date_overrides: [
+        { start_date: '2027-01-07', end_date: '2027-01-07', kind: 'personal_day_off' },
+      ],
+    },
+  })
+})
+
+test('editing after Search keeps results visible but disables Compare until recalculated', async () => {
+  vi.stubGlobal(
+    'fetch',
+    vi.fn(async (input: RequestInfo | URL) => {
+      const data = String(input).endsWith('/health')
+        ? { status: 'ok', database: 'connected' }
+        : String(input).endsWith('/sessions')
+          ? { token: 'token' }
+          : {
+              search_id: 'search',
+              recommendations: [
+                {
+                  rank: 1,
+                  score: 75,
+                  explanation: 'A useful break',
+                  remaining_balance: 3,
+                  warnings: [],
+                  window: {
+                    start_date: '2027-01-03',
+                    end_date: '2027-01-07',
+                    total_days: 5,
+                    vacation_days_used: 5,
+                    holiday_dates: [],
+                  },
+                },
+              ],
+            }
+      return { ok: true, json: async () => data }
+    }),
+  )
+  render(<App />)
+  await screen.findByText('Service ready')
+  fillRequiredSearchFields()
+  fireEvent.click(screen.getByRole('button', { name: 'Find my dates' }))
+  const compare = await screen.findByRole('button', {
+    name: 'Compare nearby dates for recommendation 1',
+  })
+  fireEvent.change(screen.getByLabelText('Selected month'), { target: { value: '2027-02' } })
+  expect(compare).toBeDisabled()
+  expect(screen.getByText(/Your inputs changed/)).toBeInTheDocument()
+  expect(screen.getByText('A useful break')).toBeInTheDocument()
+})
+
+test('a Search response arriving after an edit cannot become current results', async () => {
+  let finish: ((value: unknown) => void) | undefined
+  vi.stubGlobal(
+    'fetch',
+    vi.fn(async (input: RequestInfo | URL) => {
+      if (String(input).endsWith('/recommendations'))
+        return {
+          ok: true,
+          json: () =>
+            new Promise((resolve) => {
+              finish = resolve
+            }),
+        }
+      return {
+        ok: true,
+        json: async () =>
+          String(input).endsWith('/sessions')
+            ? { token: 'token' }
+            : { status: 'ok', database: 'connected' },
+      }
+    }),
+  )
+  render(<App />)
+  await screen.findByText('Service ready')
+  fillRequiredSearchFields()
+  fireEvent.click(screen.getByRole('button', { name: 'Find my dates' }))
+  await waitFor(() => expect(finish).toBeDefined())
+  fireEvent.change(screen.getByLabelText('Vacation balance'), { target: { value: '2' } })
+  finish?.({ search_id: 'obsolete', recommendations: [] })
+  await waitFor(() => expect(screen.getByRole('button', { name: 'Find my dates' })).toBeEnabled())
+  expect(screen.queryByText('Search complete')).not.toBeInTheDocument()
+  expect(screen.queryByText('No feasible vacation windows found.')).not.toBeInTheDocument()
+})
+
+test('explicit Search requests opportunities and displays them separately', async () => {
+  const searches: unknown[] = []
+  vi.stubGlobal(
+    'fetch',
+    vi.fn(async (input: RequestInfo | URL, init?: RequestInit) => {
+      if (String(input).endsWith('/recommendations')) {
+        searches.push(JSON.parse(String(init?.body)))
+        return {
+          ok: true,
+          json: async () => ({
+            search_id: 'search',
+            recommendations: [],
+            opportunities: { status: 'complete', items: [] },
+          }),
+        }
+      }
+      return {
+        ok: true,
+        json: async () =>
+          String(input).endsWith('/sessions')
+            ? { token: 'token' }
+            : { status: 'ok', database: 'connected' },
+      }
+    }),
+  )
+  render(<App />)
+  await screen.findByText('Service ready')
+  expect(searches).toHaveLength(0)
+  fillRequiredSearchFields()
+  fireEvent.click(screen.getByRole('button', { name: 'Find my dates' }))
+  await screen.findByRole('heading', { name: 'Other opportunities' })
+  expect(searches[0]).toMatchObject({ include_opportunities: true, include_action_details: true })
+  expect(screen.getByText('No feasible vacation windows found.')).toBeInTheDocument()
+})
+
+test('Search is disabled until an unfinished calendar rule is applied or cancelled', async () => {
+  vi.stubGlobal(
+    'fetch',
+    vi
+      .fn()
+      .mockResolvedValue({ ok: true, json: async () => ({ status: 'ok', database: 'connected' }) }),
+  )
+  render(<App />)
+  await screen.findByText('Service ready')
+  fireEvent.click(screen.getByRole('button', { name: 'Add calendar rule' }))
+  expect(screen.getByRole('button', { name: 'Find my dates' })).toBeDisabled()
+  fireEvent.click(screen.getByRole('button', { name: 'Cancel rule' }))
+  expect(screen.getByRole('button', { name: 'Find my dates' })).toBeEnabled()
+})
+
+test('an obsolete Search failure does not attach an error to the edited draft', async () => {
+  let rejectSearch: ((reason: Error) => void) | undefined
+  vi.stubGlobal(
+    'fetch',
+    vi.fn(async (input: RequestInfo | URL) => {
+      if (String(input).endsWith('/recommendations'))
+        return new Promise((_resolve, reject) => {
+          rejectSearch = reject
+        })
+      return {
+        ok: true,
+        json: async () =>
+          String(input).endsWith('/sessions')
+            ? { token: 'token' }
+            : { status: 'ok', database: 'connected' },
+      }
+    }),
+  )
+  render(<App />)
+  await screen.findByText('Service ready')
+  fillRequiredSearchFields()
+  fireEvent.click(screen.getByRole('button', { name: 'Find my dates' }))
+  await waitFor(() => expect(rejectSearch).toBeDefined())
+  fireEvent.change(screen.getByLabelText('Vacation balance'), { target: { value: '2' } })
+  rejectSearch?.(new Error('Obsolete failure'))
+  await waitFor(() => expect(screen.getByRole('button', { name: 'Find my dates' })).toBeEnabled())
+  expect(screen.queryByRole('alert')).not.toBeInTheDocument()
 })

@@ -117,3 +117,20 @@ def test_expired_source_text_is_purged_without_removing_structured_snapshot(
     assert restored is not None
     assert restored.source_text is None
     assert restored.structured_input == {"balance_days": 8}
+
+
+def test_opportunity_status_round_trips_with_the_complete_search(session: Session) -> None:
+    repository = SearchSnapshotRepository(session)
+    opportunities = {"status": "complete", "items": [], "evaluated_pair_count": 9125}
+    search_id = repository.save_completed(
+        session_id=SESSION_ID,
+        engine_version="phase0-v1",
+        structured_input={"opportunities": opportunities},
+        source_text=None,
+        recommendations=(),
+        created_at=datetime(2026, 9, 25, 12, tzinfo=UTC),
+    )
+    session.commit()
+    saved = repository.get(search_id)
+    assert saved is not None
+    assert saved.opportunities == opportunities

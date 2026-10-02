@@ -22,10 +22,14 @@ class AnonymousSession(Base):
     allowed_negative_days: Mapped[int] = mapped_column(Integer(), nullable=False, default=0)
     country_code: Mapped[str] = mapped_column(String(2), nullable=False)
     weekend_days: Mapped[list[int]] = mapped_column(JSON(), nullable=False)
+    personal_calendar: Mapped[dict[str, object]] = mapped_column(
+        JSON(), nullable=False, default=dict
+    )
     time_zone: Mapped[str] = mapped_column(Text(), nullable=False, default="Asia/Jerusalem")
 
 
 class SearchRecord(Base):
+    opportunities: Mapped[dict[str, object] | None] = mapped_column(JSON(), nullable=True)
     __tablename__ = "searches"
 
     id: Mapped[UUID] = mapped_column(Uuid(), primary_key=True)
@@ -69,6 +73,18 @@ class FeedbackRecord(Base):
 
 class ComparisonRecord(Base):
     __tablename__ = "comparisons"
+
+    id: Mapped[UUID] = mapped_column(Uuid(), primary_key=True)
+    session_id: Mapped[UUID] = mapped_column(
+        ForeignKey("anonymous_sessions.id", ondelete="CASCADE"), nullable=False, index=True
+    )
+    structured_input: Mapped[dict[str, object]] = mapped_column(JSON(), nullable=False)
+    result: Mapped[dict[str, object]] = mapped_column(JSON(), nullable=False)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False)
+
+
+class AnnualPlanRun(Base):
+    __tablename__ = "annual_plan_runs"
 
     id: Mapped[UUID] = mapped_column(Uuid(), primary_key=True)
     session_id: Mapped[UUID] = mapped_column(

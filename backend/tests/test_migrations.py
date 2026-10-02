@@ -31,11 +31,30 @@ def test_upgrade_and_downgrade_session_schema() -> None:
             "country_code",
             "weekend_days",
             "time_zone",
+            "personal_calendar",
         } <= {column["name"] for column in inspect(engine).get_columns("anonymous_sessions")}
         assert inspect(engine).has_table("searches")
+        assert "opportunities" in {
+            column["name"] for column in inspect(engine).get_columns("searches")
+        }
         assert inspect(engine).has_table("recommendations")
         assert inspect(engine).has_table("feedback")
         assert inspect(engine).has_table("comparisons")
+        assert inspect(engine).has_table("annual_plan_runs")
+        assert all(
+            not column["nullable"] for column in inspect(engine).get_columns("annual_plan_runs")
+        )
+        assert any(
+            index["column_names"] == ["session_id"]
+            for index in inspect(engine).get_indexes("annual_plan_runs")
+        )
+        assert (
+            inspect(engine).get_foreign_keys("annual_plan_runs")[0]["options"]["ondelete"]
+            == "CASCADE"
+        )
+        command.downgrade(config, "20260926_08")
+        assert not inspect(engine).has_table("annual_plan_runs")
+        command.upgrade(config, "head")
 
         command.downgrade(config, "base")
         assert not inspect(engine).has_table("anonymous_sessions")
