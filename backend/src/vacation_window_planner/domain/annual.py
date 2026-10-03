@@ -305,13 +305,16 @@ def plan_year(
     *,
     policy: AnnualPolicy = DEFAULT_ANNUAL_POLICY,
     work_budget: WorkBudget | None = None,
+    include_alternatives: bool = True,
 ) -> AnnualOutcome:
     budget = work_budget or WorkBudget(policy)
     if budget.policy != policy:
         raise ValueError("Work budget and annual policy must match")
     try:
         budget.checkpoint()
-        result = calculate_year(request, calendar, budget)
+        result = calculate_year(
+            request, calendar, budget, include_alternatives=include_alternatives
+        )
         budget.checkpoint()
         return result.model_copy(update={"policy": policy, "counters": budget.counters})
     except WorkLimitExceeded as error:
@@ -325,7 +328,11 @@ def plan_year(
 
 
 def calculate_year(
-    request: AnnualRequest, calendar: PreparedCalendar, budget: WorkBudget
+    request: AnnualRequest,
+    calendar: PreparedCalendar,
+    budget: WorkBudget,
+    *,
+    include_alternatives: bool = True,
 ) -> AnnualOutcome:
     validate_annual_context(request, calendar)
     year_calendar = assess_window(
@@ -363,7 +370,7 @@ def calculate_year(
     retained_mask = graph.locked_mask | sum(1 << index for index, _ in first)
     selections: list[Selection] = [first]
     plans = [build_annual_plan(request, calendar, first)]
-    for objective in ("fewer_leave_days", "different_dates"):
+    for objective in ("fewer_leave_days", "different_dates") if include_alternatives else ():
         selection = solve_annual_graph(
             graph,
             budget,
