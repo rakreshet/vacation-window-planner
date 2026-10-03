@@ -128,7 +128,7 @@ The user authorized these two features on October 3, 2026, with TDD and dependen
 | Task | Responsibility | Depends on | PR(s) | Status |
 | --- | --- | --- | --- | --- |
 | QW 00 | Scope, contracts, UX, test seams and progress table | main | [#80](https://github.com/rakreshet/vacation-window-planner/pull/80) | In review; seams confirmed |
-| QW 01 | Pure bounded comparison and primary-only annual mode | QW 00 + confirmed seams | — | Planned |
+| QW 01 | Pure bounded comparison and primary-only annual mode | QW 00 + confirmed seams | [#81](https://github.com/rakreshet/vacation-window-planner/pull/81) | In review |
 | QW 02 | Authenticated comparison workflow/HTTP | QW 01 | — | Planned |
 | QW 03 | Budget playground and explicit adoption | QW 02 | — | Planned |
 | QW 04 | Snapshot year-card SVG and PNG adapter | QW 03 | — | Planned |
