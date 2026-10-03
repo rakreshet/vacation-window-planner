@@ -1,59 +1,73 @@
-# Flight-search handoff
+# Google Flights handoff
 
-Verified on 2026-10-03 in an isolated worktree from origin/main `aa0e131` (PR #86). Unrelated changes in the original checkout were preserved.
+Verified on 2026-10-03 on `codex/flight-search-handoff` for [PR #87](https://github.com/rakreshet/vacation-window-planner/pull/87). The handoff opens a best-effort prefilled Google Flights search; it does not retrieve flight data or change planning calculations.
 
 ## Interaction
 
-Find flights is available on individual Search windows, the baseline and selected Compare window, and individual breaks in current or saved annual plans. One shared inline panel shows the selected break's inclusive local dates, optional manual departure and destination, and a readable, selectable travel summary.
+**Find flights** is available on individual Search windows, the baseline and selected Compare window, and individual breaks in current or saved annual plans. A compact inline panel shows the selected break's dates and manually entered **From** and **To** fields. Both locations are required; cities and airport codes are accepted, with airport codes suggested when users want specific airports.
 
-Copy travel details writes the exact ISO date strings without timezone conversion. A missing or denied clipboard leaves the summary visible, focused and selected for manual copying. Opening the panel focuses its heading; Close flight panel and Escape return focus to its opener.
+The panel has one **Search Google Flights (new tab)** action, enabled only when both trimmed locations are nonempty. The large travel-details textarea, “Vacation break” text, copy action, and bottom close button are removed. An accessible × button sits at the top-right of the panel with the name **Close flight panel**. Opening focuses the heading; × and Escape return focus to the opener.
 
-Open Google Flights is an ordinary link to `https://www.google.com/travel/flights`, with `target="_blank"` and `rel="noopener noreferrer"`. The panel explains that users enter the copied details there and the search is not automatically filled in. No flight provider, iframe, scraping, proxy, API, subscription or Google URL parameters are used.
+Stale or pending current results disable Find flights with a visible explanation. Changing the selected plan, break, calculation, or workspace invalidates an open panel. Historical annual plans retain their visible saved name, calculation time, and timezone, and the handoff works offline. No handoff action writes saved snapshots, calls a provider, or changes leave calculations, budgets, reserves, or locks.
 
-Stale or pending current results disable Find flights with a visible explanation. Changing the selected plan, break, calculation or workspace invalidates an open panel. Historical annual plans retain their saved name, calculation time and timezone, and open without a backend request. The handoff does not write saved snapshots or alter leave calculations, budgets, reserves or locks.
+## URL and reliability
+
+The client constructs an ordinary link to `https://www.google.com/travel/flights` using `URL` and `URLSearchParams`:
+
+```text
+q=Flights from {trimmed From} to {trimmed To} on {start_date} returning {end_date}
+hl=en
+```
+
+The link uses `target="_blank"` and `rel="noopener noreferrer"`. User-entered punctuation and Unicode are encoded as query data, rather than extra parameters or a fragment. Local ISO date strings are passed unchanged, including the inclusive end date as the return flight's departure date. The route is never inferred from the holiday calendar country. Passenger count and cabin remain Google Flights' reviewable defaults.
+
+This `q` format is undocumented. The author-maintained [flight-search source](https://github.com/skillhq/flight-search/blob/main/SKILL.md) provides the candidate template; actual Google Flights UI verification establishes that the tested route and dates work. Google's [developer overview](https://developers.google.com/travel/flights) describes airline/OTA partner integration and outbound booking links; no public inbound prefill contract was identified in the investigation.
+
+Google may change or reinterpret the query, especially for ambiguous city names. The planner cannot inspect the separate Google page to guarantee that every field was applied. The panel therefore tells users to check the airports and dates and, if needed, enter them there. No guarantee of price, availability, or bookability is made. A return departure on the break's final date may arrive home later, so users must choose flights that fit their actual commitments. URL construction is kept together in the handoff component for later repair or disabling.
+
+No scraping, encoded `tfs` dependency, flight-data API, subscription, LLM, or booking integration is introduced.
 
 ## Automated verification
 
-Each new behavior was observed failing through a rendered user journey before its implementation. The approved boundaries were rendered UI, browser/clipboard behavior, and API-request observation. Tests do not inspect private helpers.
-
-The 22 flight journeys cover exact selected dates (including alternate, leap-day and cross-month dates), empty/manual locations, the plain external link, stale and pending state, navigation and selection invalidation, saved historical offline behavior, unchanged saved snapshots, clipboard failures and late completion, heading/opener focus, and zero additional API requests.
+The **25 rendered flight journeys** cover compact content and icon closing, required/whitespace-only locations, trimmed TLV/LAX prefill, encoded punctuation and Unicode, new-tab attributes, route edits, inclusive dates, alternate/leap/cross-month/cross-year windows, stale and pending state, navigation and selection invalidation, saved historical offline behavior, unchanged snapshots, heading/opener focus, and no extra API requests.
 
 | Check | Result |
 | --- | --- |
-| Frontend tests, host and locked Docker dependencies | 220 passed in 32 files |
-| Frontend lint, formatting, TypeScript and production build | Passed on host and in Docker |
-| Backend regression in a separate test Compose project | 286 passed |
-| Backend Ruff format/lint and mypy | Passed; 102 formatted files and 44 typed modules |
-| Git whitespace check | Passed |
+| Frontend regression, host and locked Docker dependencies | **223 passed in 32 files** |
+| Frontend lint and formatting | Passed on host and in Docker |
+| TypeScript and production build | Passed on host and in Docker |
+| Backend | Unchanged in this revision; no new backend verification claimed |
 
-The backend suite reported one existing Pydantic AI event-loop deprecation warning. Clipboard denial and delayed completion were exercised at the automated browser boundary; the live browser verified successful copying.
+## Real-browser acceptance
 
-## Live Docker acceptance
-
-The dedicated Compose project is `vacation-flights-preview`, with its own database and `.env.example` configuration. The frontend is [http://localhost:56173](http://localhost:56173); API health is [http://localhost:59080/health](http://localhost:59080/health). Structured planning ran without interpretation-provider credentials.
+The existing Docker preview is `vacation-flights-preview`: [frontend](http://localhost:56173) and [API health](http://localhost:59080/health). Only its frontend was rebuilt. Verification used the real Codex in-app browser, signed out of Google, with English requested through `hl=en`. Native Chrome and mobile behavior are not claimed.
 
 | Journey | Observed result |
 | --- | --- |
-| England & Wales, Saturday/Sunday weekends, May 2027, one 3–14 day break, reserve 0, initial budget 4 | Initial plan May 1–9, 9 days away using 4 leave days |
-| Compare leave budgets, then Use this budget for 5 | Draft became 5; old flight panel closed; Find flights displayed the recalculation explanation |
-| Explicit Recalculate plans | Selected Most days away plan became May 1–10, 10 days away using 5 leave days, 0 remaining |
-| Find flights and Copy travel details | Panel and actual browser clipboard contained 2027-05-01 and 2027-05-10; departure and destination initially empty; manual London Heathrow (LHR) / Lisbon copied correctly |
-| Open Google Flights | Separate tab opened at the exact plain URL; the original planner tab and selected May plan were retained |
-| Handoff request count | Planning API POST count stayed at six across opening, copying, closing and following the link |
-| Keyboard | Heading received opening focus; Tab reached departure; Close and Escape restored Find flights focus |
-| Saved annual plan with API stopped, fresh tab/reload | Historical May 1–10 plan opened and copied offline, retaining name, calculation time and timezone; API was then restored healthy |
-| Desktop layout | Inspected at 1440px and 1024px; complete controls fit and no horizontal overflow |
+| Compare May 1–10, 2027 with balance 10 and the default Israel calendar | Exact baseline remained May 1–10; 10 total days off, 7 leave days used, 3 remaining |
+| Open Find flights | Compact dates, From/To fields, top-right ×, disabled Search; no textarea or copy action |
+| Enter TLV and LAX | Search became an ordinary encoded new-tab link using exact ISO dates |
+| Click the app-generated Search Google Flights link | A separate Google Flights tab opened; the original planner tab retained the dates and route panel |
+| Google Flights airports | Visible **Tel Aviv-Yafo TLV** and **Los Angeles LAX** fields |
+| Google Flights dates | Visible **Sat, May 1** and **Mon, May 10**; calendar selected **Saturday, May 1, 2027, departure date** and **Monday, May 10, 2027, return date**; Done confirmation explicitly named both full 2027 dates |
+| Keyboard and icon close | Escape from To and the × button both closed the panel and restored Find flights focus |
+| Desktop layout | Complete compact controls inspected at **1440px** and **1024px**; document width equaled viewport width, without horizontal overflow |
 
-![May handoff at 1440px](flight-evidence/current-1440.jpg)
+![Compact handoff at 1440px](flight-evidence/current-1440.jpg)
 
-![May handoff at 1024px](flight-evidence/current-1024.jpg)
+![Compact handoff at 1024px](flight-evidence/current-1024.jpg)
+
+![App-generated Google Flights search with exact airports](flight-evidence/google-prefill-results.jpg)
+
+![Selected May 1 and May 10 in the May 2027 calendar](flight-evidence/google-prefill-dates.jpg)
 
 ## Short manual scenario
 
-1. Open the preview and choose Plan my year. For a fresh run, use England & Wales, Saturday/Sunday weekends, year 2027, reserve 0, only May starts, and one break with minimum 3 and maximum 14 days away.
-2. Generate with budget 4, choose Compare leave budgets, then Use this budget on the budget-5 scenario. Confirm Find flights is disabled until you explicitly select Recalculate plans.
-3. Select Most days away. Confirm May 1–10, 10 days away and 5 leave days. Open Find flights; the summary must contain start 2027-05-01 and end 2027-05-10.
-4. Optionally enter departure/destination, copy the details, and select Open Google Flights. Confirm a separate tab opens and the plan remains in the original tab. Enter the copied details on Google Flights yourself.
-5. Return to the planner. Press Escape inside the panel and confirm focus returns to Find flights. Save the plan, reopen it under Saved options → Annual plans, and confirm the historical context.
+1. Open the preview and choose **Compare my dates**. Enter May 1, 2027 through May 10, 2027 and a vacation balance of 10, then select **Compare dates**.
+2. Open **Find flights** on **Your dates**. Confirm the compact May 1–10, 2027 summary and disabled search before both locations are entered.
+3. Enter **TLV** in From and **LAX** in To. Select **Search Google Flights (new tab)**.
+4. Confirm Google Flights shows TLV and LAX, departure May 1 and return May 10. Open its date calendar to confirm **2027**. Confirm the planner remains in its original tab.
+5. Return to the planner. Close with ×, reopen, then press Escape from a location field. Both closes restore Find flights focus.
+6. For an existing current or saved annual plan, choose its individual break's Find flights action. Historical context remains visible for saved plans; edits to current calculations require explicit recalculation before handoff.
 
-The retained preview is already at step 3 with the accepted budget-5 May plan. No merge or deployment is part of this handoff.
+The preview and verified Google Flights tab are retained for review. No merge or deployment is included.

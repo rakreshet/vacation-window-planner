@@ -1474,24 +1474,51 @@ summary {
 }
 .flight-search-panel {
   margin-top: 12px;
+  padding: 18px;
+  background: var(--canvas);
+  border: 1px solid var(--line);
+  border-radius: 10px;
 }
-.flight-search-panel h3 {
-  margin-top: 0;
+.flight-search-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+.flight-search-header h3 {
+  margin: 0;
+}
+.flight-search-close {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  width: 44px;
+  height: 44px;
+  padding: 10px;
+  background: transparent;
+  border-color: transparent;
+}
+.flight-search-close svg {
+  width: 20px;
+  height: 20px;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.7;
+  stroke-linecap: round;
+}
+.flight-search-dates {
+  margin: 8px 0 16px;
+  font-weight: 600;
 }
 .flight-search-panel .field-grid {
-  margin: 18px 0;
+  margin: 16px 0 8px;
 }
-.flight-search-panel textarea {
-  min-height: 180px;
-}
-.flight-search-controls {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  gap: 8px;
-}
-.flight-search-controls a {
+.flight-search-link {
   text-decoration: none;
+}
+.flight-search-hint {
+  margin: 12px 0 0;
 }
 .flight-search-action .field-hint {
   font-size: 13px;

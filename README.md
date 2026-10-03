@@ -100,6 +100,6 @@ The [QW PR stack](docs/progress.md#budget-playground-and-shareable-year-card) ad
 
 ## Find flights for a break
 
-**Find flights** opens a travel-details panel for an individual Search or Compare result, or a break in a current or saved annual plan. Departure and destination are optional manual entries. Copy the inclusive dates, then open Google Flights in a separate tab and enter the details there. The link opens the regular Google Flights page without prefilling a search. Prices, availability and booking remain on Google Flights.
+**Find flights** opens a compact panel for an individual Search or Compare result, or a break in a current or saved annual plan. Enter both locations, then select **Search Google Flights** to open a new tab with the route and selected dates prefilled. The handoff uses an undocumented, best-effort Google URL: check the airports and dates there, and enter them manually if needed. Prices, availability and booking remain on Google Flights. Close the panel with its top-right × or Escape.
 
 Current results must be up to date; edit the draft or adopt a budget, then explicitly search or recalculate before finding flights. Saved annual plans retain their historical context and work offline. See the [manual scenario and verification record](docs/flight-search-handoff.md).

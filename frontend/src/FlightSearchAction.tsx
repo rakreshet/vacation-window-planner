@@ -56,50 +56,37 @@ export default function FlightSearchAction({
   )
 }
 
+function googleFlightsUrl(dates: DateRange, departure: string, destination: string): string | null {
+  const from = departure.trim()
+  const to = destination.trim()
+  if (!from || !to) return null
+  // Google does not document this query format. Users verify the resulting fields there.
+  // Pass local ISO dates unchanged: the inclusive break end is the return departure date.
+  const url = new URL('https://www.google.com/travel/flights')
+  url.searchParams.set(
+    'q',
+    `Flights from ${from} to ${to} on ${dates.start_date} returning ${dates.end_date}`,
+  )
+  url.searchParams.set('hl', 'en')
+  return url.href
+}
+
 function CurrentFlightSearchAction({ dates, selection, historicalContext }: FlightSearchProps) {
   const [departure, setDeparture] = useState('')
   const [destination, setDestination] = useState('')
-  const [message, setMessage] = useState('')
-  const copyRevision = useRef(0)
-  const summary = useRef<HTMLTextAreaElement>(null)
   const opener = useRef<HTMLButtonElement>(null)
   const heading = useRef<HTMLHeadingElement>(null)
   const panelId = useId()
+  const routeHintId = useId()
+  const searchHintId = useId()
   const open = selection.selected === panelId
+  const href = googleFlightsUrl(dates, departure, destination)
   useEffect(() => {
     if (open) heading.current?.focus()
   }, [open])
   function close() {
-    clearCopy()
     selection.select(null)
     opener.current?.focus()
-  }
-  function clearCopy() {
-    copyRevision.current += 1
-    setMessage('')
-  }
-  const text = [
-    'Vacation break',
-    `Start date: ${dates.start_date}`,
-    `End date: ${dates.end_date}`,
-    'Dates include both start and end days.',
-    `Departure: ${departure.trim() || 'Not entered'}`,
-    `Destination: ${destination.trim() || 'Not entered'}`,
-    ...(historicalContext ? [historicalContext] : []),
-  ].join('\n')
-  async function copy() {
-    const revision = ++copyRevision.current
-    const field = summary.current
-    try {
-      await navigator.clipboard.writeText(text)
-      if (revision !== copyRevision.current || summary.current !== field) return
-      setMessage('Travel details copied')
-    } catch {
-      if (revision !== copyRevision.current || summary.current !== field) return
-      setMessage('Clipboard unavailable. Select the travel details and copy them manually.')
-      summary.current?.focus()
-      summary.current?.select()
-    }
   }
   return (
     <div className="flight-search-action">
@@ -109,17 +96,14 @@ function CurrentFlightSearchAction({ dates, selection, historicalContext }: Flig
         className="button button--secondary"
         aria-expanded={open}
         aria-controls={panelId}
-        onClick={() => {
-          clearCopy()
-          selection.select(panelId)
-        }}
+        onClick={() => selection.select(panelId)}
       >
         Find flights
       </button>
       {open && (
         <section
           id={panelId}
-          className="copy-preview flight-search-panel"
+          className="flight-search-panel"
           aria-label="Find flights for this break"
           onKeyDown={(event) => {
             if (event.key === 'Escape') {
@@ -128,58 +112,71 @@ function CurrentFlightSearchAction({ dates, selection, historicalContext }: Flig
             }
           }}
         >
-          <h3 ref={heading} tabIndex={-1}>
-            Find flights for this break
-          </h3>
-          <p>{formatSavedWindow(dates)} · inclusive local dates</p>
+          <div className="flight-search-header">
+            <h3 ref={heading} tabIndex={-1}>
+              Find flights
+            </h3>
+            <button
+              type="button"
+              className="flight-search-close"
+              aria-label="Close flight panel"
+              onClick={close}
+            >
+              <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+                <path d="m6 6 12 12M6 18 18 6" />
+              </svg>
+            </button>
+          </div>
+          <p className="flight-search-dates">{formatSavedWindow(dates)}</p>
           {historicalContext && <p className="form-notice">{historicalContext}</p>}
           <div className="field-grid">
             <label className="field">
-              Departure city or airport (optional)
+              From
               <input
                 value={departure}
-                onChange={(event) => {
-                  clearCopy()
-                  setDeparture(event.target.value)
-                }}
+                placeholder="e.g. TLV"
+                aria-required="true"
+                aria-describedby={routeHintId}
+                onChange={(event) => setDeparture(event.target.value)}
               />
             </label>
             <label className="field">
-              Destination (optional)
+              To
               <input
                 value={destination}
-                onChange={(event) => {
-                  clearCopy()
-                  setDestination(event.target.value)
-                }}
+                placeholder="e.g. LAX"
+                aria-required="true"
+                aria-describedby={routeHintId}
+                onChange={(event) => setDestination(event.target.value)}
               />
             </label>
           </div>
-          <label className="field">
-            Travel details
-            <textarea ref={summary} value={text} readOnly rows={7} />
-          </label>
-          <p>
-            Enter the copied details on Google Flights. The search is not automatically filled in.
-            Flight prices, availability and booking are on Google Flights.
+          <p id={routeHintId} className="field-hint">
+            Enter both cities or airport codes. Use airport codes for specific airports.
           </p>
-          <div className="flight-search-controls">
-            <button className="button button--secondary" type="button" onClick={() => void copy()}>
-              Copy travel details
-            </button>
+          {href ? (
             <a
-              className="button button--primary"
-              href="https://www.google.com/travel/flights"
+              className="button button--primary flight-search-link"
+              href={href}
               target="_blank"
               rel="noopener noreferrer"
+              aria-describedby={searchHintId}
             >
-              Open Google Flights <span>(new tab)</span>
+              Search Google Flights <span>(new tab)</span>
             </a>
-            <button className="button button--secondary" type="button" onClick={close}>
-              Close flight panel
+          ) : (
+            <button
+              className="button button--primary"
+              type="button"
+              disabled
+              aria-describedby={routeHintId}
+            >
+              Search Google Flights <span>(new tab)</span>
             </button>
-          </div>
-          <p role="status">{message}</p>
+          )}
+          <p id={searchHintId} className="field-hint flight-search-hint">
+            Check the airports and dates on Google Flights. If needed, enter them there.
+          </p>
         </section>
       )}
     </div>
