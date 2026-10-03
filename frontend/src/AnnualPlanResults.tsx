@@ -1,4 +1,5 @@
 import YearCardActions from './YearCardActions'
+import FlightSearchAction, { useFlightSearchSelection } from './FlightSearchAction'
 import { annualConflictMessage } from './annualConflictMessage'
 import { FieldLink } from './FieldValidation'
 import AnnualLeaveRequestActions from './AnnualLeaveRequestActions'
@@ -20,7 +21,11 @@ export default function AnnualPlanResults({
   onUseReduced,
   onSave,
   cardTitle,
+  historicalContext,
+  visible = true,
 }: {
+  visible?: boolean
+  historicalContext?: string
   cardTitle?: string
   result: AnnualResult
   stale?: boolean
@@ -34,6 +39,9 @@ export default function AnnualPlanResults({
 }) {
   const headingId = useId()
   const plan = result.plans.find((item) => item.plan_id === selectedId) ?? result.plans[0]
+  const flightSelection = useFlightSearchSelection(
+    `${plan?.plan_id}:${result.calculation_context.calculated_at}:${stale}:${busy}:${historicalContext}:${visible}`,
+  )
   return (
     <section aria-labelledby={headingId} className="annual-results">
       <h2 id={headingId} tabIndex={-1}>
@@ -160,6 +168,19 @@ export default function AnnualPlanResults({
                   {item.window.total_days} days away · {item.window.vacation_days_used} vacation
                   days · {item.balance_after_break} remain
                 </p>
+                <FlightSearchAction
+                  key={`${plan.plan_id}:${result.calculation_context.calculated_at}:${item.slot_id}`}
+                  dates={item.window}
+                  selection={flightSelection}
+                  historicalContext={historicalContext}
+                  disabledReason={
+                    busy
+                      ? 'Wait for the current calculation before finding flights.'
+                      : stale
+                        ? 'Recalculate plans to find flights for these dates.'
+                        : undefined
+                  }
+                />
                 {!item.locked && onLock && (
                   <button
                     type="button"

@@ -268,6 +268,7 @@ export default function App() {
             {results && (
               <RecommendationResults
                 key={results.search_id}
+                visible={mode === 'search'}
                 result={results}
                 stale={searchStale}
                 onCompare={(window) =>
@@ -299,6 +300,7 @@ export default function App() {
             <div hidden={mode !== 'compare' || Boolean(savedCheck)}>
               <ComparisonWorkspace
                 key={comparisonKey}
+                visible={mode === 'compare' && !savedCheck}
                 draft={comparisonDraft}
                 onDraftChange={setComparisonDraft}
                 origin={origin}
@@ -337,6 +339,7 @@ export default function App() {
               </div>
               <div hidden={savedTab !== 'annual'}>
                 <SavedAnnualPlansView
+                  visible={mode === 'saved' && savedTab === 'annual'}
                   onPlan={() => {
                     setAnnualPlanning((current) => current ?? structuredClone(planning))
                     setMode('annual')

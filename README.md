@@ -19,6 +19,7 @@ Search and Compare support Israel, U.S. federal holidays, and England & Wales ba
 - [Annual planning TDD seams and test strategy](docs/annual-plans-testing.md)
 - [Budget playground and year-card stacked plan](docs/quick-wins-plan.md)
 - [Budget playground and year-card acceptance](docs/quick-wins-acceptance.md)
+- [Flight-search handoff and acceptance](docs/flight-search-handoff.md)
 - [Research on opportunities before flights](docs/non-flight-opportunities-research.md)
 - [Implementation task plan](docs/implementation-plan.md)
 - [Delivery progress and PR map](docs/progress.md)
@@ -96,3 +97,9 @@ See the [annual plan](docs/annual-plans-plan.md), [acceptance results](docs/annu
 The [QW PR stack](docs/progress.md#budget-playground-and-shareable-year-card) adds **Compare leave budgets** after annual generation: compare Most days away with one fewer or one more available leave day while preserving your calendar, breaks, locks and reserve. **Use this budget** edits the draft and requires explicit recalculation. Comparisons are hypothetical and do not create annual database rows.
 
 **Preview year card** creates a 12-month image from the selected current or saved annual snapshot, with exact dates, locked status and reduced-plan omissions. Leave figures are private by default; Include leave details opts them in independently of copying. Saved cards work offline. PNG generation uses native browser APIs without external images, fonts, uploads or provider credentials. Native file-delivery verification is pending at the user's request; see the [acceptance record](docs/quick-wins-acceptance.md).
+
+## Find flights for a break
+
+**Find flights** opens a travel-details panel for an individual Search or Compare result, or a break in a current or saved annual plan. Departure and destination are optional manual entries. Copy the inclusive dates, then open Google Flights in a separate tab and enter the details there. The link opens the regular Google Flights page without prefilling a search. Prices, availability and booking remain on Google Flights.
+
+Current results must be up to date; edit the draft or adopt a budget, then explicitly search or recalculate before finding flights. Saved annual plans retain their historical context and work offline. See the [manual scenario and verification record](docs/flight-search-handoff.md).

@@ -1,9 +1,11 @@
 import WindowActions from './WindowActions'
+import FlightSearchAction, { useFlightSearchSelection } from './FlightSearchAction'
 import { useState } from 'react'
 
 import type { FeedbackValue, Recommendation, RecommendationResponse } from './api'
 
 type RecommendationResultsProps = {
+  visible?: boolean
   stale?: boolean
   result: RecommendationResponse
   onCompare?: (window: Recommendation['window']) => void
@@ -46,11 +48,15 @@ function warningText(warning: string, remainingBalance: number): string {
 export default function RecommendationResults({
   result,
   stale = false,
+  visible = true,
   onFeedback,
   onCompare,
 }: RecommendationResultsProps) {
   const [feedbackStatus, setFeedbackStatus] = useState<Record<number, string>>({})
   const [feedbackChoice, setFeedbackChoice] = useState<Record<number, FeedbackValue>>({})
+  const flightSelection = useFlightSearchSelection(
+    `${result.search_id}:${result.calculation_context?.calculated_at}:${stale}:${visible}`,
+  )
 
   async function saveFeedback(rank: number, value: FeedbackValue) {
     if (onFeedback === undefined) return
@@ -197,6 +203,13 @@ export default function RecommendationResults({
                         {alternatives.map((window, index) => (
                           <li key={`${window.start_date}-${window.end_date}`}>
                             {dateWindow(window)}
+                            <FlightSearchAction
+                              dates={window}
+                              selection={flightSelection}
+                              disabledReason={
+                                stale ? 'Search again to find flights for these dates.' : undefined
+                              }
+                            />
                             {result.calculation_context &&
                               recommendation.alternative_assessments?.[index] && (
                                 <WindowActions
@@ -273,6 +286,13 @@ export default function RecommendationResults({
                       metadata={{ explanation: recommendation.explanation }}
                     />
                   )}
+                  <FlightSearchAction
+                    dates={recommendation.window}
+                    selection={flightSelection}
+                    disabledReason={
+                      stale ? 'Search again to find flights for these dates.' : undefined
+                    }
+                  />
                   {onFeedback && (
                     <div
                       className="feedback-row"
