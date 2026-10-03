@@ -133,7 +133,7 @@ The user authorized these two features on October 3, 2026, with TDD and dependen
 | QW 03 | Budget playground and explicit adoption | QW 02 | [#83](https://github.com/rakreshet/vacation-window-planner/pull/83) | In review |
 | QW 04 | Snapshot year-card SVG and PNG adapter | QW 03 | [#84](https://github.com/rakreshet/vacation-window-planner/pull/84) | In review |
 | QW 05 | Current/saved year-card preview and download | QW 04 | [#85](https://github.com/rakreshet/vacation-window-planner/pull/85) | In review; native download verification deferred |
-| QW 06 | Acceptance, performance and delivery evidence | QW 05 | — | Checks passed; PR opening |
+| QW 06 | Acceptance, performance and delivery evidence | QW 05 | [#86](https://github.com/rakreshet/vacation-window-planner/pull/86) | In review; native download verification deferred |
 
 ## Phase 1
 
