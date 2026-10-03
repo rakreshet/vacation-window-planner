@@ -1,6 +1,7 @@
-import { useEffect, useId, useRef, useState } from 'react'
+import { useEffect, useId, useRef, useState, type ReactNode } from 'react'
 import type { DateRange } from './api'
 import { formatSavedWindow } from './displayDates'
+import ActionButton, { PanelCloseButton } from './ActionButton'
 
 type FlightSelection = { selected: string | null; select: (id: string | null) => void }
 type FlightSearchProps = {
@@ -8,6 +9,7 @@ type FlightSearchProps = {
   selection: FlightSelection
   disabledReason?: string
   historicalContext?: string
+  adjacentAction?: ReactNode
 }
 
 export function useFlightSearchSelection(identity: string): FlightSelection {
@@ -28,19 +30,24 @@ export default function FlightSearchAction({
   selection,
   disabledReason,
   historicalContext,
+  adjacentAction,
 }: FlightSearchProps) {
   const reasonId = useId()
   if (disabledReason)
     return (
       <div className="flight-search-action">
-        <button
-          type="button"
-          className="button button--secondary"
-          disabled
-          aria-describedby={reasonId}
-        >
-          Find flights
-        </button>
+        <div className="break-action-row" role="group" aria-label="Break actions">
+          <ActionButton
+            label="Find flights"
+            icon="plane"
+            className="button button--secondary"
+            disabled
+            aria-describedby={reasonId}
+          >
+            Find flights
+          </ActionButton>
+          {adjacentAction}
+        </div>
         <p id={reasonId} className="field-hint">
           {disabledReason}
         </p>
@@ -52,6 +59,7 @@ export default function FlightSearchAction({
       dates={dates}
       selection={selection}
       historicalContext={historicalContext}
+      adjacentAction={adjacentAction}
     />
   )
 }
@@ -71,7 +79,12 @@ function googleFlightsUrl(dates: DateRange, departure: string, destination: stri
   return url.href
 }
 
-function CurrentFlightSearchAction({ dates, selection, historicalContext }: FlightSearchProps) {
+function CurrentFlightSearchAction({
+  dates,
+  selection,
+  historicalContext,
+  adjacentAction,
+}: FlightSearchProps) {
   const [departure, setDeparture] = useState('')
   const [destination, setDestination] = useState('')
   const opener = useRef<HTMLButtonElement>(null)
@@ -90,16 +103,20 @@ function CurrentFlightSearchAction({ dates, selection, historicalContext }: Flig
   }
   return (
     <div className="flight-search-action">
-      <button
-        type="button"
-        ref={opener}
-        className="button button--secondary"
-        aria-expanded={open}
-        aria-controls={panelId}
-        onClick={() => selection.select(panelId)}
-      >
-        Find flights
-      </button>
+      <div className="break-action-row" role="group" aria-label="Break actions">
+        <ActionButton
+          label="Find flights"
+          icon="plane"
+          ref={opener}
+          className="button button--secondary"
+          aria-expanded={open}
+          aria-controls={panelId}
+          onClick={() => selection.select(panelId)}
+        >
+          Find flights
+        </ActionButton>
+        {adjacentAction}
+      </div>
       {open && (
         <section
           id={panelId}
@@ -112,20 +129,11 @@ function CurrentFlightSearchAction({ dates, selection, historicalContext }: Flig
             }
           }}
         >
-          <div className="flight-search-header">
+          <div className="panel-header">
             <h3 ref={heading} tabIndex={-1}>
               Find flights
             </h3>
-            <button
-              type="button"
-              className="flight-search-close"
-              aria-label="Close flight panel"
-              onClick={close}
-            >
-              <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
-                <path d="m6 6 12 12M6 18 18 6" />
-              </svg>
-            </button>
+            <PanelCloseButton label="Close flight panel" onClick={close} />
           </div>
           <p className="flight-search-dates">{formatSavedWindow(dates)}</p>
           {historicalContext && <p className="form-notice">{historicalContext}</p>}

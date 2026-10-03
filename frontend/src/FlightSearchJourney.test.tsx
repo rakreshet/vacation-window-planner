@@ -7,6 +7,7 @@ import ComparisonResults from './ComparisonResults'
 import App from './App'
 import { context } from './snapshotFixtures'
 import AnnualPlanWorkspace from './AnnualPlanWorkspace'
+import AnnualPlanResults from './AnnualPlanResults'
 import { annualFixtureWithAlternatives } from './annualFixtures'
 import { emptyPlanning } from './planning'
 import SavedAnnualPlansView from './SavedAnnualPlansView'
@@ -47,6 +48,19 @@ const maySearch: RecommendationResponse = {
     },
   ],
 }
+
+test('a break groups flight and lock actions while preserving locking without another request', () => {
+  vi.stubGlobal('fetch', vi.fn().mockRejectedValue(new Error('offline')))
+  const lock = vi.fn()
+  const result = annualRunSchema.parse(annualFixtureWithAlternatives())
+  render(<AnnualPlanResults result={result} onLock={lock} />)
+  const groups = screen.getAllByRole('group', { name: 'Break actions' })
+  const first = within(groups[0])
+  expect(first.getByRole('button', { name: 'Find flights' })).toBeEnabled()
+  fireEvent.click(first.getByRole('button', { name: 'Lock Break 2 dates' }))
+  expect(lock).toHaveBeenCalledWith(result.plans[0].breaks[0])
+  expect(fetch).not.toHaveBeenCalled()
+})
 
 function flightSearchUrl(departure = 'TLV', destination = 'LAX'): URL {
   const panel = within(screen.getByRole('region', { name: 'Find flights for this break' }))

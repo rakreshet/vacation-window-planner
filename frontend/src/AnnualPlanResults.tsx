@@ -1,5 +1,6 @@
 import YearCardActions from './YearCardActions'
 import FlightSearchAction, { useFlightSearchSelection } from './FlightSearchAction'
+import ActionButton from './ActionButton'
 import { annualConflictMessage } from './annualConflictMessage'
 import { FieldLink } from './FieldValidation'
 import AnnualLeaveRequestActions from './AnnualLeaveRequestActions'
@@ -180,17 +181,21 @@ export default function AnnualPlanResults({
                         ? 'Recalculate plans to find flights for these dates.'
                         : undefined
                   }
+                  adjacentAction={
+                    !item.locked && onLock ? (
+                      <ActionButton
+                        label={`Lock Break ${result.input.slots.findIndex((slot) => slot.slot_id === item.slot_id) + 1} dates`}
+                        tooltip="Keep these dates when recalculating"
+                        icon="lock"
+                        className="button--secondary break-lock-action"
+                        disabled={stale || busy}
+                        onClick={() => onLock(item)}
+                      >
+                        Lock dates
+                      </ActionButton>
+                    ) : undefined
+                  }
                 />
-                {!item.locked && onLock && (
-                  <button
-                    type="button"
-                    disabled={stale || busy}
-                    onClick={() => onLock(item)}
-                    aria-label={`Lock Break ${result.input.slots.findIndex((slot) => slot.slot_id === item.slot_id) + 1} dates`}
-                  >
-                    Lock dates
-                  </button>
-                )}
                 <details
                   id={annualDetailsId(headingId, plan, item.slot_id)}
                   tabIndex={-1}

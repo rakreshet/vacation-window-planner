@@ -1469,8 +1469,85 @@ summary {
   margin: 12px 0;
   min-height: 130px;
 }
+.panel-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+  width: 100%;
+}
+.panel-header h3 {
+  margin: 8px 0 0;
+}
+.action-control {
+  position: relative;
+  display: inline-flex;
+  flex-shrink: 0;
+}
+.action-button {
+  gap: 8px;
+  margin: 0;
+}
+.action-button .action-icon {
+  width: 18px;
+  height: 18px;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.7;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+.action-button--icon {
+  width: 44px;
+  height: 44px;
+  min-width: 44px;
+  min-height: 44px;
+  padding: 10px;
+}
+.panel-close {
+  background: transparent;
+  border-color: transparent;
+  border-radius: 50%;
+  color: var(--ink-soft);
+}
+.panel-close:hover:not(:disabled) {
+  background: var(--surface-tint);
+  color: var(--ink);
+}
+.action-tooltip {
+  position: absolute;
+  z-index: 10;
+  top: 100%;
+  right: 0;
+  width: max-content;
+  max-width: min(240px, 70vw);
+  padding: 8px 10px;
+  border-radius: 8px;
+  background: var(--ink);
+  color: var(--paper);
+  box-shadow: 0 4px 12px var(--pressed-shadow);
+  font-size: 12px;
+  font-weight: 500;
+  line-height: 1.4;
+}
+.break-action-row {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+.break-action-row .action-tooltip {
+  right: auto;
+  left: 0;
+}
+.break-lock-action {
+  background: transparent;
+  border-color: transparent;
+  color: var(--ink-soft);
+}
 .flight-search-action {
   margin-top: 16px;
+  margin-bottom: 16px;
 }
 .flight-search-panel {
   margin-top: 12px;
@@ -1478,34 +1555,6 @@ summary {
   background: var(--canvas);
   border: 1px solid var(--line);
   border-radius: 10px;
-}
-.flight-search-header {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 12px;
-}
-.flight-search-header h3 {
-  margin: 0;
-}
-.flight-search-close {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  flex-shrink: 0;
-  width: 44px;
-  height: 44px;
-  padding: 10px;
-  background: transparent;
-  border-color: transparent;
-}
-.flight-search-close svg {
-  width: 20px;
-  height: 20px;
-  fill: none;
-  stroke: currentColor;
-  stroke-width: 1.7;
-  stroke-linecap: round;
 }
 .flight-search-dates {
   margin: 8px 0 16px;
@@ -2064,8 +2113,8 @@ summary {
   font-size: 26px;
   font-weight: 400;
 }
-.theme-panel-heading button {
-  font-size: 22px;
+.theme-panel-heading > .action-control {
+  margin-left: auto;
 }
 .theme-panel > p,
 .theme-footer small {
@@ -2241,16 +2290,15 @@ summary {
   border-radius: 14px;
   background: var(--surface-tint);
 }
-.year-card-preview > h3,
+.year-card-preview > .panel-header,
 .year-card-preview > .field,
 .year-card-privacy,
-.year-card-controls,
 .year-card-preview > [role],
 .year-card-filename {
   grid-column: 1 / -1;
   margin: 0;
 }
-.year-card-preview > h3 {
+.year-card-preview .panel-header h3 {
   font-family: var(--display);
   font-size: 27px;
   font-weight: 500;
@@ -2267,9 +2315,8 @@ summary {
 .year-card-image {
   display: block;
   width: 100%;
-  max-width: 600px;
-  border: 1px solid var(--line);
-  border-radius: 12px;
+  border-top: 1px solid var(--line);
+  border-radius: 0 0 12px 12px;
   background: var(--paper);
 }
 .year-card-text {
@@ -2286,10 +2333,64 @@ summary {
 .year-card-text span {
   display: block;
 }
-.year-card-controls {
+.year-card-artwork {
+  max-width: 600px;
+  overflow: visible;
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  background: var(--paper);
+  box-shadow: 0 6px 20px var(--pressed-shadow);
+}
+.year-card-image-toolbar {
   display: flex;
-  flex-wrap: wrap;
+  align-items: center;
   gap: 10px;
+  padding: 14px 16px;
+}
+.year-card-file {
+  min-width: 0;
+  flex: 1;
+}
+.year-card-file strong,
+.year-card-file span {
+  display: block;
+}
+.year-card-file strong {
+  font-size: 13px;
+  font-weight: 600;
+}
+.year-card-format {
+  padding: 4px 7px;
+  border-radius: 6px;
+  background: var(--surface-tint);
+  color: var(--brand-ink);
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+}
+.year-card-download {
+  border-radius: 50%;
+  background: var(--accent);
+  border-color: var(--accent);
+  color: var(--paper);
+  box-shadow: 0 3px 8px var(--accent-shadow);
+}
+.year-card-download:hover:not(:disabled) {
+  background: var(--accent-hover);
+  border-color: var(--accent-hover);
+}
+.year-card-download.is-preparing .action-icon {
+  animation: export-progress 900ms linear infinite;
+}
+@keyframes export-progress {
+  to {
+    transform: rotate(360deg);
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .year-card-download.is-preparing .action-icon {
+    animation: none;
+  }
 }
 .year-card-filename {
   color: var(--muted);

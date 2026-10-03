@@ -8,6 +8,12 @@ Verified on 2026-10-03 on `codex/flight-search-handoff` for [PR #87](https://git
 
 The panel has one **Search Google Flights (new tab)** action, enabled only when both trimmed locations are nonempty. The large travel-details textarea, “Vacation break” text, copy action, and bottom close button are removed. An accessible × button sits at the top-right of the panel with the name **Close flight panel**. Opening focuses the heading; × and Escape return focus to the opener.
 
+Annual breaks place **Find flights** and **Lock dates** in one wrapping action row. Both keep their visible labels and use a small plane or lock icon; locking is the quieter secondary action. Preview year card keeps its visible label and gains an image icon. Flight, year-card, individual leave-request, annual leave-request, and Appearance panels share the same corner × control instead of footer Close buttons.
+
+The year-card image has a file toolbar with its filename, PNG badge, and circular download icon. Its tooltip appears on hover or keyboard focus; the button has an accessible name and a 44px target. During export it shows progress and prevents duplicate downloads. Privacy options, title validation, filename, PNG generation, retry/fallback link, and captured planning snapshot retain their existing behavior.
+
+This follows [Adobe Spectrum's action-button guidance](https://spectrum.adobe.com/page/action-button/) on grouping related actions and retaining labels for less familiar actions, and [W3C's hover/focus guidance](https://www.w3.org/WAI/WCAG22/Understanding/content-on-hover-or-focus.html) on persistent, hoverable, dismissible tooltips. Escape dismisses a visible tooltip without moving focus; a subsequent Escape closes its panel and returns focus to the opener. Closing Appearance also dismisses its tooltip so the hidden native disclosure cannot intercept Escape in another preview.
+
 Stale or pending current results disable Find flights with a visible explanation. Changing the selected plan, break, calculation, or workspace invalidates an open panel. Historical annual plans retain their visible saved name, calculation time, and timezone, and the handoff works offline. No handoff action writes saved snapshots, calls a provider, or changes leave calculations, budgets, reserves, or locks.
 
 ## URL and reliability
@@ -29,45 +35,46 @@ No scraping, encoded `tfs` dependency, flight-data API, subscription, LLM, or bo
 
 ## Automated verification
 
-The **25 rendered flight journeys** cover compact content and icon closing, required/whitespace-only locations, trimmed TLV/LAX prefill, encoded punctuation and Unicode, new-tab attributes, route edits, inclusive dates, alternate/leap/cross-month/cross-year windows, stale and pending state, navigation and selection invalidation, saved historical offline behavior, unchanged snapshots, heading/opener focus, and no extra API requests.
+The rendered flight journeys cover compact content and icon closing, required/whitespace-only locations, trimmed TLV/LAX prefill, encoded punctuation and Unicode, new-tab attributes, route edits, inclusive dates, alternate/leap/cross-month/cross-year windows, stale and pending state, navigation and selection invalidation, saved historical offline behavior, unchanged snapshots, heading/opener focus, and no extra API requests. New rendered journeys verify grouped flight/lock actions and unchanged lock selection, corner close controls, keyboard tooltip dismissal, exact PNG export, and Escape/focus restoration across year-card and leave-request previews, including after closing Appearance.
 
-| Check | Result |
-| --- | --- |
-| Frontend regression, host and locked Docker dependencies | **223 passed in 32 files** |
-| Frontend lint and formatting | Passed on host and in Docker |
-| TypeScript and production build | Passed on host and in Docker |
-| Backend | Unchanged in this revision; no new backend verification claimed |
+| Check                           | Result                                                          |
+| ------------------------------- | --------------------------------------------------------------- |
+| Frontend regression             | **232 passed in 32 files** on the host                          |
+| Frontend lint and formatting    | Passed                                                          |
+| TypeScript and production build | Passed                                                          |
+| Backend                         | Unchanged in this revision; no new backend verification claimed |
 
 ## Real-browser acceptance
 
 The existing Docker preview is `vacation-flights-preview`: [frontend](http://localhost:56173) and [API health](http://localhost:59080/health). Only its frontend was rebuilt. Verification used the real Codex in-app browser, signed out of Google, with English requested through `hl=en`. Native Chrome and mobile behavior are not claimed.
 
-| Journey | Observed result |
-| --- | --- |
-| Compare May 1–10, 2027 with balance 10 and the default Israel calendar | Exact baseline remained May 1–10; 10 total days off, 7 leave days used, 3 remaining |
-| Open Find flights | Compact dates, From/To fields, top-right ×, disabled Search; no textarea or copy action |
-| Enter TLV and LAX | Search became an ordinary encoded new-tab link using exact ISO dates |
-| Click the app-generated Search Google Flights link | A separate Google Flights tab opened; the original planner tab retained the dates and route panel |
-| Google Flights airports | Visible **Tel Aviv-Yafo TLV** and **Los Angeles LAX** fields |
-| Google Flights dates | Visible **Sat, May 1** and **Mon, May 10**; calendar selected **Saturday, May 1, 2027, departure date** and **Monday, May 10, 2027, return date**; Done confirmation explicitly named both full 2027 dates |
-| Keyboard and icon close | Escape from To and the × button both closed the panel and restored Find flights focus |
-| Desktop layout | Complete compact controls inspected at **1440px** and **1024px**; document width equaled viewport width, without horizontal overflow |
+| Journey                                                                | Observed result                                                                                                                                                                                            |
+| ---------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Compare May 1–10, 2027 with balance 10 and the default Israel calendar | Exact baseline remained May 1–10; 10 total days off, 7 leave days used, 3 remaining                                                                                                                        |
+| Open Find flights                                                      | Compact dates, From/To fields, top-right ×, disabled Search; no textarea or copy action                                                                                                                    |
+| Enter TLV and LAX                                                      | Search became an ordinary encoded new-tab link using exact ISO dates                                                                                                                                       |
+| Click the app-generated Search Google Flights link                     | A separate Google Flights tab opened; the original planner tab retained the dates and route panel                                                                                                          |
+| Google Flights airports                                                | Visible **Tel Aviv-Yafo TLV** and **Los Angeles LAX** fields                                                                                                                                               |
+| Google Flights dates                                                   | Visible **Sat, May 1** and **Mon, May 10**; calendar selected **Saturday, May 1, 2027, departure date** and **Monday, May 10, 2027, return date**; Done confirmation explicitly named both full 2027 dates |
+| Keyboard and icon close                                                | Escape from To and the × button both closed the panel and restored Find flights focus                                                                                                                      |
+| Desktop layout                                                         | Complete compact controls inspected at **1440px** and **1024px**; document width equaled viewport width, without horizontal overflow                                                                       |
 
-![Compact handoff at 1440px](flight-evidence/current-1440.jpg)
+### Action-control polish acceptance
 
-![Compact handoff at 1024px](flight-evidence/current-1024.jpg)
+The final controls were inspected in the same Docker preview at 1440px and 1024px. Find flights and Lock dates had the same vertical position and 46px height at both widths, and document width equaled viewport width. The flight panel remained full width beneath its action row.
 
-![App-generated Google Flights search with exact airports](flight-evidence/google-prefill-results.jpg)
+The annual May example used England & Wales bank holidays, Saturday/Sunday weekends, May starts, one 3–14 day break, and a budget of 5. Explicit recalculation retained **May 1–10, 2027: 10 days away, 5 leave days**. Editing the budget invalidated an open flight panel, disabled both break actions, and displayed the recalculation explanation; recalculating restored them.
 
-![Selected May 1 and May 10 in the May 2027 calendar](flight-evidence/google-prefill-dates.jpg)
+Browser checks confirmed corner × controls, initial heading/text focus, tooltip focus and Escape dismissal, panel Escape/opener focus, and correct Escape behavior after closing Appearance. Clicking the download icon prepared a loaded **1200 × 1800 PNG** and displayed the download-started status and fallback link. The in-app browser did not expose a native download event, so file delivery to the operating system is not claimed by this check; the external download boundary and exact filename are covered by rendered tests.
 
 ## Short manual scenario
 
-1. Open the preview and choose **Compare my dates**. Enter May 1, 2027 through May 10, 2027 and a vacation balance of 10, then select **Compare dates**.
-2. Open **Find flights** on **Your dates**. Confirm the compact May 1–10, 2027 summary and disabled search before both locations are entered.
-3. Enter **TLV** in From and **LAX** in To. Select **Search Google Flights (new tab)**.
-4. Confirm Google Flights shows TLV and LAX, departure May 1 and return May 10. Open its date calendar to confirm **2027**. Confirm the planner remains in its original tab.
-5. Return to the planner. Close with ×, reopen, then press Escape from a location field. Both closes restore Find flights focus.
-6. For an existing current or saved annual plan, choose its individual break's Find flights action. Historical context remains visible for saved plans; edits to current calculations require explicit recalculation before handoff.
+1. Open the preview and choose **Plan my year**. Set available leave to **5**, calendar to **England & Wales**, year to **2027**, reserve to **0**, and start months to **May only**. Keep one requested break with **3–14 days away** and generate plans. For an existing example, explicitly select **Recalculate plans** after adopting budget 5.
+2. On **Most days away**, confirm **May 1–10**, **10 days away**, and **5 vacation days**. Confirm Find flights and Lock dates sit together in one action row.
+3. Open **Find flights**, enter **TLV** and **LAX**, and select **Search Google Flights (new tab)**. Check the airports and full 2027 dates on Google Flights and confirm the planner remains in its original tab.
+4. Return to the planner. Close with ×, reopen, then press Escape from a location field. Both closes restore Find flights focus. Change the budget: the panel closes and both break actions disable with an explanation. Restore budget 5 and explicitly recalculate.
+5. Open **Preview year card**. Confirm a corner ×, filename/PNG badge, and a circular download icon. Hover or tab to the icon for its tooltip, download, and check `vacation-year-2027.png`. Press Escape to dismiss a visible tooltip, then Escape again to close; otherwise Escape closes directly. Focus returns to Preview year card.
+6. Open **Copy annual leave request** (and an individual leave preview in Find dates). Confirm the corner × replaces the footer Close button and Escape returns focus to the opener. Existing text, privacy choices, and clipboard fallback remain usable.
+7. Reopen a saved annual plan and use its break's Find flights or year-card preview. Historical context remains visible, and opening these actions needs no backend request.
 
 The preview and verified Google Flights tab are retained for review. No merge or deployment is included.

@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from 'react'
 import { themeConfig } from './theme/config'
 import { applyTheme, readThemeHue, rotateColor, saveTheme } from './theme/theme'
+import { PanelCloseButton } from './ActionButton'
 
 export default function ThemeSettings() {
   const [hue, setHue] = useState(readThemeHue)
@@ -41,9 +42,7 @@ export default function ThemeSettings() {
             <p className="eyebrow">MAKE IT YOURS</p>
             <h2 id="theme-heading">A different shade of escape.</h2>
           </div>
-          <button type="button" onClick={close} aria-label="Close appearance settings">
-            ×
-          </button>
+          <PanelCloseButton label="Close appearance settings" onClick={close} />
         </div>
         <p>The same calm workspace, in your colors.</p>
         <div className="theme-presets" role="group" aria-label="Color palettes">
