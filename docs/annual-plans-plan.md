@@ -1,10 +1,12 @@
 # Annual planning: several vacations, one leave budget
 
+**Scope update — October 2, 2026:** this plan reflects the [current scope decision](open-decisions.md#calendar-export-canceled). Annual year views, saved plans and leave-request copying remain supported.
+
 **Status:** AP 00 was merged in PR #61 into the prerequisite stack on September 26, 2026. The user subsequently authorized AP 01–10, explicitly requiring this plan, TDD, meaningful typed functions and variables, and no code comments. Implementation proceeds through dependent PRs; do not auto-merge. The original design and review rationale below are retained.
 
 **Phase name:** Annual planning, task prefix **AP**. It follows the Phase 0.75 foundation and precedes travel enrichment. Phase 1 keeps its existing flight scope and identifiers.
 
-**Verified baseline, September 26, 2026:** `origin/main` is `20df229`; planning PR [#50](https://github.com/rakreshet/vacation-window-planner/pull/50) is merged. Implementation PRs #51–#60 remain open. This planning branch starts at the verified #60 tip, `aaabf4e`, and targets `codex/phase075-10-acceptance`, so its review diff contains only these documents. Recheck ancestry and retarget after that stack lands; never merge it automatically. The [Phase 0.75 acceptance record](phase-0.75-acceptance.md) retains its pending browser-download and real calendar-client checks.
+**Verified baseline, September 26, 2026:** `origin/main` is `20df229`; planning PR [#50](https://github.com/rakreshet/vacation-window-planner/pull/50) is merged. Implementation PRs #51–#60 remain open. This planning branch starts at the verified #60 tip, `aaabf4e`, and targets `codex/phase075-10-acceptance`, so its review diff contains only these documents. Recheck ancestry and retarget after that stack lands; never merge it automatically. The [Phase 0.75 acceptance record](phase-0.75-acceptance.md) retains its measured planning, saving and copying evidence.
 
 **Companions:** [UX walkthrough](annual-plans-ux.md), [test strategy](annual-plans-testing.md), [progress and PR map](progress.md#annual-planning--several-vacations-one-budget), [domain glossary](../CONTEXT.md). This document owns the proposed annual contracts. The older phase documents retain their own release scope.
 
@@ -199,11 +201,11 @@ Proposed modules are an `AnnualPlanWorkspace`, typed annual client/contracts, an
 | Draft | Editable mix, common calendar, locks, reserve and gap; no requests on typing, Interpret Apply, navigation, or lock toggles |
 | Submitting | Capture draft revision/context; disable duplicate submission and live-result actions; cancel/ignore obsolete responses |
 | Current result | Select one of up to three complete plan cards; show budget totals, year view, list and per-break charged dates |
-| Dirty result | Keep “Last calculation” visible; disable live Save/Copy/Download and conflict-sensitive actions until Generate/Recalculate |
+| Dirty result | Keep “Last calculation” visible; disable live Save/Copy and conflict-sensitive actions until Generate/Recalculate |
 | Lock from result | Copy only that plan's selected exact interval into its slot, retain all existing locks, mark dirty, announce “Dates locked; recalculate to update the other breaks” |
 | Recalculated | Show date/cost differences from the previously selected plan, unchanged lock dates, and new aggregate totals |
 | Error/conflict/cap | Preserve draft, locks and last result; render outcome-specific recovery; do not treat service failure as infeasibility |
-| Saved snapshot | Read-only historical result with recorded context/date; offline view/export/copy; Recalculate opens a separate editable draft |
+| Saved snapshot | Read-only historical result with recorded context/date; offline view/copy; Recalculate opens a separate editable draft |
 
 Lock toggles are draft edits, not implicit calculations. Unlocking ordinary slots retains their length ranges. Removing a locked slot requires an explicit Remove locked break action; ordinary mix reduction must stop at the affected lock. Manual editing of locked dates is explicit and creates a new draft, never a mutation by the optimizer. Carry the current request revision through all async actions and close live action previews when input changes.
 
@@ -213,11 +215,11 @@ Compare whole plans through a shared metric table and one selected year view. Do
 
 - Use a separate `SavedAnnualPlansStore`, namespaced `vacation-window:annual:v1:`, with a browser-storage adapter and an in-memory test adapter. Keep existing saved-option records and semantics unchanged.
 - A record holds one selected plan, original canonical request including locks and omitted slots, common context/year-calendar facts, exact accounting, calculation timestamp, policy/accounting/schema versions, sanitized identity, saved time and editable name. Do not save all alternative plans by default. Exclude tokens, server run/session IDs, raw interpretation text, and unrelated saved records.
-- Use a deterministic SHA-256 identity over versioned canonical input, calendar context, selected intervals/accounting and fulfillment metadata, excluding timestamps/name/rank. Repeat save reports Already saved and preserves the name. Different calendar accounting or reserve/mix can produce a distinct capture. Plan-level and per-break export IDs derive from that saved identity and exact interval; rename/reload/repeat export keep them stable.
+- Use a deterministic SHA-256 identity over versioned canonical input, calendar context, selected intervals/accounting and fulfillment metadata, excluding timestamps/name/rank. Repeat save reports Already saved and preserves the name. Different calendar accounting or reserve/mix can produce a distinct capture. Rename and reload preserve that saved identity and the exact captured accounting.
 - Proposed limits: 20 annual records, 256 KiB UTF-8 per record, 80-character name. Validate the full discriminated schema and accounting invariants on write/read; never truncate day details. Quota, blocked storage, corruption and unsupported versions produce item-level recovery without deleting other records. Removal has Undo with truthful failure handling. Same-item cross-tab edits use last successful write; concurrent new records may briefly exceed the count cap, with subsequent saves blocked and no automatic deletion.
 - Reopen reads the saved calculation without a backend call. Recalculate opens a separate draft initialized with its recorded context/time zone and original request; review current budget/calendar explicitly. Preserve only the locks recorded by the user. Do not automatically lock every generated break or accept an omitted slot. The original saved record is unchanged; past/year-invalid inputs get a clear error on explicit submission. Restore the previous annual workspace on Back.
-- Copy preview lists all included breaks and unique charged dates with aggregate leave used. Offer an optional “Include budget and reserve” checkbox, off by default. Export one `.ics` file with one tentative, transparent all-day event per selected break using existing date/escaping/folding rules. Do not sum independent single-window export summaries into annual balance claims. No attendees, requests, or writes to external calendars.
-- Export and copy bind to the selected immutable current/saved plan, never a mutable draft. Reduced plans clearly state which requested breaks are omitted in the preview/copy and event description. Preserve selectable-text fallback when clipboard access fails. Download is not recovery/synchronization; v1 has no editable JSON import/export.
+- Copy preview lists all included breaks and their charged dates with aggregate leave used. Offer an optional “Include budget and reserve” checkbox, off by default. Read the selected whole-plan accounting rather than summing unrelated single-window requests.
+- Copy binds to the selected immutable current/saved plan, never a mutable draft. Reduced plans clearly state which requested breaks are omitted in the preview/copy. Preserve selectable-text fallback when clipboard access fails. Browser saves remain local to their browser/profile/origin; v1 has no editable JSON import/export.
 
 The [UX document](annual-plans-ux.md) specifies inspectable screens, concrete fixtures, accessibility, and recovery copy. The [test strategy](annual-plans-testing.md) owns the proposed public seams and acceptance matrix.
 
@@ -236,10 +238,10 @@ Each behavior PR is based on the previous PR branch; all dependencies below are 
 | AP 06 | Year view, whole-plan comparison, lock/unlock/recalculate, deltas and preserved task/draft navigation | AP 05 | Keyboard and visual checks, stable locks, fresh costs after calendar edits, stale/late responses, separate Search/Compare state; integrated recalculation |
 | AP 07 | Optional typed annual interpretation and review/apply flow with explicit reference resolution | AP 06 | Fake model-provider proposals, absent-vs-explicit values, lock mapping, ambiguous saved trip, concurrent edits and provider outage; no automatic calculation |
 | AP 08 | Save/reopen whole plans in this browser with original request, immutable accounting and explicit recalculation | AP 07 | Storage adapter and rendered journeys for identity, validation, reload/session expiry, quota/corruption/undo/multi-tab, preserved workspace and unchanged bookmarks |
-| AP 09 | Whole-plan calendar download and leave-request copy, including reduced-plan disclosures | AP 08 | Independent multi-event ICS parse, exact dates/UIDs/totals, escaping, privacy defaults, clipboard denial, stale preview and real download/import evidence |
+| AP 09 | Whole-plan leave-request copy, including reduced-plan disclosures | AP 08 | Exact inclusive dates, charged dates and aggregate totals, omissions, privacy defaults, clipboard denial and stale-preview behavior |
 | AP 10 | Integrated acceptance, performance/resource tuning if proven necessary, accessibility and operational documentation | AP 09 | Full agreed matrix, measured normal/worst-bound timings, fresh backend/frontend checks, browser evidence and acceptance record with unresolved limitations |
 
-AP 01–03 are public-domain vertical slices: each test exercises a useful annual result rather than private enumeration tables. AP 04 integrates all server behavior. AP 05 begins live integrated journeys; acceptance is not deferred wholesale to AP 10. Public feature visibility follows completed capability: structured annual planning after AP 05, year/lock refinements after AP 06, optional interpretation after AP 07, saving after AP 08, export/copy after AP 09.
+AP 01–03 are public-domain vertical slices: each test exercises a useful annual result rather than private enumeration tables. AP 04 integrates all server behavior. AP 05 begins live integrated journeys; acceptance is not deferred wholesale to AP 10. Public feature visibility follows completed capability: structured annual planning after AP 05, year/lock refinements after AP 06, optional interpretation after AP 07, saving after AP 08, leave-request copying after AP 09.
 
 ## Delivery and review gate
 

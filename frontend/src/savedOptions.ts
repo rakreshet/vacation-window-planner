@@ -74,7 +74,7 @@ export class SavedOptionsStore {
   private write(key: string, item: SavedOption) {
     const serialized = JSON.stringify(savedOptionSchema.parse(item))
     if (new TextEncoder().encode(serialized).length > 65536)
-      throw new Error('This option exceeds the 64 KiB save limit. You can still export or copy it.')
+      throw new Error('This option exceeds the 64 KiB save limit. You can still copy it.')
     this.storage.setItem(key, serialized)
   }
 

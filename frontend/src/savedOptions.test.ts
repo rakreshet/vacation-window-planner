@@ -12,6 +12,23 @@ beforeEach(() => {
 })
 afterEach(() => vi.unstubAllGlobals())
 
+test('previously saved calendar-export snapshots reopen without export metadata', async () => {
+  const snapshot = await createActionSnapshot('search', window, assessment, context)
+  storage.setItem(
+    savedOptionPrefix + snapshot.capture_id,
+    JSON.stringify({
+      schema_version: 1,
+      name: 'Existing vacation',
+      saved_at: '2026-09-26T12:00:00Z',
+      snapshot: { ...snapshot, export_uid: `${snapshot.capture_id}@vacation-window-planner` },
+    }),
+  )
+  const saved = new SavedOptionsStore(storage).list()
+  expect(saved.invalid).toEqual([])
+  expect(saved.items[0].snapshot.window).toEqual(window)
+  expect(saved.items[0].snapshot).not.toHaveProperty('export_uid')
+})
+
 test('save survives reload and duplicate save preserves a renamed item', async () => {
   const store = new SavedOptionsStore(storage)
   const snapshot = await createActionSnapshot('search', window, assessment, context)
@@ -20,7 +37,7 @@ test('save survives reload and duplicate save preserves a renamed item', async (
   const reloaded = new SavedOptionsStore(storage)
   expect(reloaded.save(snapshot).status).toBe('already_saved')
   expect(reloaded.list().items[0].name).toBe('Winter break')
-  expect(reloaded.list().items[0].snapshot.export_uid).toBe(snapshot.export_uid)
+  expect(reloaded.list().items[0].snapshot.capture_id).toBe(snapshot.capture_id)
 })
 
 test('corrupt and unsupported items are isolated from valid records and oversized writes are rejected', async () => {
@@ -46,7 +63,7 @@ test('bounded saves, quota errors, and removal undo preserve existing records', 
   const snapshot = await createActionSnapshot('search', window, assessment, context)
   for (let index = 0; index < 50; index++) {
     const id = index.toString(16).padStart(64, '0')
-    store.save({ ...snapshot, capture_id: id, export_uid: `${id}@vacation-window-planner` })
+    store.save({ ...snapshot, capture_id: id })
   }
   expect(() => store.save(snapshot)).toThrow('50')
   const removed = store.remove('0'.repeat(64))

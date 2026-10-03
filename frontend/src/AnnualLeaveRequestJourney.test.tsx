@@ -52,17 +52,17 @@ test('annual copy preview defaults to private budget, survives clipboard denial,
   expect(
     screen.queryByRole('textbox', { name: 'Annual leave request text' }),
   ).not.toBeInTheDocument()
-  expect(screen.getByRole('button', { name: 'Download annual calendar' })).toBeDisabled()
+  expect(screen.getByRole('button', { name: 'Copy annual leave request' })).toBeDisabled()
   fireEvent.click(screen.getByRole('button', { name: 'Recalculate plans' }))
   await waitFor(() =>
-    expect(screen.getByRole('button', { name: 'Download annual calendar' })).toBeEnabled(),
+    expect(screen.getByRole('button', { name: 'Copy annual leave request' })).toBeEnabled(),
   )
   expect(
     screen.queryByRole('textbox', { name: 'Annual leave request text' }),
   ).not.toBeInTheDocument()
 })
 
-test('a failed save leaves direct annual download available with one calendar file', async () => {
+test('a failed save leaves the annual leave-request preview available', async () => {
   vi.spyOn(window, 'localStorage', 'get').mockImplementation(() => {
     throw new Error('Storage blocked')
   })
@@ -73,17 +73,6 @@ test('a failed save leaves direct annual download available with one calendar fi
       json: async () => (url.endsWith('/sessions') ? { token: 'token' } : annualFixture()),
     })),
   )
-  const createUrl = vi.fn(() => 'blob:annual-calendar')
-  vi.stubGlobal(
-    'URL',
-    Object.assign(class extends URL {}, { createObjectURL: createUrl, revokeObjectURL: vi.fn() }),
-  )
-  const downloads: string[] = []
-  vi.spyOn(HTMLAnchorElement.prototype, 'click').mockImplementation(function (
-    this: HTMLAnchorElement,
-  ) {
-    downloads.push(this.download)
-  })
   render(
     <AnnualPlanWorkspace
       initialPlanning={{ ...emptyPlanning, balance: '18', timeZone: 'Asia/Jerusalem' }}
@@ -91,13 +80,14 @@ test('a failed save leaves direct annual download available with one calendar fi
   )
   fireEvent.click(screen.getByRole('button', { name: 'Generate plans' }))
   await waitFor(() =>
-    expect(screen.getByRole('button', { name: 'Download annual calendar' })).toBeEnabled(),
+    expect(screen.getByRole('button', { name: 'Copy annual leave request' })).toBeEnabled(),
   )
   fireEvent.click(screen.getByRole('button', { name: 'Save this plan' }))
   await screen.findByText('Storage blocked')
-  fireEvent.click(screen.getByRole('button', { name: 'Download annual calendar' }))
-  expect(downloads).toEqual(['annual-vacations-2027.ics'])
-  expect(createUrl).toHaveBeenCalledTimes(1)
+  fireEvent.click(screen.getByRole('button', { name: 'Copy annual leave request' }))
+  expect(screen.getByLabelText('Annual leave request text')).toHaveTextContent(
+    'Total vacation days required: 8',
+  )
   expect(screen.queryByText('Annual plan saved in this browser')).not.toBeInTheDocument()
 })
 

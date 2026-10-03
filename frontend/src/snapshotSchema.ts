@@ -29,7 +29,6 @@ export const actionSnapshotSchema: z.ZodType<ActionSnapshot> = z
   .object({
     schema_version: z.literal(1),
     capture_id: z.string().regex(/^[a-f0-9]{64}$/),
-    export_uid: z.string(),
     source: z.enum(['search', 'opportunity', 'comparison_baseline', 'comparison_alternative']),
     metadata: z.object({
       explanation: z.string().optional(),
@@ -103,8 +102,7 @@ export const actionSnapshotSchema: z.ZodType<ActionSnapshot> = z
         JSON.stringify(
           assessment.day_details.filter((day) => day.charged).map((day) => day.date),
         ) &&
-      assessment.charged_dates.length === window.vacation_days_used &&
-      value.export_uid === `${value.capture_id}@vacation-window-planner`
+      assessment.charged_dates.length === window.vacation_days_used
     )
   }, 'Snapshot accounting is incomplete or inconsistent')
 

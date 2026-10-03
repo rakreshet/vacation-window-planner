@@ -17,7 +17,7 @@ Help someone decide whether the dates they have in mind are a good use of their 
 
 The comparison explains the change in dates, vacation days used, total days off, and remaining balance. It does not claim the person is available to travel on an alternative date. The current Search, ranked results, grouped alternative dates, interpretation, and feedback remain available with their present behavior.
 
-This phase focuses on one break. Annual leave allocation, destinations, flights, booking, calendar export, accounts, and the previously planned broad proactive opportunity scan are outside Phase 0.5. A bounded nearby-date view belongs to comparison; it is not a replacement for the later proactive scan across a wider future horizon.
+This phase focuses on one break. Annual leave allocation, destinations, flights, booking, accounts, and the previously planned broad proactive opportunity scan are outside Phase 0.5. A bounded nearby-date view belongs to comparison; it is not a replacement for the later proactive scan across a wider future horizon.
 
 ## Decisions made in the design discussion
 

@@ -7,7 +7,6 @@ export type ActionSnapshot = {
   metadata: ActionMetadata
   schema_version: 1
   capture_id: string
-  export_uid: string
   source: ActionSource
   window: Recommendation['window']
   assessment: WindowAssessment
@@ -81,7 +80,6 @@ export async function createActionSnapshot(
   return {
     schema_version: 1,
     capture_id: captureId,
-    export_uid: `${captureId}@vacation-window-planner`,
     source,
     metadata: { explanation: metadata.explanation, policy_version: metadata.policy_version },
     window: capturedWindow,

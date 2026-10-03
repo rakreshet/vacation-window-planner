@@ -15,6 +15,15 @@ afterEach(() => {
   vi.unstubAllGlobals()
 })
 
+test('saved vacations keep the leave-request preview without calendar downloads', async () => {
+  const store = new SavedOptionsStore(new MemoryOptionStorage())
+  store.save(await createActionSnapshot('search', vacationWindow, assessment, context))
+  render(<SavedOptions store={store} onCheck={() => {}} />)
+  expect(screen.queryByRole('button', { name: 'Download calendar' })).not.toBeInTheDocument()
+  fireEvent.click(screen.getByRole('button', { name: 'Copy leave request' }))
+  expect(screen.getByLabelText('Leave request text')).toHaveTextContent('2027-01-07')
+})
+
 test('saved details work offline, rename is explicit, and removal can be undone', async () => {
   const store = new SavedOptionsStore(new MemoryOptionStorage())
   const snapshot = await createActionSnapshot('search', vacationWindow, assessment, context)

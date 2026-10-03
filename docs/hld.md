@@ -6,15 +6,15 @@ This design places the recommendation engine behind a small interface and keeps 
 
 | Field | Value |
 | --- | --- |
-| **Status** | Phase 0/0.5 delivered; Phase 0.75 implemented in review with client acceptance pending; annual planning proposed; Phase 1 planned |
+| **Status** | Phase 0/0.5/0.75 and annual planning delivered through #72; Phase 1 planned |
 | **Prepared for** | POC product and engineering implementation |
 | **Version date** | 2026-09-26 |
 
 Delivery and original PR links are recorded in the [progress tracker](progress.md). Phase 0.5 requirements and task details are maintained in the [comparison plan](phase-0.5-plan.md), with completed validation in the [acceptance record](phase-0.5-acceptance.md).
 
-The [Phase 0.75 plan](phase-0.75-plan.md#backend-design) records the backend/frontend contract for personal calendar rules, assessment detail, opportunity policy, snapshot migrations, and browser saving/export. Its implementation is in the open #51–#60 stack, with limitations in the [acceptance record](phase-0.75-acceptance.md); Phase 0/0.5 remain the merged behavior baseline.
+The [Phase 0.75 plan](phase-0.75-plan.md#backend-design) records the backend/frontend contract for personal calendar rules, assessment detail, opportunity policy, snapshot migrations, and browser saving and leave-request copying. Its implementation was incorporated into `main` through [#72](https://github.com/rakreshet/vacation-window-planner/pull/72); the [acceptance record](phase-0.75-acceptance.md) retains the measured evidence.
 
-The [annual planning backend design](annual-plans-plan.md#backend-design) proposes a pure whole-plan optimizer above the shared assessment rules, with one common calendar, exact locks, protected reserve, bounded complete combination search, and explicit infeasible-versus-incomplete outcomes. An authenticated workflow snapshots runs in PostgreSQL; browser saves retain selected historical plans separately from individual bookmarks. The [frontend design](annual-plans-plan.md#frontend-design), [UX walkthrough](annual-plans-ux.md), and [test seams](annual-plans-testing.md#proposed-public-test-seams) complete this documentation-only proposal. No annual code is implemented or authorized by this plan; Phase 1 retains its flight architecture.
+The [annual planning backend design](annual-plans-plan.md#backend-design) describes a pure whole-plan optimizer above the shared assessment rules, with one common calendar, exact locks, protected reserve, bounded complete combination search, and explicit infeasible-versus-incomplete outcomes. An authenticated workflow snapshots runs in PostgreSQL; browser saves retain selected historical plans separately from individual bookmarks. The [frontend design](annual-plans-plan.md#frontend-design), [UX walkthrough](annual-plans-ux.md), and [test seams](annual-plans-testing.md#proposed-public-test-seams) describe the delivered annual implementation. Phase 1 retains its flight architecture.
 
 ## Architecture decision
 
@@ -85,7 +85,7 @@ Manual personal rules become part of the immutable anonymous-session context. A 
 
 After an explicit Search, an optional independent scan enumerates bounded start/length pairs using the same assessment module. The detector applies a versioned policy, excludes the full explicit criteria interval and duplicate dates, and returns qualifying opportunities in a separate status envelope. Its cap/provider failure cannot erase complete explicit results. Atomic snapshots include personal context, provider facts, policy, local date, and output. See the plan for exact bounds, score formula, and typed failure behavior; no flight adapter is introduced for this phase.
 
-Additive detailed assessments let the frontend save one exact option in the same browser and generate an ICS file or copyable leave-request text without duplicating leave arithmetic. Saved captures contain no token, reserve no balance, and remain historical until the user explicitly starts a new comparison. A browser storage adapter has an in-memory test adapter; no server saved-plan or account system is added.
+Additive detailed assessments let the frontend save one exact option in the same browser and prepare copyable leave-request text without duplicating leave arithmetic. Saved captures contain no token, reserve no balance, and remain historical until the user explicitly starts a new comparison. A browser storage adapter has an in-memory test adapter; no server saved-plan or account system is added.
 
 ## Core domain contracts
 
@@ -217,7 +217,7 @@ The flight seam becomes real only when both mock and live adapters exist in phas
 - Test the frontend with Vitest and React Testing Library; use contract fixtures generated from backend schemas.
 - Require GitHub Actions checks before merge on the public repository.
 
-Phase 0.75 opportunity tests use fixed calendars, clocks, and policies to cover normalization, literal score examples, zero-PTO handling, stable ties, threshold boundaries, weight overrides, duplicate suppression, personal constraints, complete scans, and criteria differences. Contract/frontend tests verify separate results and failure isolation. Saved-option tests cover browser recovery and exact-date exports; P1 14 later adds actual flight-adapter regression checks. The phase plan names the public test seams and PR-specific evidence.
+Phase 0.75 opportunity tests use fixed calendars, clocks, and policies to cover normalization, literal score examples, zero-PTO handling, stable ties, threshold boundaries, weight overrides, duplicate suppression, personal constraints, complete scans, and criteria differences. Contract/frontend tests verify separate results and failure isolation. Saved-option tests cover browser recovery and exact-date leave requests; P1 14 later adds actual flight-adapter regression checks. The phase plan names the public test seams and PR-specific evidence.
 
 ## Deployment and migration
 

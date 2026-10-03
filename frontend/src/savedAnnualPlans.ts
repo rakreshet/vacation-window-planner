@@ -147,7 +147,7 @@ export class SavedAnnualPlansStore {
   private write(key: string, item: SavedAnnualPlan) {
     const raw = JSON.stringify(savedAnnualSchema.parse(item))
     if (new TextEncoder().encode(raw).length > 262144)
-      throw new Error('This plan exceeds the 256 KiB save limit. Copy or download it instead.')
+      throw new Error('This plan exceeds the 256 KiB save limit. Copy it instead.')
     this.storage.setItem(key, raw)
   }
 }

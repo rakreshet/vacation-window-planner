@@ -12,7 +12,7 @@ The layout was inspected at 1,440×1,000 and 1,024×900. At 1,024 px, the sectio
 
 Automated rendered journeys cover independent task draft, explicit generation, slot order/month/gap edits, manual range conversion, explicit saved-date selection without copying its calendar, incomplete lock-editor protection, conflict/cap/reduction states, and rejection of inconsistent accounting. The final AP 05 frontend run passed all 87 tests, including 12 annual rendered tests. ESLint, Prettier, TypeScript and the production build passed. Review regressions cover removing an open slot editor and inconsistent slot/fulfillment metadata; clocks and time zones are fixed in the annual tests.
 
-Year visualization, richer comparison/recalculation, interpretation, saving whole plans and export belong to AP 06–09. This is milestone evidence, not AP 10 release acceptance or calendar-client import verification.
+Year visualization, richer comparison/recalculation, interpretation, saving whole plans and leave-request copying belong to AP 06–09. This is historical milestone evidence; AP 10 records the integrated acceptance.
 
 ## AP 06: comparison and recalculation
 
@@ -49,27 +49,14 @@ verified with a rejecting HTTP boundary in rendered tests; the live browser chec
 was performed with the local service available. Limits are 20 records and 256 KiB each.
 Annual records use their own namespace and leave existing vacation records unchanged.
 
-## AP 09: whole-plan export and copy
+## AP 09: whole-plan leave-request copy
 
 September 26, 2026: opened the real saved annual result and its copy preview. It listed
 April 15–28, May 11–15, and September 29–October 3 with 12 aggregate leave days and
 the original timestamp. Budget/reserve inclusion was unchecked, and preview text did
 not include those values. [Preview capture](annual-evidence/ap09-preview-1440.png).
 
-Independent `ical.js` parsing verifies one tentative, transparent all-day event per
-break, distinct stable UIDs, exclusive ends, Unicode escaping/UTF-8 folding, no attendees,
-reduced-plan omissions and opt-in budget text. Literal year-end, leap-day and DST-boundary
-cases pass. Rendered tests cover denied clipboard fallback, stale preview closure even
-after recalculation with identical result identity, and download remaining available
-when saving is blocked. The full 112-test frontend suite passed before three additional
-boundary cases (115 total); focused cases and production build pass after changes.
-
-Actual file delivery is **not verified** in the available in-app browser: native
-Download annual calendar was invoked, its download-event wait timed out, and no matching
-file appeared in the local Downloads directory. This is not counted as a successful
-download. Google Calendar and a second-client import remain pending, as in Phase 0.75.
-Release acceptance stays conditional until those client checks are recorded; parser
-and download-adapter tests do not replace them.
+Rendered tests cover exact inclusive dates, charged dates and aggregate cost, reduced-plan disclosures, privacy defaults, denied clipboard fallback, and stale preview closure even after recalculation with identical result identity. The milestone suite reached 115 tests; those are historical totals rather than current verification. The retained copy behavior is covered by the current leave-request suites.
 
 ## Annual form consistency follow-up — September 26, 2026
 

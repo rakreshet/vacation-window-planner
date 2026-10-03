@@ -1,6 +1,6 @@
 import { formatSavedDate, formatSavedWindow } from './displayDates'
 import { Icon } from './InterfaceArtwork'
-import ExportActions from './ExportActions'
+import LeaveRequestActions from './LeaveRequestActions'
 import { useCallback, useEffect, useState } from 'react'
 import type { ActionSnapshot } from './actionSnapshots'
 import {
@@ -151,7 +151,7 @@ function SavedOptionCard({
           ? formatSavedWindow(item.snapshot.window)
           : item.name}
       </h2>
-      <ExportActions snapshot={item.snapshot} title={item.name} />
+      <LeaveRequestActions snapshot={item.snapshot} />
       <p>
         Historical calculation ·{' '}
         {formatSavedDate(

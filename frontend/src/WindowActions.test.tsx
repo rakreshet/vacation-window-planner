@@ -12,6 +12,21 @@ afterEach(() => {
   vi.unstubAllGlobals()
 })
 
+test('exact vacation dates offer saving and copying without a calendar download', () => {
+  render(
+    <WindowActions
+      source="search"
+      window={vacationWindow}
+      assessment={assessment}
+      context={context}
+    />,
+  )
+  expect(screen.getAllByRole('button').map((button) => button.textContent)).toEqual([
+    'Save option',
+    'Copy leave request',
+  ])
+})
+
 test('the selected exact dates save once and stale results cannot be saved', async () => {
   const store = new SavedOptionsStore(new MemoryOptionStorage())
   const props = { source: 'search' as const, window: vacationWindow, assessment, context, store }

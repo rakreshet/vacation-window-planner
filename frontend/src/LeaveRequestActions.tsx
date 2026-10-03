@@ -1,19 +1,6 @@
 import { useEffect, useRef, useState } from 'react'
 import type { ActionSnapshot } from './actionSnapshots'
-import { calendarFile, leaveRequestText } from './calendarExport'
-
-export function downloadCalendar(snapshot: ActionSnapshot, title?: string) {
-  const url = URL.createObjectURL(
-    new Blob([calendarFile(snapshot, title)], { type: 'text/calendar;charset=utf-8' }),
-  )
-  const link = document.createElement('a')
-  link.href = url
-  link.download = `vacation-${snapshot.window.start_date}-${snapshot.window.end_date}.ics`
-  document.body.append(link)
-  link.click()
-  link.remove()
-  setTimeout(() => URL.revokeObjectURL(url), 1000)
-}
+import { leaveRequestText } from './leaveRequest'
 
 export function CopyPreview({
   snapshot,
@@ -53,32 +40,11 @@ export function CopyPreview({
   )
 }
 
-export default function ExportActions({
-  snapshot,
-  title,
-}: {
-  snapshot: ActionSnapshot
-  title?: string
-}) {
+export default function LeaveRequestActions({ snapshot }: { snapshot: ActionSnapshot }) {
   const [preview, setPreview] = useState(false)
-  const [error, setError] = useState('')
   const opener = useRef<HTMLButtonElement>(null)
   return (
     <div className="window-actions">
-      <button
-        className="button button--secondary"
-        type="button"
-        onClick={() => {
-          try {
-            downloadCalendar(snapshot, title)
-            setError('')
-          } catch (caught) {
-            setError(caught instanceof Error ? caught.message : 'Calendar download failed')
-          }
-        }}
-      >
-        Download calendar
-      </button>
       <button
         className="button button--secondary"
         type="button"
@@ -87,7 +53,6 @@ export default function ExportActions({
       >
         Copy leave request
       </button>
-      {error && <p role="alert">{error}</p>}
       {preview && (
         <CopyPreview
           snapshot={snapshot}
