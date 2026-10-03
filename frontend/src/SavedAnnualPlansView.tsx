@@ -143,7 +143,11 @@ export default function SavedAnnualPlansView({ onPlan }: { onPlan?: () => void }
               and calendar before recalculating.
             </p>
             <AnnualSavedContext result={selected.snapshot.result} />
-            <AnnualPlanResults result={selected.snapshot.result} />
+            <AnnualPlanResults
+              result={selected.snapshot.result}
+              cardTitle={selected.name}
+              busy={recalculating}
+            />
             <button ref={opener} type="button" onClick={() => setRecalculating(true)}>
               Recalculate this plan
             </button>

@@ -1,3 +1,4 @@
+import YearCardActions from './YearCardActions'
 import { annualConflictMessage } from './annualConflictMessage'
 import { FieldLink } from './FieldValidation'
 import AnnualLeaveRequestActions from './AnnualLeaveRequestActions'
@@ -18,7 +19,9 @@ export default function AnnualPlanResults({
   onSelect,
   onUseReduced,
   onSave,
+  cardTitle,
 }: {
+  cardTitle?: string
   result: AnnualResult
   stale?: boolean
   busy?: boolean
@@ -129,6 +132,13 @@ export default function AnnualPlanResults({
           )}
           <AnnualLeaveRequestActions
             key={`${plan.plan_id}-${result.calculation_context.calculated_at}`}
+            result={result}
+            planId={plan.plan_id}
+            disabled={stale || busy}
+          />
+          <YearCardActions
+            key={`${plan.plan_id}-${result.calculation_context.calculated_at}-${stale}-${busy}-${cardTitle}`}
+            title={cardTitle}
             result={result}
             planId={plan.plan_id}
             disabled={stale || busy}

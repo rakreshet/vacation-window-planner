@@ -186,7 +186,7 @@ export default function AnnualPlanWorkspace({
             <AnnualPlanResults
               result={result}
               stale={stale}
-              busy={busy}
+              busy={busy || !visible}
               previousPlan={previousPlan}
               onLock={lockDates}
               onSave={(plan) => void save(plan)}
