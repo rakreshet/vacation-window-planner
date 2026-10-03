@@ -1,3 +1,5 @@
+import YearCardActions from './YearCardActions'
+import { annualConflictMessage } from './annualConflictMessage'
 import { FieldLink } from './FieldValidation'
 import AnnualLeaveRequestActions from './AnnualLeaveRequestActions'
 import type { AnnualResult } from './savedAnnualPlans'
@@ -5,7 +7,7 @@ import { useId } from 'react'
 import AnnualPlanComparison from './AnnualPlanComparison'
 import AnnualYearView, { annualDetailsId } from './AnnualYearView'
 import AnnualPlanChanges from './AnnualPlanChanges'
-import type { AnnualBreak, AnnualConflict, AnnualPlan } from './annualContracts'
+import type { AnnualBreak, AnnualPlan } from './annualContracts'
 
 export default function AnnualPlanResults({
   result,
@@ -17,7 +19,9 @@ export default function AnnualPlanResults({
   onSelect,
   onUseReduced,
   onSave,
+  cardTitle,
 }: {
+  cardTitle?: string
   result: AnnualResult
   stale?: boolean
   busy?: boolean
@@ -57,7 +61,7 @@ export default function AnnualPlanResults({
         <ul>
           {result.conflicts.map((conflict, index) => (
             <li key={index}>
-              {conflictMessage(conflict)} Affected:{' '}
+              {annualConflictMessage(conflict)} Affected:{' '}
               {conflict.slot_ids
                 .map(
                   (id) =>
@@ -132,6 +136,13 @@ export default function AnnualPlanResults({
             planId={plan.plan_id}
             disabled={stale || busy}
           />
+          <YearCardActions
+            key={`${plan.plan_id}-${result.calculation_context.calculated_at}-${stale}-${busy}-${cardTitle}`}
+            title={cardTitle}
+            result={result}
+            planId={plan.plan_id}
+            disabled={stale || busy}
+          />
           <AnnualYearView result={result} plan={plan} detailPrefix={headingId} />
           <ol>
             {plan.breaks.map((item) => (
@@ -182,21 +193,4 @@ export default function AnnualPlanResults({
       )}
     </section>
   )
-}
-
-function conflictMessage(conflict: AnnualConflict): string {
-  switch (conflict.code) {
-    case 'locked_budget':
-      return `Locked trips use ${conflict.required_days} days; only ${conflict.permitted_days} are available after reserve.`
-    case 'mix_budget':
-      return `The full mix needs at least ${conflict.required_days} leave days; ${conflict.permitted_days} are available after reserve.`
-    case 'locked_overlap':
-      return 'Locked dates overlap. Edit or remove one of the affected breaks.'
-    case 'locked_unavailable':
-      return `Locked dates intersect unavailable dates: ${conflict.dates.join(', ')}.`
-    case 'locked_spacing':
-      return `Locked trips have ${conflict.gap_days} intervening dates and ${conflict.working_dates_between} working dates; they need at least ${conflict.minimum_gap_days} intervening dates and one working date.`
-    case 'mix_constraints':
-      return 'The full mix cannot fit these combined calendar, length and spacing constraints.'
-  }
 }

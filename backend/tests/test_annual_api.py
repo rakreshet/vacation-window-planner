@@ -59,6 +59,7 @@ def annual_api(monkeypatch: pytest.MonkeyPatch) -> Iterator[AnnualApi]:
         session_creator=main.create_session,
         session_lookup=main.find_session,
         annual_service=main.plan_annual,
+        budget_comparison_service=main.compare_budgets,
     )
     with TestClient(app) as client:
         yield client, main

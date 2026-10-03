@@ -17,16 +17,19 @@ import {
 import { AnnualError, generateAnnualPlans } from './annualApi'
 import type { AnnualBreak, AnnualPlan, AnnualRun } from './annualContracts'
 import AnnualPlanResults from './AnnualPlanResults'
+import AnnualBudgetPlayground from './AnnualBudgetPlayground'
 import AnnualMixFields from './AnnualMixFields'
 
 export default function AnnualPlanWorkspace({
   initialPlanning,
   initialDraft,
   idPrefix = 'annual-',
+  visible = true,
 }: {
   initialPlanning: PlanningDraft
   initialDraft?: AnnualDraft
   idPrefix?: string
+  visible?: boolean
 }) {
   const [draft, setDraft] = useState(() =>
     initialDraft ? structuredClone(initialDraft) : newAnnualDraft(initialPlanning),
@@ -179,22 +182,33 @@ export default function AnnualPlanWorkspace({
         {error && <p role="alert">{error}</p>}
         {failedOutcome && <AnnualPlanResults result={failedOutcome} />}
         {result ? (
-          <AnnualPlanResults
-            result={result}
-            stale={stale}
-            busy={busy}
-            previousPlan={previousPlan}
-            onLock={lockDates}
-            onSave={(plan) => void save(plan)}
-            onUseReduced={(plan) =>
-              edit({
-                ...draft,
-                slots: draft.slots.filter((slot) => plan.retained_slot_ids.includes(slot.id)),
-              })
-            }
-            selectedId={selectedId}
-            onSelect={setSelectedId}
-          />
+          <>
+            <AnnualPlanResults
+              result={result}
+              stale={stale}
+              busy={busy || !visible}
+              previousPlan={previousPlan}
+              onLock={lockDates}
+              onSave={(plan) => void save(plan)}
+              onUseReduced={(plan) =>
+                edit({
+                  ...draft,
+                  slots: draft.slots.filter((slot) => plan.retained_slot_ids.includes(slot.id)),
+                })
+              }
+              selectedId={selectedId}
+              onSelect={setSelectedId}
+            />
+            <AnnualBudgetPlayground
+              key={`${result.run_id}-${revision.current}-${selectedId}-${visible}`}
+              result={result}
+              disabled={stale || busy || !visible}
+              onAdopt={(balance) => {
+                edit({ ...draft, planning: { ...draft.planning, balance: String(balance) } })
+                setNotice('Budget copied to your draft; recalculate plans to use it')
+              }}
+            />
+          </>
         ) : (
           <aside className="annual-results annual-empty">
             <EscapeScene />

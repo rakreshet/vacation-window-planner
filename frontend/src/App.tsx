@@ -292,7 +292,7 @@ export default function App() {
           </div>
           {annualPlanning && (
             <div hidden={mode !== 'annual'}>
-              <AnnualPlanWorkspace initialPlanning={annualPlanning} />
+              <AnnualPlanWorkspace initialPlanning={annualPlanning} visible={mode === 'annual'} />
             </div>
           )}
           {comparisonDraft && (

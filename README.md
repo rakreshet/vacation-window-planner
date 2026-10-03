@@ -17,6 +17,8 @@ Search and Compare support Israel, U.S. federal holidays, and England & Wales ba
 - [Annual multi-vacation BE/FE plan and dependent PR sequence](docs/annual-plans-plan.md)
 - [Annual planning UX walkthrough](docs/annual-plans-ux.md)
 - [Annual planning TDD seams and test strategy](docs/annual-plans-testing.md)
+- [Budget playground and year-card stacked plan](docs/quick-wins-plan.md)
+- [Budget playground and year-card acceptance](docs/quick-wins-acceptance.md)
 - [Research on opportunities before flights](docs/non-flight-opportunities-research.md)
 - [Implementation task plan](docs/implementation-plan.md)
 - [Delivery progress and PR map](docs/progress.md)
@@ -88,3 +90,9 @@ Codex can use the versioned [run-vacation-window-planner skill](.agents/skills/r
 **Plan my year** coordinates up to six breaks under one available-leave budget and protected reserve. Review complete alternatives, lock dates and explicitly recalculate, save one historical plan in this browser, or copy the whole plan's leave request. Locked trips count in the mix. Natural-language interpretation is optional and only proposes editable inputs.
 
 See the [annual plan](docs/annual-plans-plan.md), [acceptance results](docs/annual-plans-acceptance.md), [progress/PR stack](docs/progress.md#annual-planning--several-vacations-one-budget), and [operations](docs/runbook.md#annual-planning).
+
+## Budget playground and shareable year card
+
+The [QW PR stack](docs/progress.md#budget-playground-and-shareable-year-card) adds **Compare leave budgets** after annual generation: compare Most days away with one fewer or one more available leave day while preserving your calendar, breaks, locks and reserve. **Use this budget** edits the draft and requires explicit recalculation. Comparisons are hypothetical and do not create annual database rows.
+
+**Preview year card** creates a 12-month image from the selected current or saved annual snapshot, with exact dates, locked status and reduced-plan omissions. Leave figures are private by default; Include leave details opts them in independently of copying. Saved cards work offline. PNG generation uses native browser APIs without external images, fonts, uploads or provider credentials. Native file-delivery verification is pending at the user's request; see the [acceptance record](docs/quick-wins-acceptance.md).
