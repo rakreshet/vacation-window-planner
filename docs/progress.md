@@ -1,12 +1,12 @@
 # Delivery progress and pull request map
 
-This is the versioned record of what has been merged and which pull request delivered each task. The [Phase 0 and Phase 1 implementation task plan](implementation-plan.md), [Phase 0.5 comparison plan](phase-0.5-plan.md), [Phase 0.75 plan](phase-0.75-plan.md), and [annual planning plan](annual-plans-plan.md) define each task's scope, tests, and definition of done; this file tracks delivery, not a second copy of the plans.
+This is the versioned record of what has been merged and which pull request delivered each task. The [Phase 0 and Phase 1 implementation task plan](implementation-plan.md), [Phase 0.5 comparison plan](phase-0.5-plan.md), [Phase 0.75 plan](phase-0.75-plan.md), [annual planning plan](annual-plans-plan.md), and [quick wins plan](quick-wins-plan.md) define each task's scope, tests, and definition of done; this file tracks delivery, not a second copy of the plans.
 
-## Current scope — October 2, 2026
+## Current scope — October 3, 2026
 
 [#72](https://github.com/rakreshet/vacation-window-planner/pull/72) incorporated Phase 0.75 and annual planning into `main` (`6029f25`). The task tables retain their original PR links; the September 26 acceptance records retain historical measurements.
 
-The user canceled calendar downloads and client imports. Follow-up acceptance PRs [#76](https://github.com/rakreshet/vacation-window-planner/pull/76), [#77](https://github.com/rakreshet/vacation-window-planner/pull/77), and [#78](https://github.com/rakreshet/vacation-window-planner/pull/78) are closed and their local/remote branches deleted. Removal PR [#79](https://github.com/rakreshet/vacation-window-planner/pull/79) is in review, based on `main`, and removes the export logic already merged while retaining date planning, browser saves and leave-request copying. See the [scope decision](open-decisions.md#calendar-export-canceled).
+The user canceled calendar downloads and client imports. Follow-up acceptance PRs [#76](https://github.com/rakreshet/vacation-window-planner/pull/76), [#77](https://github.com/rakreshet/vacation-window-planner/pull/77), and [#78](https://github.com/rakreshet/vacation-window-planner/pull/78) are closed and their local/remote branches deleted. Removal PR [#79](https://github.com/rakreshet/vacation-window-planner/pull/79) merged on October 3 as `36a1b33` and removes the export logic already merged while retaining date planning, browser saves and leave-request copying. See the [scope decision](open-decisions.md#calendar-export-canceled).
 
 ## How to use this tracker
 
@@ -120,6 +120,20 @@ Base verified September 26, 2026: `origin/main` = `20df229`; #50 merged; #51–#
 | AP 10 | Integrated acceptance, performance, accessibility and runbook | AP 09 | [#71](https://github.com/rakreshet/vacation-window-planner/pull/71) | Done through #72 |
 
 The [ordered breakdown](annual-plans-plan.md#ordered-dependent-pr-breakdown) supplies each task's scope, acceptance evidence, and stacking policy. Do not create implementation PRs or mark work Done in advance. Planning review/merge alone is not permission to implement.
+
+## Budget playground and shareable year card
+
+The user authorized these two features on October 3, 2026, with TDD and dependent stacked PRs. The [plan](quick-wins-plan.md), [UX walkthrough](quick-wins-ux.md) and [test strategy](quick-wins-testing.md) define scope and acceptance. QW 00 starts from merged main `36a1b33`; each later PR targets its predecessor. Implementation is authorized; the TDD public seams await explicit confirmation before the first behavioral test. No automatic merges.
+
+| Task | Responsibility | Depends on | PR(s) | Status |
+| --- | --- | --- | --- | --- |
+| QW 00 | Scope, contracts, UX, test seams and progress table | main | — | Preparing |
+| QW 01 | Pure bounded comparison and primary-only annual mode | QW 00 + confirmed seams | — | Planned |
+| QW 02 | Authenticated comparison workflow/HTTP | QW 01 | — | Planned |
+| QW 03 | Budget playground and explicit adoption | QW 02 | — | Planned |
+| QW 04 | Snapshot year-card SVG and PNG adapter | QW 03 | — | Planned |
+| QW 05 | Current/saved year-card preview and download | QW 04 | — | Planned |
+| QW 06 | Acceptance, performance and delivery evidence | QW 05 | — | Planned |
 
 ## Phase 1
 
