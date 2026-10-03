@@ -1,0 +1,55 @@
+{
+  "python": "3.12.13",
+  "platform": "macOS-26.6-arm64-arm-64bit",
+  "year": 2027,
+  "balance": 18,
+  "reserve": 3,
+  "gap": 7,
+  "results": [
+    {
+      "country": "IL",
+      "runs": 20,
+      "median_seconds": 0.8059578749816865,
+      "p95_seconds": 2.474038374959491,
+      "max_seconds": 2.583030082983896,
+      "outcomes": {
+        "complete/complete/complete": 20
+      },
+      "maximum_counters": {
+        "candidates": 11790,
+        "states": 64132,
+        "transitions": 1879196
+      }
+    },
+    {
+      "country": "US",
+      "runs": 20,
+      "median_seconds": 0.8258512500033248,
+      "p95_seconds": 1.0025812499807216,
+      "max_seconds": 1.095023959001992,
+      "outcomes": {
+        "complete/complete/complete": 20
+      },
+      "maximum_counters": {
+        "candidates": 11790,
+        "states": 66894,
+        "transitions": 1978727
+      }
+    },
+    {
+      "country": "GB",
+      "runs": 20,
+      "median_seconds": 0.8309096249577124,
+      "p95_seconds": 1.1391445000190288,
+      "max_seconds": 1.266703207977116,
+      "outcomes": {
+        "complete/complete/complete": 20
+      },
+      "maximum_counters": {
+        "candidates": 11790,
+        "states": 68715,
+        "transitions": 2049488
+      }
+    }
+  ]
+}

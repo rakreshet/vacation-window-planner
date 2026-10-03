@@ -36,7 +36,7 @@ Begin QW 01 with a literal synthetic calendar: Saturday/Sunday weekends, May 3 2
 | Artifact privacy | Default omits all leave figures/private fields; opt-in includes correct totals/reserve; title escaped as XML text; no external image/font/script/link dependencies | QW 04 |
 | Preview/export | Readable text equivalent; correct selected snapshot and filename; no export before ready; close/Escape restores focus; stale/replaced preview disabled; denied/null canvas/image error reports failure | QW 05 |
 | Saved | Offline current snapshot render, historical disclosure, renamed title, unchanged stored record, switching saved/current plans cannot export the earlier capture | QW 05 |
-| Acceptance | Real HTTP comparison, adoption/generation, current/saved PNG files, 1024/1440px layout and keyboard flow, existing journeys and no calendar-download controls | QW 06 |
+| Acceptance | Real HTTP comparison, adoption/generation, current/saved PNG rendering (native delivery deferred), 1024/1440px layout and keyboard flow, existing journeys and no calendar-download controls | QW 06 |
 
 Use existing backend annual fixtures and tiny independent examples. Extend optimizer oracle checks only where the new primary-only mode changes observable behavior. Do not create a second solver oracle or compare two copies of the same calculation. Parse SVG through a DOM/XML parser and inspect literal content/date labels; pixel/font/layout correctness needs actual browser rendering.
 
@@ -49,3 +49,5 @@ Use an isolated Compose test project; never reset the user's running database. R
 For comparison performance, record runtime/hardware, IL/US/GB calendar, three-slot inputs, warm timings (20 runs per normal fixture), complete/capped result and cumulative candidates/states/transitions. Target warm p95 <=5 seconds under existing five-second calculation budget. Extreme requests should cap honestly; concurrency should release permits on success/failure. Do not use exact elapsed-time assertions in unit tests.
 
 Inspect real preview and downloaded PNG, including six-break/reduced/default-private/opt-in cards, in a browser. Verify image dimensions, legibility and inclusive endpoints. Record delivery separately from mocked anchor/canvas behavior. User sharing the downloaded file is outside the acceptance action; do not send it externally.
+
+On October 3, 2026 the user explicitly requested: “Leave native download verification pending.” The in-app browser rendered the generated PNG but did not deliver a file through its download handler. Native Chrome access was rejected. Do not count the mocked anchor or rendered image as file-delivery proof. The [acceptance record](quick-wins-acceptance.md) preserves this pending check separately from verified artifact/rendering behavior.

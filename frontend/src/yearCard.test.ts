@@ -146,3 +146,30 @@ test('a reduced card names omitted breaks without claiming the full requested mi
   expect(document.documentElement.textContent).toContain('15 days away')
   expect(document.querySelectorAll('[data-selected="true"]')).toHaveLength(15)
 })
+
+test('a single-break card uses singular wording', async () => {
+  vi.stubGlobal('crypto', webcrypto)
+  const raw = annualFixtureWithAlternatives()
+  raw.plans = [raw.plans[0]]
+  const plan = raw.plans[0]
+  raw.input.slots = raw.input.slots.filter((slot) => slot.slot_id === 'short-1')
+  plan.breaks = plan.breaks.slice(0, 1)
+  plan.retained_slot_ids = ['short-1']
+  Object.assign(plan.accounting, {
+    total_leave_used: 2,
+    remaining_days: 16,
+    unallocated_days: 13,
+    total_days_away: 4,
+    charged_dates: ['2027-03-07', '2027-03-08'],
+  })
+  const run = annualRunSchema.parse(raw)
+  const document = parse(
+    yearCardSvg(await createAnnualSnapshot(run, plan.plan_id), {
+      title: 'A little time away',
+      includeLeaveDetails: false,
+    }),
+  )
+  expect(Array.from(document.querySelectorAll('text')).map((text) => text.textContent)).toContain(
+    '1 break',
+  )
+})

@@ -192,7 +192,8 @@ function YearCardPreview({
       )}
       <div className="year-card-text">
         <p>
-          {plan.accounting.total_days_away} days away · {plan.breaks.length} breaks
+          {plan.accounting.total_days_away} days away · {plan.breaks.length}{' '}
+          {plan.breaks.length === 1 ? 'break' : 'breaks'}
         </p>
         {includeLeaveDetails && (
           <p>

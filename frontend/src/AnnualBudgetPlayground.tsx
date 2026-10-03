@@ -135,7 +135,8 @@ export default function AnnualBudgetPlayground({
                   <strong>{scenario.outcome.plans[0].accounting.total_days_away} days away</strong>
                   <p>
                     {scenario.outcome.plans[0].accounting.total_leave_used} leave days used ·{' '}
-                    {scenario.outcome.plans[0].breaks.length} breaks
+                    {scenario.outcome.plans[0].breaks.length}{' '}
+                    {scenario.outcome.plans[0].breaks.length === 1 ? 'break' : 'breaks'}
                   </p>
                 </>
               )}

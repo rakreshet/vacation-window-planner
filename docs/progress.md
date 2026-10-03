@@ -123,7 +123,7 @@ The [ordered breakdown](annual-plans-plan.md#ordered-dependent-pr-breakdown) sup
 
 ## Budget playground and shareable year card
 
-The user authorized these two features on October 3, 2026, with TDD and dependent stacked PRs. The [plan](quick-wins-plan.md), [UX walkthrough](quick-wins-ux.md) and [test strategy](quick-wins-testing.md) define scope and acceptance. QW 00 starts from merged main `36a1b33`; each later PR targets its predecessor. Implementation is authorized; the user confirmed all five TDD public seams on October 3, 2026. No automatic merges.
+The user authorized these two features on October 3, 2026, with TDD and dependent stacked PRs. The [plan](quick-wins-plan.md), [UX walkthrough](quick-wins-ux.md) and [test strategy](quick-wins-testing.md) define scope and acceptance. QW 00 starts from merged main `36a1b33`; each later PR targets its predecessor. Implementation is authorized; the user confirmed all five TDD public seams on October 3, 2026. No automatic merges. Fresh verification and the user-deferred native download check are recorded in [acceptance](quick-wins-acceptance.md), with [raw benchmark results](quick-wins-benchmark.json).
 
 | Task | Responsibility | Depends on | PR(s) | Status |
 | --- | --- | --- | --- | --- |
@@ -133,7 +133,7 @@ The user authorized these two features on October 3, 2026, with TDD and dependen
 | QW 03 | Budget playground and explicit adoption | QW 02 | [#83](https://github.com/rakreshet/vacation-window-planner/pull/83) | In review |
 | QW 04 | Snapshot year-card SVG and PNG adapter | QW 03 | [#84](https://github.com/rakreshet/vacation-window-planner/pull/84) | In review |
 | QW 05 | Current/saved year-card preview and download | QW 04 | [#85](https://github.com/rakreshet/vacation-window-planner/pull/85) | In review; native download verification deferred |
-| QW 06 | Acceptance, performance and delivery evidence | QW 05 | — | Planned |
+| QW 06 | Acceptance, performance and delivery evidence | QW 05 | — | Checks passed; PR opening |
 
 ## Phase 1
 

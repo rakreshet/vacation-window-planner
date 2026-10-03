@@ -55,7 +55,7 @@ export function yearCardSvg(snapshot: AnnualSnapshot, options: YearCardOptions):
       text(72, 132 + index * 29, line, 30).replace('<text ', '<text data-title="true" '),
     ),
     text(72, 262, `${plan.accounting.total_days_away} days away`, 52, yearCardPalette.plum),
-    text(750, 262, `${plan.breaks.length} breaks`, 38),
+    text(750, 262, `${plan.breaks.length} ${plan.breaks.length === 1 ? 'break' : 'breaks'}`, 38),
     text(72, 322, 'Time away · outlined dates are locked', 18, yearCardPalette.muted),
   ]
   if (options.includeLeaveDetails)
@@ -112,7 +112,12 @@ export function yearCardSvg(snapshot: AnnualSnapshot, options: YearCardOptions):
     parts.push(
       text(72, y, `Break ${number}${item.locked ? ' · locked dates' : ''}`, 18),
       text(380, y, `${item.window.start_date} – ${item.window.end_date}`, 21),
-      text(955, y, `${item.window.total_days} days`, 18),
+      text(
+        955,
+        y,
+        `${item.window.total_days} ${item.window.total_days === 1 ? 'day' : 'days'}`,
+        18,
+      ),
     )
   })
   if (plan.fulfillment === 'reduced')

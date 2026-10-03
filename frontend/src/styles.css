@@ -2178,7 +2178,7 @@ summary {
 }
 .year-card-preview {
   display: grid;
-  grid-template-columns: minmax(0, 1.2fr) minmax(240px, 1fr);
+  grid-template-columns: 1fr;
   gap: 18px 24px;
   margin-top: 18px;
   padding: 24px;

@@ -4,7 +4,7 @@ Date: 2026-10-03. Task prefix: **QW**. The user authorized implementation, TDD, 
 
 Baseline: `origin/main` = `36a1b33`, including annual planning/redesign through #72 and calendar-export removal through #79. Work uses an isolated managed worktree, preserving the original checkout's local changes. Calendar downloads/imports remain canceled; the requested image card is a distinct feature. Do not merge PRs automatically.
 
-Companions: [UX walkthrough](quick-wins-ux.md), [test strategy](quick-wins-testing.md), [delivery tracker](progress.md#budget-playground-and-shareable-year-card).
+Companions: [UX walkthrough](quick-wins-ux.md), [test strategy](quick-wins-testing.md), [delivery tracker](progress.md#budget-playground-and-shareable-year-card), [acceptance evidence](quick-wins-acceptance.md).
 
 ## Product outcome
 
@@ -53,8 +53,8 @@ Each branch starts at its predecessor's final reviewed commit and targets that p
 | QW 02 | Authenticated comparison workflow and HTTP contract | `codex/quick-wins-02-http` | QW 01 | One calendar/date, session validation, errors, shared permit and no persistence side effects verified |
 | QW 03 | Annual budget playground and explicit adoption | `codex/quick-wins-03-playground` | QW 02 | Three scenario cards, truthful comparisons, no automatic requests, stale/error/cancel behavior and adoption journey pass |
 | QW 04 | Snapshot-to-year-card SVG and PNG adapter | `codex/quick-wins-04-card` | QW 03 | Parsed artifact content/privacy, escaped text, calendar dates, layout bounds and observable rasterization failures pass |
-| QW 05 | Year-card preview/download in current and saved plans | `codex/quick-wins-05-sharing` | QW 04 | Offline saved preview, selected/reduced plan fidelity, opt-in details, focus, invalidation and actual PNG download verified |
-| QW 06 | Integrated acceptance, performance and delivery evidence | `codex/quick-wins-06-acceptance` | QW 05 | Fresh full checks, browser evidence at 1024/1440px, downloaded PNG inspection and measured comparison bounds recorded |
+| QW 05 | Year-card preview/download in current and saved plans | `codex/quick-wins-05-sharing` | QW 04 | Offline saved preview, selected/reduced plan fidelity, opt-in details, focus, invalidation and PNG rendering and download trigger verified; native delivery deferred at user request |
+| QW 06 | Integrated acceptance, performance and delivery evidence | `codex/quick-wins-06-acceptance` | QW 05 | Fresh full checks, browser evidence at 1024/1440px, generated PNG inspection and measured comparison bounds recorded; native delivery deferred |
 
 Do not open placeholder implementation PRs or mark tasks Done before delivery. Every behavior PR includes its tests and starts with one observed failing behavior at a confirmed seam. Preserve meaningful typed names and focused functions; no explanatory code comments that repeat the implementation.
 
@@ -64,6 +64,6 @@ Do not open placeholder implementation PRs or mark tasks Done before delivery. E
 - The May demonstration visibly yields 6/9/10 days away under the stated fixed rules; a budget change can also visibly yield no improvement.
 - Reserve, exact locks, omitted slots, caps and hypothetical budgets remain truthful at domain, HTTP and UI seams.
 - A changed draft never triggers comparison automatically or permits stale adoption/sharing.
-- A PNG containing the reviewed current or historical selected plan actually downloads in a supported browser and renders legibly. Privacy defaults and optional leave details match the artifact.
+- A PNG containing the reviewed current or historical selected plan renders legibly with correct privacy defaults and optional leave details. On October 3 the user explicitly deferred native file-delivery verification: “Leave native download verification pending.” Keep that check pending and record rendering separately from actual delivery.
 - Record timings and work counters for IL/US/GB normal three-slot comparisons, plus deterministic cap/concurrency behavior. Target warm p95 <=5 seconds for the bounded comparison; report complete versus capped outcomes separately. Keep the existing annual limits unchanged. A missed target leads to measurement and a documented repair, not silently raised limits.
 - Required CI checks pass at every PR tip. The final acceptance record states measured commands, commits, visual evidence and unresolved limitations. PRs remain open for user review; tracker status becomes Done only after merge.
