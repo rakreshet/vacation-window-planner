@@ -108,6 +108,22 @@ test('opening moves keyboard focus into the preview and Escape or Close returns 
   expect(screen.getByRole('button', { name: 'Preview year card' })).toHaveFocus()
 })
 
+test('the year card has an accessible corner close icon with a dismissible keyboard tooltip', async () => {
+  await workspace()
+  const preview = await openPreview()
+  const close = preview.getByRole('button', { name: 'Close year card' })
+  expect(close).not.toHaveTextContent('Close year card')
+  act(() => close.focus())
+  expect(preview.getByRole('tooltip')).toHaveTextContent('Close year card')
+  fireEvent.keyDown(close, { key: 'Escape' })
+  expect(preview.queryByRole('tooltip')).not.toBeInTheDocument()
+  expect(close).toHaveFocus()
+  expect(screen.getByRole('region', { name: 'Year card preview' })).toBeVisible()
+  fireEvent.click(close)
+  expect(screen.queryByRole('region', { name: 'Year card preview' })).not.toBeInTheDocument()
+  expect(screen.getByRole('button', { name: 'Preview year card' })).toHaveFocus()
+})
+
 function pngBrowser(pending = false) {
   const downloads: string[] = []
   let finish: (() => void) | undefined
@@ -143,6 +159,56 @@ function pngBrowser(pending = false) {
   })
   return { downloads, finish: () => finish?.() }
 }
+
+test('the image download action explains itself on focus and hover and still exports the reviewed PNG', async () => {
+  await workspace()
+  const preview = await openPreview()
+  const browser = pngBrowser()
+  const imageActions = within(preview.getByRole('group', { name: 'Year card image actions' }))
+  const download = imageActions.getByRole('button', { name: 'Download PNG' })
+  act(() => download.focus())
+  expect(imageActions.getByRole('tooltip')).toHaveTextContent('Download year card as PNG')
+  fireEvent.keyDown(download, { key: 'Escape' })
+  expect(imageActions.queryByRole('tooltip')).not.toBeInTheDocument()
+  expect(download).toHaveFocus()
+  fireEvent.blur(download)
+  fireEvent.mouseEnter(download)
+  expect(imageActions.getByRole('tooltip')).toHaveTextContent('Download year card as PNG')
+  fireEvent.mouseLeave(download)
+  expect(imageActions.queryByRole('tooltip')).not.toBeInTheDocument()
+  fireEvent.click(download)
+  await preview.findByText('PNG download started')
+  expect(browser.downloads).toEqual(['vacation-year-2027.png'])
+})
+
+test('Escape dismisses a hovered export tooltip without closing the year card or moving focus', async () => {
+  await workspace()
+  const preview = await openPreview()
+  const title = preview.getByLabelText('Card title')
+  act(() => title.focus())
+  fireEvent.mouseEnter(preview.getByRole('button', { name: 'Download PNG' }))
+  expect(preview.getByRole('tooltip')).toBeVisible()
+  fireEvent.keyDown(title, { key: 'Escape' })
+  expect(preview.queryByRole('tooltip')).not.toBeInTheDocument()
+  expect(screen.getByRole('region', { name: 'Year card preview' })).toBeVisible()
+  expect(title).toHaveFocus()
+  fireEvent.keyDown(title, { key: 'Escape' })
+  expect(screen.queryByRole('region', { name: 'Year card preview' })).not.toBeInTheDocument()
+  expect(screen.getByRole('button', { name: 'Preview year card' })).toHaveFocus()
+})
+
+test('closing a hovered appearance panel does not intercept Escape in a later preview', async () => {
+  await workspace(true)
+  fireEvent.click(screen.getByText('Appearance', { exact: true }))
+  const close = screen.getByRole('button', { name: 'Close appearance settings' })
+  fireEvent.mouseEnter(close)
+  fireEvent.click(close)
+  expect(screen.getByText('Appearance', { exact: true })).toHaveFocus()
+  const preview = await openPreview()
+  fireEvent.keyDown(preview.getByLabelText('Card title'), { key: 'Escape' })
+  expect(screen.queryByRole('region', { name: 'Year card preview' })).not.toBeInTheDocument()
+  expect(screen.getByRole('button', { name: 'Preview year card' })).toHaveFocus()
+})
 
 test('explicit PNG download uses the reviewed settings and a visible filename', async () => {
   await workspace()

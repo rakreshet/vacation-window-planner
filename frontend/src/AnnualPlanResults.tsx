@@ -1,4 +1,6 @@
 import YearCardActions from './YearCardActions'
+import FlightSearchAction, { useFlightSearchSelection } from './FlightSearchAction'
+import ActionButton from './ActionButton'
 import { annualConflictMessage } from './annualConflictMessage'
 import { FieldLink } from './FieldValidation'
 import AnnualLeaveRequestActions from './AnnualLeaveRequestActions'
@@ -6,6 +8,7 @@ import type { AnnualResult } from './savedAnnualPlans'
 import { useId } from 'react'
 import AnnualPlanComparison from './AnnualPlanComparison'
 import AnnualYearView, { annualDetailsId } from './AnnualYearView'
+import AnnualYearOverview from './AnnualYearOverview'
 import AnnualPlanChanges from './AnnualPlanChanges'
 import type { AnnualBreak, AnnualPlan } from './annualContracts'
 
@@ -20,7 +23,11 @@ export default function AnnualPlanResults({
   onUseReduced,
   onSave,
   cardTitle,
+  historicalContext,
+  visible = true,
 }: {
+  visible?: boolean
+  historicalContext?: string
   cardTitle?: string
   result: AnnualResult
   stale?: boolean
@@ -34,6 +41,9 @@ export default function AnnualPlanResults({
 }) {
   const headingId = useId()
   const plan = result.plans.find((item) => item.plan_id === selectedId) ?? result.plans[0]
+  const flightSelection = useFlightSearchSelection(
+    `${plan?.plan_id}:${result.calculation_context.calculated_at}:${stale}:${busy}:${historicalContext}:${visible}`,
+  )
   return (
     <section aria-labelledby={headingId} className="annual-results">
       <h2 id={headingId} tabIndex={-1}>
@@ -125,25 +135,7 @@ export default function AnnualPlanResults({
             <p>{plan.accounting.unallocated_days} days unallocated</p>
             <p>{plan.accounting.total_days_away} days away</p>
           </div>
-          {onSave && (
-            <button type="button" disabled={stale || busy} onClick={() => onSave(plan)}>
-              Save this plan
-            </button>
-          )}
-          <AnnualLeaveRequestActions
-            key={`${plan.plan_id}-${result.calculation_context.calculated_at}`}
-            result={result}
-            planId={plan.plan_id}
-            disabled={stale || busy}
-          />
-          <YearCardActions
-            key={`${plan.plan_id}-${result.calculation_context.calculated_at}-${stale}-${busy}-${cardTitle}`}
-            title={cardTitle}
-            result={result}
-            planId={plan.plan_id}
-            disabled={stale || busy}
-          />
-          <AnnualYearView result={result} plan={plan} detailPrefix={headingId} />
+          <AnnualYearOverview result={result} plan={plan} />
           <ol>
             {plan.breaks.map((item) => (
               <li key={item.slot_id}>
@@ -160,16 +152,33 @@ export default function AnnualPlanResults({
                   {item.window.total_days} days away · {item.window.vacation_days_used} vacation
                   days · {item.balance_after_break} remain
                 </p>
-                {!item.locked && onLock && (
-                  <button
-                    type="button"
-                    disabled={stale || busy}
-                    onClick={() => onLock(item)}
-                    aria-label={`Lock Break ${result.input.slots.findIndex((slot) => slot.slot_id === item.slot_id) + 1} dates`}
-                  >
-                    Lock dates
-                  </button>
-                )}
+                <FlightSearchAction
+                  key={`${plan.plan_id}:${result.calculation_context.calculated_at}:${item.slot_id}`}
+                  dates={item.window}
+                  selection={flightSelection}
+                  historicalContext={historicalContext}
+                  disabledReason={
+                    busy
+                      ? 'Wait for the current calculation before finding flights.'
+                      : stale
+                        ? 'Recalculate plans to find flights for these dates.'
+                        : undefined
+                  }
+                  adjacentAction={
+                    !item.locked && onLock ? (
+                      <ActionButton
+                        label={`Lock Break ${result.input.slots.findIndex((slot) => slot.slot_id === item.slot_id) + 1} dates`}
+                        tooltip="Keep these dates when recalculating"
+                        icon="lock"
+                        className="button--secondary break-lock-action"
+                        disabled={stale || busy}
+                        onClick={() => onLock(item)}
+                      >
+                        Lock dates
+                      </ActionButton>
+                    ) : undefined
+                  }
+                />
                 <details
                   id={annualDetailsId(headingId, plan, item.slot_id)}
                   tabIndex={-1}
@@ -189,6 +198,25 @@ export default function AnnualPlanResults({
               </li>
             ))}
           </ol>
+          {onSave && (
+            <button type="button" disabled={stale || busy} onClick={() => onSave(plan)}>
+              Save this plan
+            </button>
+          )}
+          <AnnualLeaveRequestActions
+            key={`${plan.plan_id}-${result.calculation_context.calculated_at}`}
+            result={result}
+            planId={plan.plan_id}
+            disabled={stale || busy}
+          />
+          <YearCardActions
+            key={`${plan.plan_id}-${result.calculation_context.calculated_at}-${stale}-${busy}-${cardTitle}`}
+            title={cardTitle}
+            result={result}
+            planId={plan.plan_id}
+            disabled={stale || busy}
+          />
+          <AnnualYearView result={result} plan={plan} detailPrefix={headingId} />
         </>
       )}
     </section>

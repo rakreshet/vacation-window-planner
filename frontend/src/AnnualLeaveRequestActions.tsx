@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from 'react'
 import { createAnnualSnapshot, type AnnualResult, type AnnualSnapshot } from './savedAnnualPlans'
 import { annualLeaveRequestText } from './annualLeaveRequest'
+import { PanelCloseButton } from './ActionButton'
 
 export default function AnnualLeaveRequestActions({
   result,
@@ -97,8 +98,20 @@ function AnnualCopyPreview({
     }
   }
   return (
-    <section className="copy-preview" aria-label="Annual leave request preview">
-      <h3>Review your annual leave request</h3>
+    <section
+      className="copy-preview"
+      aria-label="Annual leave request preview"
+      onKeyDown={(event) => {
+        if (event.key === 'Escape') {
+          event.stopPropagation()
+          onClose()
+        }
+      }}
+    >
+      <div className="panel-header">
+        <h3>Review your annual leave request</h3>
+        <PanelCloseButton label="Close annual preview" onClick={onClose} />
+      </div>
       <textarea
         ref={textarea}
         readOnly
@@ -108,9 +121,6 @@ function AnnualCopyPreview({
       />
       <button type="button" onClick={() => void copy()}>
         Copy annual text
-      </button>
-      <button type="button" onClick={onClose}>
-        Close annual preview
       </button>
       <p role="status">{message}</p>
     </section>

@@ -12,7 +12,13 @@ import {
 import type { SavedAnnualPlan } from './savedAnnualPlans'
 import { draftFromAnnual } from './annualDraft'
 
-export default function SavedAnnualPlansView({ onPlan }: { onPlan?: () => void }) {
+export default function SavedAnnualPlansView({
+  onPlan,
+  visible = true,
+}: {
+  onPlan?: () => void
+  visible?: boolean
+}) {
   const [records, setRecords] = useState<{ items: SavedAnnualPlan[]; invalid: string[] }>({
     items: [],
     invalid: [],
@@ -144,9 +150,12 @@ export default function SavedAnnualPlansView({ onPlan }: { onPlan?: () => void }
             </p>
             <AnnualSavedContext result={selected.snapshot.result} />
             <AnnualPlanResults
+              key={selected.snapshot.capture_id}
               result={selected.snapshot.result}
+              historicalContext={`Historical annual calculation · ${selected.name} · Calculated ${formatSavedDate(selected.snapshot.result.calculation_context.calculated_at, selected.snapshot.result.calculation_context.planning.time_zone)} (${selected.snapshot.result.calculation_context.planning.time_zone})`}
               cardTitle={selected.name}
               busy={recalculating}
+              visible={visible}
             />
             <button ref={opener} type="button" onClick={() => setRecalculating(true)}>
               Recalculate this plan
@@ -166,6 +175,7 @@ export default function SavedAnnualPlansView({ onPlan }: { onPlan?: () => void }
             Back to saved annual plan
           </button>
           <AnnualPlanWorkspace
+            visible={visible}
             initialPlanning={draftFromAnnual(selected.snapshot.result).planning}
             initialDraft={draftFromAnnual(selected.snapshot.result)}
             idPrefix="saved-annual-"

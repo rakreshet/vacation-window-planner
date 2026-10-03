@@ -1,4 +1,5 @@
 import WindowActions from './WindowActions'
+import FlightSearchAction, { useFlightSearchSelection } from './FlightSearchAction'
 import { useEffect, useRef, useState } from 'react'
 import type { ComparedWindow, ComparisonAlternative, ComparisonResponse, DateRange } from './api'
 
@@ -161,11 +162,16 @@ export function WindowSummary({
 export default function ComparisonResults({
   result,
   stale,
+  visible = true,
 }: {
+  visible?: boolean
   result: ComparisonResponse
   stale: boolean
 }) {
   const [selected, setSelected] = useState<ComparisonAlternative | null>(null)
+  const flightSelection = useFlightSearchSelection(
+    `${result.comparison_id}:${stale}:${selected?.evaluation.window.start_date}:${selected?.evaluation.window.end_date}:${visible}`,
+  )
   const selectedView = useRef<HTMLDivElement>(null)
   const selectionButton = useRef<HTMLButtonElement | null>(null)
   useEffect(() => {
@@ -178,6 +184,13 @@ export default function ComparisonResults({
     <div className="comparison-layout">
       <div className="comparison-anchor">
         <WindowSummary value={result.baseline} label="Your dates">
+          <FlightSearchAction
+            dates={result.baseline.window}
+            selection={flightSelection}
+            disabledReason={
+              stale ? 'Update comparison to find flights for these dates.' : undefined
+            }
+          />
           {result.calculation_context && result.baseline.assessment && (
             <WindowActions
               source="comparison_baseline"
@@ -210,6 +223,10 @@ export default function ComparisonResults({
                   label="Selected alternative"
                   compareTo={result.baseline}
                 >
+                  <FlightSearchAction
+                    dates={selected.evaluation.window}
+                    selection={flightSelection}
+                  />
                   {result.calculation_context && selected.evaluation.assessment && (
                     <WindowActions
                       source="comparison_alternative"

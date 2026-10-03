@@ -2,6 +2,7 @@ import { yearCardPng } from './yearCardPng'
 import { useEffect, useRef, useState } from 'react'
 import { createAnnualSnapshot, type AnnualResult, type AnnualSnapshot } from './savedAnnualPlans'
 import { yearCardSvg } from './yearCard'
+import ActionButton, { PanelCloseButton } from './ActionButton'
 
 export default function YearCardActions({
   result,
@@ -38,14 +39,16 @@ export default function YearCardActions({
   const snapshot = capture?.result === result && capture.planId === planId ? capture.snapshot : null
   return (
     <div className="year-card-actions">
-      <button
-        type="button"
+      <ActionButton
+        label="Preview year card"
+        icon="image"
+        className="button--secondary"
         ref={opener}
         disabled={disabled || !snapshot}
         onClick={() => setPreview(snapshot)}
       >
         Preview year card
-      </button>
+      </ActionButton>
       {error && <p role="alert">{error}</p>}
       {snapshot && preview === snapshot && !disabled && (
         <YearCardPreview
@@ -156,9 +159,12 @@ function YearCardPreview({
         }
       }}
     >
-      <h3 ref={heading} tabIndex={-1}>
-        Review your year card
-      </h3>
+      <div className="panel-header">
+        <h3 ref={heading} tabIndex={-1}>
+          Review your year card
+        </h3>
+        <PanelCloseButton label="Close year card" onClick={onClose} />
+      </div>
       <label className="field">
         Card title
         <input
@@ -183,13 +189,31 @@ function YearCardPreview({
         />
         Include leave details
       </label>
-      {svg && (
-        <img
-          className="year-card-image"
-          alt="Year card image"
-          src={prepared ?? `data:image/svg+xml;charset=utf-8,${encodeURIComponent(svg)}`}
-        />
-      )}
+      <div className="year-card-artwork">
+        <div className="year-card-image-toolbar" role="group" aria-label="Year card image actions">
+          <div className="year-card-file">
+            <strong>{busy ? 'Preparing PNG…' : 'Save your year'}</strong>
+            <span className="year-card-filename">{filename}</span>
+          </div>
+          <span className="year-card-format">PNG</span>
+          <ActionButton
+            label={busy ? 'Preparing PNG…' : 'Download PNG'}
+            icon={busy ? 'progress' : 'download'}
+            aria-busy={busy}
+            tooltip={busy ? 'Preparing PNG…' : 'Download year card as PNG'}
+            className={`year-card-download ${busy ? 'is-preparing' : ''}`}
+            disabled={busy || !svg}
+            onClick={() => void download()}
+          />
+        </div>
+        {svg && (
+          <img
+            className="year-card-image"
+            alt="Year card image"
+            src={prepared ?? `data:image/svg+xml;charset=utf-8,${encodeURIComponent(svg)}`}
+          />
+        )}
+      </div>
       <div className="year-card-text">
         <p>
           {plan.accounting.total_days_away} days away · {plan.breaks.length}{' '}
@@ -236,15 +260,6 @@ function YearCardPreview({
           {result.calculation_context.planning.time_zone}
         </p>
         <p>Proposed plan · leave approval is separate</p>
-      </div>
-      <p className="year-card-filename">{filename}</p>
-      <div className="year-card-controls">
-        <button type="button" disabled={busy || !svg} onClick={() => void download()}>
-          {busy ? 'Preparing PNG…' : 'Download PNG'}
-        </button>
-        <button type="button" onClick={onClose}>
-          Close year card
-        </button>
       </div>
       {validationError && <p role="alert">{validationError}</p>}
       {prepared && (
