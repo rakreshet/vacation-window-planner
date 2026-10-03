@@ -1,6 +1,6 @@
 # Budget playground and shareable year card
 
-Date: 2026-10-03. Task prefix: **QW**. The user authorized implementation, TDD, one responsibility per PR, and dependent stacked PRs. This plan records that authorization; it does not require a second implementation approval. Confirm the public test seams in the companion [test strategy](quick-wins-testing.md) before the first behavioral test, as required by the TDD skill.
+Date: 2026-10-03. Task prefix: **QW**. The user authorized implementation, TDD, one responsibility per PR, and dependent stacked PRs. This plan records that authorization; it does not require a second implementation approval. The user confirmed the public test seams in the companion [test strategy](quick-wins-testing.md) on October 3, 2026. Begin behavioral tests at those interfaces.
 
 Baseline: `origin/main` = `36a1b33`, including annual planning/redesign through #72 and calendar-export removal through #79. Work uses an isolated managed worktree, preserving the original checkout's local changes. Calendar downloads/imports remain canceled; the requested image card is a distinct feature. Do not merge PRs automatically.
 

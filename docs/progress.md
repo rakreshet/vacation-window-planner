@@ -123,11 +123,11 @@ The [ordered breakdown](annual-plans-plan.md#ordered-dependent-pr-breakdown) sup
 
 ## Budget playground and shareable year card
 
-The user authorized these two features on October 3, 2026, with TDD and dependent stacked PRs. The [plan](quick-wins-plan.md), [UX walkthrough](quick-wins-ux.md) and [test strategy](quick-wins-testing.md) define scope and acceptance. QW 00 starts from merged main `36a1b33`; each later PR targets its predecessor. Implementation is authorized; the TDD public seams await explicit confirmation before the first behavioral test. No automatic merges.
+The user authorized these two features on October 3, 2026, with TDD and dependent stacked PRs. The [plan](quick-wins-plan.md), [UX walkthrough](quick-wins-ux.md) and [test strategy](quick-wins-testing.md) define scope and acceptance. QW 00 starts from merged main `36a1b33`; each later PR targets its predecessor. Implementation is authorized; the user confirmed all five TDD public seams on October 3, 2026. No automatic merges.
 
 | Task | Responsibility | Depends on | PR(s) | Status |
 | --- | --- | --- | --- | --- |
-| QW 00 | Scope, contracts, UX, test seams and progress table | main | [#80](https://github.com/rakreshet/vacation-window-planner/pull/80) | In review; seams pending |
+| QW 00 | Scope, contracts, UX, test seams and progress table | main | [#80](https://github.com/rakreshet/vacation-window-planner/pull/80) | In review; seams confirmed |
 | QW 01 | Pure bounded comparison and primary-only annual mode | QW 00 + confirmed seams | — | Planned |
 | QW 02 | Authenticated comparison workflow/HTTP | QW 01 | — | Planned |
 | QW 03 | Budget playground and explicit adoption | QW 02 | — | Planned |

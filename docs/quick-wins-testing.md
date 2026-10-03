@@ -1,8 +1,8 @@
 # Budget playground and year card test strategy
 
-Date: 2026-10-03. Companion: [implementation plan](quick-wins-plan.md). Implementation is authorized. The public seams below are proposed for explicit confirmation before behavioral tests; record the confirmation here when received.
+Date: 2026-10-03. Companion: [implementation plan](quick-wins-plan.md). Implementation is authorized. The user explicitly confirmed all five public seams on October 3, 2026: “Use the recommended coverage and continue.” Behavioral implementation uses these confirmed interfaces.
 
-## Public seams proposed for confirmation
+## Confirmed public seams
 
 | Seam | What tests observe | External dependencies allowed to vary |
 | --- | --- | --- |
