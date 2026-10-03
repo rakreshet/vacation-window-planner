@@ -64,6 +64,10 @@ test('save and offline reopening preserve the original mix while recalculation u
       '8 vacation days used',
     ),
   ).toBeInTheDocument()
+  const overview = within(saved.getByRole('region', { name: '2027 year overview' }))
+  expect(within(overview.getByRole('listitem', { name: 'March' })).getByText('5–8')).toBeVisible()
+  expect(saved.queryByRole('region', { name: '2027 year view' })).not.toBeInTheDocument()
+  fireEvent.click(saved.getByRole('button', { name: 'Show full year calendar' }))
   fireEvent.click(saved.getByRole('button', { name: 'Show Break 2 details' }))
   expect(saved.getByRole('group', { name: 'Break 2 charged dates and day details' })).toHaveFocus()
   fireEvent.click(saved.getByRole('button', { name: 'Recalculate this plan' }))

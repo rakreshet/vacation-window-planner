@@ -7,7 +7,8 @@ import {
   type Ref,
 } from 'react'
 
-type IconName = 'close' | 'download' | 'plane' | 'lock' | 'image' | 'progress'
+type IconName =
+  'close' | 'download' | 'plane' | 'lock' | 'image' | 'progress' | 'calendar' | 'chevron'
 const paths: Record<IconName, string> = {
   close: 'M6 6l12 12M6 18 18 6',
   download: 'M12 3v12m-5-5 5 5 5-5M4 16v5h16v-5',
@@ -15,6 +16,8 @@ const paths: Record<IconName, string> = {
   lock: 'M7 10V7a5 5 0 0 1 10 0v3M5 10h14v11H5ZM12 14v3',
   image: 'M3 3h18v18H3ZM3 16l6-6 12 11M14 8h.01',
   progress: 'M20 12a8 8 0 1 1-8-8',
+  calendar: 'M5 5h14v16H5ZM8 3v4M16 3v4M5 10h14M9 14h.01M15 14h.01M9 17h.01M15 17h.01',
+  chevron: 'M6 9l6 6 6-6',
 }
 
 export function ActionIcon({ name }: { name: IconName }) {

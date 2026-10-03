@@ -1715,6 +1715,115 @@ summary {
   color: var(--brand-ink);
   font-size: 24px;
 }
+.annual-year-overview {
+  margin: 20px 0;
+}
+.annual-overview-heading {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+.annual-overview-heading h3 {
+  margin: 0;
+}
+.annual-overview-heading > span {
+  color: var(--ink-soft);
+  font-size: 12px;
+}
+.annual-overview-months {
+  display: grid;
+  grid-template-columns: repeat(6, minmax(0, 1fr));
+  gap: 8px;
+  padding: 0;
+  margin: 12px 0 0;
+  list-style: none;
+}
+.annual-overview-month {
+  min-width: 0;
+  padding: 10px 8px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: var(--paper);
+}
+.annual-overview-month.has-breaks {
+  background: var(--surface-selected);
+  border-color: var(--annual-border);
+}
+.annual-overview-month h4 {
+  margin: 0 0 8px;
+  font-size: 12px;
+}
+.annual-overview-empty,
+.annual-overview-break-label,
+.annual-overview-lock {
+  display: block;
+  color: var(--ink-soft);
+  font-size: 12px;
+  line-height: 1.4;
+}
+.annual-overview-break + .annual-overview-break {
+  margin-top: 10px;
+}
+.annual-overview-break strong {
+  display: block;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--brand-ink);
+}
+.annual-overview-track {
+  position: relative;
+  height: 4px;
+  margin-top: 5px;
+  border-radius: 4px;
+  background: var(--line);
+}
+.annual-overview-track > span {
+  position: absolute;
+  height: 100%;
+  border-radius: inherit;
+  background: var(--brand-ink);
+}
+.annual-overview-break.is-locked .annual-overview-track > span {
+  outline: 1px solid var(--warm-accent);
+  outline-offset: 1px;
+}
+.annual-overview-lock {
+  margin-top: 6px;
+  font-weight: 600;
+}
+.annual-calendar-toggle {
+  width: 100%;
+  min-height: 48px;
+  justify-content: space-between;
+  margin: 0;
+  background: var(--paper);
+  color: var(--ink);
+  text-align: left;
+}
+.annual-calendar-toggle-label {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+}
+.annual-calendar-toggle small {
+  display: block;
+  color: var(--ink-soft);
+  font-size: 12px;
+  line-height: 1.5;
+  font-weight: 400;
+}
+.annual-calendar-toggle[aria-expanded='true'] > .action-icon {
+  transform: rotate(180deg);
+}
+.annual-calendar-disclosure {
+  border-top: 1px solid var(--line);
+  padding-top: 16px;
+}
+.annual-calendar-disclosure .annual-year {
+  padding-top: 8px;
+}
 .annual-month-grid {
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));

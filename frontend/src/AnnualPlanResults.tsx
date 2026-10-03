@@ -8,6 +8,7 @@ import type { AnnualResult } from './savedAnnualPlans'
 import { useId } from 'react'
 import AnnualPlanComparison from './AnnualPlanComparison'
 import AnnualYearView, { annualDetailsId } from './AnnualYearView'
+import AnnualYearOverview from './AnnualYearOverview'
 import AnnualPlanChanges from './AnnualPlanChanges'
 import type { AnnualBreak, AnnualPlan } from './annualContracts'
 
@@ -134,25 +135,7 @@ export default function AnnualPlanResults({
             <p>{plan.accounting.unallocated_days} days unallocated</p>
             <p>{plan.accounting.total_days_away} days away</p>
           </div>
-          {onSave && (
-            <button type="button" disabled={stale || busy} onClick={() => onSave(plan)}>
-              Save this plan
-            </button>
-          )}
-          <AnnualLeaveRequestActions
-            key={`${plan.plan_id}-${result.calculation_context.calculated_at}`}
-            result={result}
-            planId={plan.plan_id}
-            disabled={stale || busy}
-          />
-          <YearCardActions
-            key={`${plan.plan_id}-${result.calculation_context.calculated_at}-${stale}-${busy}-${cardTitle}`}
-            title={cardTitle}
-            result={result}
-            planId={plan.plan_id}
-            disabled={stale || busy}
-          />
-          <AnnualYearView result={result} plan={plan} detailPrefix={headingId} />
+          <AnnualYearOverview result={result} plan={plan} />
           <ol>
             {plan.breaks.map((item) => (
               <li key={item.slot_id}>
@@ -215,6 +198,25 @@ export default function AnnualPlanResults({
               </li>
             ))}
           </ol>
+          {onSave && (
+            <button type="button" disabled={stale || busy} onClick={() => onSave(plan)}>
+              Save this plan
+            </button>
+          )}
+          <AnnualLeaveRequestActions
+            key={`${plan.plan_id}-${result.calculation_context.calculated_at}`}
+            result={result}
+            planId={plan.plan_id}
+            disabled={stale || busy}
+          />
+          <YearCardActions
+            key={`${plan.plan_id}-${result.calculation_context.calculated_at}-${stale}-${busy}-${cardTitle}`}
+            title={cardTitle}
+            result={result}
+            planId={plan.plan_id}
+            disabled={stale || busy}
+          />
+          <AnnualYearView result={result} plan={plan} detailPrefix={headingId} />
         </>
       )}
     </section>
