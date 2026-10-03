@@ -21,6 +21,7 @@ from vacation_window_planner.annual_workflow import (
     AnnualPlanningRequest,
     AnnualRun,
 )
+from vacation_window_planner.budget_comparison_workflow import BudgetComparisonRun
 from vacation_window_planner.comparison_workflow import (
     ComparisonOriginError,
     ComparisonRequest,
@@ -150,6 +151,7 @@ def create_app(
     clock: Callable[[], datetime] = lambda: datetime.now(UTC),
     cors_origins: tuple[str, ...] = (),
     max_request_bytes: int = 65_536,
+    budget_comparison_service: Callable[[AnnualPlanningRequest], BudgetComparisonRun] | None = None,
 ) -> FastAPI:
     app = FastAPI(title="Vacation Window Planner")
     app.add_middleware(
@@ -207,7 +209,7 @@ def create_app(
             if any(field.startswith("body.personal_calendar") for field in fields)
             else "VALIDATION_ERROR"
         )
-        if _request.url.path == "/annual-plans":
+        if _request.url.path in ("/annual-plans", "/annual-plans/budget-comparison"):
             code = "INVALID_ANNUAL_PLAN"
         return _error(422, code, "Request validation failed", fields)
 
@@ -309,6 +311,27 @@ def create_app(
             return _error(404, "NOT_FOUND", str(error))
         except (InvalidComparisonError, UnsupportedCalendarError, CalendarCoverageError) as error:
             return _error(422, "INVALID_COMPARISON", str(error))
+
+    @app.post("/annual-plans/budget-comparison", response_model=BudgetComparisonRun)
+    def compare_leave_budgets(
+        body: AnnualRequest,
+        authorization: Annotated[str | None, Header()] = None,
+    ) -> BudgetComparisonRun | JSONResponse:
+        if session_lookup is None or budget_comparison_service is None:
+            return _error(503, "SERVICE_UNAVAILABLE", "Budget comparison is unavailable")
+        context = authenticated_context(authorization)
+        if isinstance(context, JSONResponse):
+            return context
+        try:
+            return budget_comparison_service(AnnualPlanningRequest(context=context, input=body))
+        except AnnualPlannerBusy:
+            return _error(503, "ANNUAL_PLANNER_BUSY", "Annual planner is busy; try again")
+        except AnnualInputError as error:
+            return _error(422, "INVALID_ANNUAL_PLAN", str(error), [error.field])
+        except UnsupportedCalendarError as error:
+            return _error(422, "UNSUPPORTED_CALENDAR", str(error), ["context.country_code"])
+        except (CalendarResolutionUnavailable, CalendarCoverageError):
+            return _error(503, "CALENDAR_UNAVAILABLE", "Calendar data is unavailable; try again")
 
     @app.post("/annual-plans", response_model=AnnualRun)
     def annual_plans(

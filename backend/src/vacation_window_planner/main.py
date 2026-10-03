@@ -8,6 +8,10 @@ from sqlalchemy.exc import SQLAlchemyError
 from vacation_window_planner.annual_interpreter import build_annual_interpreter
 from vacation_window_planner.annual_workflow import AnnualPlanningRequest, AnnualRun, AnnualWorkflow
 from vacation_window_planner.api import SessionHttpRequest, create_app
+from vacation_window_planner.budget_comparison_workflow import (
+    BudgetComparisonRun,
+    BudgetComparisonWorkflow,
+)
 from vacation_window_planner.comparison_workflow import ComparisonRequest, ComparisonWorkflow
 from vacation_window_planner.database import (
     database_is_reachable,
@@ -120,6 +124,14 @@ def compare(request: ComparisonRequest) -> ComparisonResult:
         return result
 
 
+def compare_budgets(request: AnnualPlanningRequest) -> BudgetComparisonRun:
+    return BudgetComparisonWorkflow(
+        calendar_provider=calendar_provider,
+        policy=settings.annual_policy,
+        clock=utc_now,
+    ).compare(request)
+
+
 def plan_annual(request: AnnualPlanningRequest) -> AnnualRun:
     with sessions() as session:
         return AnnualWorkflow(
@@ -148,6 +160,7 @@ app = create_app(
     recommendation_service=recommend,
     comparison_service=compare,
     annual_service=plan_annual,
+    budget_comparison_service=compare_budgets,
     interpretation_service=interpreter.interpret if interpreter is not None else None,
     annual_interpretation_service=annual_interpreter.interpret
     if annual_interpreter is not None
