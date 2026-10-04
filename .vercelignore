@@ -13,7 +13,7 @@
 **/.ruff_cache
 **/node_modules
 **/dist
-public
+/public
 backend/tests
 docs
 design-system
