@@ -17,6 +17,51 @@ afterEach(() => {
   vi.restoreAllMocks()
 })
 
+async function openAnnualPreview() {
+  vi.stubGlobal(
+    'fetch',
+    vi.fn(async (url: string) => ({
+      ok: true,
+      json: async () => (url.endsWith('/sessions') ? { token: 'token' } : annualFixture()),
+    })),
+  )
+  render(
+    <AnnualPlanWorkspace
+      initialPlanning={{ ...emptyPlanning, balance: '18', timeZone: 'Asia/Jerusalem' }}
+    />,
+  )
+  fireEvent.click(screen.getByRole('button', { name: 'Generate plans' }))
+  const opener = await screen.findByRole('button', { name: 'Copy annual leave request' })
+  await waitFor(() => expect(opener).toBeEnabled())
+  fireEvent.click(opener)
+  return opener
+}
+
+test('the annual leave preview dismisses with an icon and returns focus to its opener', async () => {
+  const opener = await openAnnualPreview()
+  expect(screen.getByRole('textbox', { name: 'Annual leave request text' })).toHaveFocus()
+  const close = screen.getByRole('button', { name: 'Close annual preview' })
+  expect(close).not.toHaveTextContent('Close annual preview')
+  fireEvent.click(close)
+  expect(
+    screen.queryByRole('region', { name: 'Annual leave request preview' }),
+  ).not.toBeInTheDocument()
+  expect(opener).toHaveFocus()
+  expect(fetch).toHaveBeenCalledTimes(2)
+})
+
+test('Escape closes the annual leave preview and returns focus to its opener', async () => {
+  const opener = await openAnnualPreview()
+  const text = screen.getByRole('textbox', { name: 'Annual leave request text' })
+  expect(text).toHaveFocus()
+  fireEvent.keyDown(text, { key: 'Escape' })
+  expect(
+    screen.queryByRole('region', { name: 'Annual leave request preview' }),
+  ).not.toBeInTheDocument()
+  expect(opener).toHaveFocus()
+  expect(fetch).toHaveBeenCalledTimes(2)
+})
+
 test('annual copy preview defaults to private budget, survives clipboard denial, and closes on edits', async () => {
   vi.stubGlobal(
     'fetch',

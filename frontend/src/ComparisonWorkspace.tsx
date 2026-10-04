@@ -17,7 +17,9 @@ export default function ComparisonWorkspace({
   origin,
   onClose,
   idPrefix = 'compare-',
+  visible = true,
 }: {
+  visible?: boolean
   draft: ComparisonDraft
   onDraftChange: (value: ComparisonDraft) => void
   origin?: ComparisonOrigin
@@ -230,6 +232,7 @@ export default function ComparisonWorkspace({
       </p>
       {result && (
         <ComparisonResults
+          visible={visible}
           key={result.comparison_id}
           result={result}
           stale={stale || busy || Boolean(error)}

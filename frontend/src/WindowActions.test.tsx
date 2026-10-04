@@ -40,6 +40,43 @@ test('the selected exact dates save once and stale results cannot be saved', asy
   expect(screen.getByRole('button', { name: 'Save option' })).toBeDisabled()
 })
 
+test('the leave request preview dismisses with an icon and returns focus to its opener', async () => {
+  render(
+    <WindowActions
+      source="search"
+      window={vacationWindow}
+      assessment={assessment}
+      context={context}
+    />,
+  )
+  const opener = screen.getByRole('button', { name: 'Copy leave request' })
+  fireEvent.click(opener)
+  expect(await screen.findByRole('textbox', { name: 'Leave request text' })).toHaveFocus()
+  const close = screen.getByRole('button', { name: 'Close preview' })
+  expect(close).not.toHaveTextContent('Close preview')
+  fireEvent.click(close)
+  expect(screen.queryByRole('region', { name: 'Leave request preview' })).not.toBeInTheDocument()
+  expect(opener).toHaveFocus()
+})
+
+test('Escape closes the leave request preview and returns focus to its opener', async () => {
+  render(
+    <WindowActions
+      source="search"
+      window={vacationWindow}
+      assessment={assessment}
+      context={context}
+    />,
+  )
+  const opener = screen.getByRole('button', { name: 'Copy leave request' })
+  fireEvent.click(opener)
+  const text = await screen.findByRole('textbox', { name: 'Leave request text' })
+  expect(text).toHaveFocus()
+  fireEvent.keyDown(text, { key: 'Escape' })
+  expect(screen.queryByRole('region', { name: 'Leave request preview' })).not.toBeInTheDocument()
+  expect(opener).toHaveFocus()
+})
+
 test('denied clipboard shows selectable text and editing closes an open live preview', async () => {
   vi.stubGlobal('navigator', {
     clipboard: { writeText: vi.fn().mockRejectedValue(new Error('denied')) },

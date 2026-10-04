@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from 'react'
 import type { ActionSnapshot } from './actionSnapshots'
 import { leaveRequestText } from './leaveRequest'
+import { PanelCloseButton } from './ActionButton'
 
 export function CopyPreview({
   snapshot,
@@ -26,14 +27,23 @@ export function CopyPreview({
     }
   }
   return (
-    <section className="copy-preview" aria-label="Leave request preview">
-      <h3>Review your leave request</h3>
+    <section
+      className="copy-preview"
+      aria-label="Leave request preview"
+      onKeyDown={(event) => {
+        if (event.key === 'Escape') {
+          event.stopPropagation()
+          onClose()
+        }
+      }}
+    >
+      <div className="panel-header">
+        <h3>Review your leave request</h3>
+        <PanelCloseButton label="Close preview" onClick={onClose} />
+      </div>
       <textarea aria-label="Leave request text" ref={textarea} value={text} readOnly rows={9} />
       <button className="button button--primary" type="button" onClick={() => void copy()}>
         Copy text
-      </button>
-      <button className="button button--secondary" type="button" onClick={onClose}>
-        Close preview
       </button>
       <p role="status">{message}</p>
     </section>

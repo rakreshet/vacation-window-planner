@@ -72,6 +72,7 @@ test('the year view has twelve months and keyboard-friendly links to break detai
     />,
   )
   fireEvent.click(screen.getByRole('button', { name: 'Generate plans' }))
+  fireEvent.click(await screen.findByRole('button', { name: 'Show full year calendar' }))
   const year = within(await screen.findByRole('region', { name: '2027 year view' }))
   expect(year.getAllByRole('heading', { level: 4 })).toHaveLength(12)
   expect(
@@ -98,8 +99,22 @@ test('whole-plan selection changes the year view and lock action together', asyn
   )
   fireEvent.click(screen.getByRole('button', { name: 'Generate plans' }))
   const comparisons = within(await screen.findByRole('table', { name: 'Compare whole plans' }))
+  fireEvent.click(screen.getByRole('button', { name: 'Show full year calendar' }))
   fireEvent.click(comparisons.getByRole('button', { name: 'View Fewer leave days' }))
   expect(screen.getByRole('heading', { name: '2027-08-13 – 2027-08-21' })).toBeInTheDocument()
+  const overview = within(screen.getByRole('region', { name: '2027 year overview' }))
+  expect(
+    within(overview.getByRole('listitem', { name: 'August' })).getByText('13–21'),
+  ).toBeVisible()
+  expect(screen.getByRole('button', { name: 'Hide full year calendar' })).toHaveAttribute(
+    'aria-expanded',
+    'true',
+  )
+  expect(
+    within(screen.getByRole('region', { name: '2027 year view' })).getByText(
+      'August: 2027-08-13 – 2027-08-21; unavailable dates: none; past dates: none.',
+    ),
+  ).toBeInTheDocument()
   fireEvent.click(screen.getByRole('button', { name: 'Lock Break 1 dates' }))
   expect(screen.getByText('Locked: 2027-08-13 – 2027-08-21')).toBeInTheDocument()
 })
