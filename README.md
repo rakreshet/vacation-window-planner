@@ -64,6 +64,13 @@ docker compose down
 
 `docker compose down` keeps your PostgreSQL data. Use `down --volumes` only if you deliberately want to erase that local data.
 
+## Public demo hosting
+
+The public demo is available at [Vacation Window Planner](https://vacation-window-planner.vercel.app).
+Vercel runs the React frontend and FastAPI API; Neon supplies PostgreSQL.
+See [hosting and deployments](docs/hosting.md) for Git deployment setup, environment
+variables, database migrations, and verification.
+
 ## Tests and checks
 
 These commands also run entirely in Docker:

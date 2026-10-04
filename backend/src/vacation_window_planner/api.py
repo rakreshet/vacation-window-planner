@@ -209,7 +209,10 @@ def create_app(
             if any(field.startswith("body.personal_calendar") for field in fields)
             else "VALIDATION_ERROR"
         )
-        if _request.url.path in ("/annual-plans", "/annual-plans/budget-comparison"):
+        if _request.url.path.removeprefix(_request.scope.get("root_path", "")) in (
+            "/annual-plans",
+            "/annual-plans/budget-comparison",
+        ):
             code = "INVALID_ANNUAL_PLAN"
         return _error(422, code, "Request validation failed", fields)
 

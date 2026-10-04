@@ -4,9 +4,8 @@ from typing import Literal
 
 from pydantic import Field, SecretStr, field_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
-from sqlalchemy.engine import make_url
-from sqlalchemy.exc import ArgumentError
 
+from vacation_window_planner.database import normalize_database_url
 from vacation_window_planner.domain.annual_budget import AnnualPolicy
 
 
@@ -28,10 +27,4 @@ class Settings(BaseSettings):
     @field_validator("database_url")
     @classmethod
     def database_url_must_be_postgresql(cls, value: str) -> str:
-        try:
-            url = make_url(value)
-        except ArgumentError as error:
-            raise ValueError("DATABASE_URL must be a PostgreSQL URL") from error
-        if url.drivername != "postgresql+psycopg" or not url.host or not url.database:
-            raise ValueError("DATABASE_URL must be a PostgreSQL URL")
-        return value
+        return normalize_database_url(value)
