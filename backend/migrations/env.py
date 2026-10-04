@@ -6,6 +6,7 @@ from logging.config import fileConfig
 from alembic import context
 from sqlalchemy import engine_from_config, pool
 
+from vacation_window_planner.database import normalize_database_url
 from vacation_window_planner.models import Base
 
 config = context.config
@@ -14,7 +15,10 @@ if config.config_file_name and config.get_section("loggers"):
 
 database_url = os.environ.get("DATABASE_URL")
 if database_url:
-    config.set_main_option("sqlalchemy.url", database_url)
+    # ConfigParser otherwise treats percent-encoded passwords as interpolation.
+    config.set_main_option(
+        "sqlalchemy.url", normalize_database_url(database_url).replace("%", "%%")
+    )
 
 target_metadata = Base.metadata
 

@@ -27,6 +27,10 @@ jobs:
         run: docker compose -f compose.yaml -f .github/compose.ci.yaml --env-file .env.example --profile test run --no-deps --rm backend-test ruff check .
       - name: Python typing
         run: docker compose -f compose.yaml -f .github/compose.ci.yaml --env-file .env.example --profile test run --no-deps --rm backend-test mypy src
+      - name: Hosted deployment Python checks
+        run: |
+          docker compose -f compose.yaml -f .github/compose.ci.yaml --env-file .env.example --profile test run --no-deps --rm --volume "$PWD:/workspace:ro" --workdir /workspace --env RUFF_CACHE_DIR=/tmp/ruff-cache backend-test ruff check --config backend/pyproject.toml app.py scripts/migrate_hosted.py
+          docker compose -f compose.yaml -f .github/compose.ci.yaml --env-file .env.example --profile test run --no-deps --rm --volume "$PWD:/workspace:ro" --workdir /workspace --env RUFF_CACHE_DIR=/tmp/ruff-cache backend-test ruff format --check --config backend/pyproject.toml app.py scripts/migrate_hosted.py
       - name: Stop test services
         if: always()
         run: docker compose -f compose.yaml -f .github/compose.ci.yaml --env-file .env.example --profile test down

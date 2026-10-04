@@ -1,0 +1,19 @@
+{
+  "$schema": "https://openapi.vercel.sh/vercel.json",
+  "framework": "fastapi",
+  "regions": ["fra1"],
+  "buildCommand": "npm --prefix frontend ci --no-audit --no-fund && npm --prefix frontend run build",
+  "functions": {
+    "app.py": {
+      "maxDuration": 60,
+      "includeFiles": "{backend/src/**,frontend/dist/**}",
+      "excludeFiles": "{.env*,.{git,idea,agents,codex,aws,github}/**,**/{.hypothesis,__pycache__,.venv}/**,backend/tests/**,frontend/{src,public,node_modules}/**,frontend/*.{json,ts},frontend/{index.html,Dockerfile},docs/**,design-system/**}"
+    }
+  },
+  "headers": [
+    {
+      "source": "/api/:path*",
+      "headers": [{ "key": "Cache-Control", "value": "no-store" }]
+    }
+  ]
+}

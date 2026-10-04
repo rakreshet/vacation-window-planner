@@ -1,6 +1,7 @@
 """Migration contract against a disposable PostgreSQL database."""
 
 import os
+from io import StringIO
 from pathlib import Path
 from urllib.parse import urlparse
 
@@ -8,6 +9,20 @@ import pytest
 from alembic import command
 from alembic.config import Config
 from sqlalchemy import create_engine, inspect
+
+
+def test_offline_migrations_accept_encoded_provider_credentials(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    url = "postgresql://user:pass%40word%25@db.example/neondb?sslmode=require"
+    monkeypatch.setenv("DATABASE_URL", url)
+    output = StringIO()
+    config = Config(str(Path(__file__).resolve().parents[1] / "alembic.ini"), output_buffer=output)
+    command.upgrade(config, "head", sql=True)
+    assert config.get_main_option("sqlalchemy.url") == url.replace(
+        "postgresql://", "postgresql+psycopg://", 1
+    )
+    assert "CREATE TABLE anonymous_sessions" in output.getvalue()
 
 
 def test_upgrade_and_downgrade_session_schema() -> None:
