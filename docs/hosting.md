@@ -25,15 +25,14 @@ can use the repository's default branch without replacing newer app changes.
 
 ## Git deployment setup
 
-The production branch is `main` (this repository has no `master` branch). Link
-`rakreshet/vacation-window-planner` to the existing Vercel project, keeping the
-repository root as the build root, with the FastAPI framework and no Output
-Directory override. Vercel requires a GitHub Login Connection on the Vercel
-account before it can link the repository. Configure this under
-[Vercel account authentication](https://vercel.com/account/settings/authentication).
+The existing Vercel project is connected to
+`rakreshet/vacation-window-planner`, with Git deployments enabled and `main` as
+the production branch (this repository has no `master` branch). The build root
+is the repository root. `vercel.json` selects FastAPI and supplies the build
+settings; there is no Output Directory override.
 
-Once the repository is connected, each successful build from a merge or push to
-`main` updates the public production URL. Other branches and PRs produce preview
+Each successful build from a merge or push to `main` updates the public
+production URL. Other branches and PRs produce preview
 deployments with the separate preview database. The GitHub CI workflow runs the
 backend and frontend checks; Vercel runs its build separately, so CI does not by
 itself delay a production deployment. Review the CI and preview checks before
