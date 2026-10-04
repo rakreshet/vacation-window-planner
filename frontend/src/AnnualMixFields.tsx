@@ -73,6 +73,36 @@ export default function AnnualMixFields({
       <fieldset className="annual-months" tabIndex={-1} {...field('allowed_start_months')}>
         <FieldError field="allowed_start_months" />
         <legend>Start months for new breaks</legend>
+        <div className="annual-month-actions">
+          <span aria-live="polite" aria-atomic="true">
+            {draft.months.length
+              ? `${draft.months.length} ${draft.months.length === 1 ? 'month' : 'months'} selected`
+              : 'No months selected'}
+          </span>
+          <div>
+            <button
+              type="button"
+              className="button button--plain"
+              aria-label="Select all months"
+              onClick={() => {
+                if (draft.months.length !== months.length)
+                  onChange({ ...draft, months: months.map((_, index) => index + 1) })
+              }}
+            >
+              Select all
+            </button>
+            <button
+              type="button"
+              className="button button--plain"
+              aria-label="Clear all months"
+              onClick={() => {
+                if (draft.months.length) onChange({ ...draft, months: [] })
+              }}
+            >
+              Clear all
+            </button>
+          </div>
+        </div>
         <div className="day-picker">
           {months.map((month, index) => (
             <label key={month}>
