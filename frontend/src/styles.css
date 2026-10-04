@@ -1667,6 +1667,27 @@ summary {
 .annual-months .day-picker {
   grid-template-columns: repeat(6, minmax(0, 1fr));
 }
+.annual-month-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  margin-bottom: 8px;
+}
+.annual-month-actions > span {
+  color: var(--ink-soft);
+  font-size: 12px;
+}
+.annual-month-actions > div {
+  display: flex;
+  gap: 4px;
+}
+.annual-month-actions .button {
+  min-height: 44px;
+  padding: 8px 10px;
+  color: var(--brand-ink);
+}
 .annual-months > small {
   display: block;
   margin-top: 12px;
